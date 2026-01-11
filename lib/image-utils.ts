@@ -22,65 +22,54 @@ export function getImageUrl(url: string | undefined | null, addCacheBuster: bool
   }
 
   // Get API URL dynamically to ensure env is loaded
-  const API_BASE_URL = PlatformUtils.getApiUrl();
-  
+  const API_BASE_URL = PlatformUtils.getApiUrl().replace(/\/$/, ''); // Remove trailing slash
+
   // Separate URL from any existing query params
   const [baseUrl, existingParams] = url.split('?');
-  
-  console.log('🔗 [IMAGE-UTILS] Transforming URL:', { input: baseUrl, apiBase: API_BASE_URL });
 
   let result = baseUrl;
 
-  // If it's already a full URL with the correct server, keep the base
-  if (baseUrl.startsWith(API_BASE_URL)) {
-    console.log('🔗 [IMAGE-UTILS] URL already correct:', baseUrl);
-    result = baseUrl;
+  // CRITICAL: If any URL contains '/uploads/', we MUST force it to use our current API_BASE_URL
+  // This handles cases where the DB has 'localhost', '127.0.0.1', or stale IPs like '51.254.132.77' or '192.168.1.16'
+  if (baseUrl.includes('/uploads/')) {
+    const pathAfterUploads = baseUrl.split('/uploads/')[1];
+    result = `${API_BASE_URL}/uploads/${pathAfterUploads}`;
+    console.log('🔗 [IMAGE-UTILS] Forcing upload path to API_BASE_URL:', {
+      input: baseUrl,
+      output: result,
+      apiBase: API_BASE_URL
+    });
   }
-  // If it's a relative path starting with /uploads
-  else if (baseUrl.startsWith('/uploads')) {
-    result = `${API_BASE_URL}${baseUrl}`;
-    console.log('🔗 [IMAGE-UTILS] Relative path transformed:', result);
-  }
-  // If it's a localhost URL (any port), replace with API URL
-  else if (baseUrl.includes('localhost:')) {
-    // Extract the path after the port
-    const match = baseUrl.match(/localhost:\d+(\/.*)/);
-    if (match && match[1]) {
-      result = `${API_BASE_URL}${match[1]}`;
-      console.log('🔗 [IMAGE-UTILS] Localhost URL transformed:', result);
-    }
-  }
-  // Handle http://localhost:3000 specifically
-  else if (baseUrl.startsWith('http://localhost:3000')) {
-    result = baseUrl.replace('http://localhost:3000', API_BASE_URL);
-    console.log('🔗 [IMAGE-UTILS] localhost:3000 transformed:', result);
-  }
-  // Handle http://localhost (without port)
-  else if (baseUrl.startsWith('http://localhost')) {
-    result = baseUrl.replace(/http:\/\/localhost(:\d+)?/, API_BASE_URL);
-    console.log('🔗 [IMAGE-UTILS] localhost transformed:', result);
-  }
-  // If it's just the path without leading slash
+  // If it's a relative path starting with uploads/ (no leading slash)
   else if (baseUrl.startsWith('uploads/')) {
     result = `${API_BASE_URL}/${baseUrl}`;
-    console.log('🔗 [IMAGE-UTILS] uploads path transformed:', result);
+    console.log('🔗 [IMAGE-UTILS] Relative uploads path transformed:', result);
   }
-  // If it's an external URL (https://...), return as-is
-  else if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
-    console.log('🔗 [IMAGE-UTILS] External URL unchanged:', baseUrl);
-    result = baseUrl;
+  // If it's already a full URL (external like ui-avatars, google, etc.) 
+  else if (baseUrl.startsWith('http')) {
+    // If it's our own API but maybe missing a slash or something, keep it but ensure it's correct
+    if (baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) {
+      // Should have been caught by the /uploads/ check above, but as a fallback:
+      const parts = baseUrl.split('://')[1].split('/');
+      const path = parts.slice(1).join('/');
+      result = `${API_BASE_URL}/${path}`;
+      console.log('🔗 [IMAGE-UTILS] Localhost URL fallback transform:', result);
+    } else {
+      console.log('🔗 [IMAGE-UTILS] External URL unchanged:', baseUrl);
+      result = baseUrl;
+    }
   }
-  // Default: assume it's a relative path
-  else {
-    result = `${API_BASE_URL}/${baseUrl}`;
-    console.log('🔗 [IMAGE-UTILS] Default transform:', result);
+  // Default: assume it's a relative path if it's not empty
+  else if (baseUrl.trim().length > 0) {
+    result = `${API_BASE_URL}/${baseUrl.startsWith('/') ? baseUrl.slice(1) : baseUrl}`;
+    console.log('🔗 [IMAGE-UTILS] Default transform (relative):', result);
   }
 
   // Re-add existing query params if any
   if (existingParams) {
     result = `${result}?${existingParams}`;
   }
-  
+
   // Add cache buster if requested and not already present
   if (addCacheBuster && !result.includes('?t=')) {
     const separator = result.includes('?') ? '&' : '?';
@@ -113,7 +102,7 @@ export function getCommunityImageUrl(community: {
   photo_de_couverture?: string;
 } | null | undefined): string {
   if (!community) return '';
-  
+
   const imageUrl = community.image || community.logo || community.coverImage || community.photo_de_couverture;
   return getImageUrl(imageUrl);
 }

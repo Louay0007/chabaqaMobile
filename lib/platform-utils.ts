@@ -41,8 +41,9 @@ export const PlatformUtils = {
       // Android emulator uses 10.0.2.2 to access host machine
       return 'http://10.0.2.2:3000';
     } else {
-      // iOS simulator can use localhost
-      return 'http://localhost:3000';
+      // iOS simulator needs the computer's IP address instead of localhost
+      // For development, use the IP from .env or fallback to a common local IP
+      return 'http://192.168.1.16:3000';
     }
   },
 

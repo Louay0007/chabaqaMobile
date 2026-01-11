@@ -6,13 +6,17 @@ import { Camera, ImagePlus, X } from 'lucide-react-native';
 import styles from '../styles';
 import CameraIcon from './icons/CameraIcon';
 
-interface UploadImageProps {
+interface UploadCoverImageProps {
   selectedImage: string | null;
   handleImagePicker: (imageUri: string) => void;
   title?: string;
 }
 
-const UploadImage: React.FC<UploadImageProps> = ({ selectedImage, handleImagePicker, title = "Add community photo" }) => {
+const UploadCoverImage: React.FC<UploadCoverImageProps> = ({ 
+  selectedImage, 
+  handleImagePicker, 
+  title = "Add cover image" 
+}) => {
   const [showImagePicker, setShowImagePicker] = useState(false);
 
   const handleTakePhoto = async () => {
@@ -25,7 +29,7 @@ const UploadImage: React.FC<UploadImageProps> = ({ selectedImage, handleImagePic
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect: [16, 9], // Cover image aspect ratio
       quality: 0.8,
     });
 
@@ -45,7 +49,7 @@ const UploadImage: React.FC<UploadImageProps> = ({ selectedImage, handleImagePic
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect: [16, 9], // Cover image aspect ratio
       quality: 0.8,
     });
 
@@ -57,17 +61,51 @@ const UploadImage: React.FC<UploadImageProps> = ({ selectedImage, handleImagePic
 
   return (
     <>
-      <View style={styles.photoUploadContainer}>
+      <View style={coverStyles.coverUploadContainer}>
+        <Text style={coverStyles.coverUploadLabel}>{title}</Text>
         <TouchableOpacity 
-          style={styles.photoUploadButton} 
+          style={[
+            coverStyles.coverUploadButton,
+            selectedImage && { borderColor: '#8e78fb', borderStyle: 'solid' }
+          ]} 
           onPress={() => setShowImagePicker(true)}
           activeOpacity={0.8}
         >
-          <LinearGradient colors={['#8e78fb', '#47c7ea']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.photoUploadGradient}>
-            {selectedImage ? <Image source={{ uri: selectedImage }} style={styles.selectedImage} /> : <CameraIcon />}
-          </LinearGradient>
+          {selectedImage ? (
+            <View style={{ position: 'relative', width: '100%', height: '100%' }}>
+              <Image 
+                source={{ uri: selectedImage }} 
+                style={coverStyles.selectedCoverImage}
+                resizeMode="cover"
+              />
+              {/* Edit overlay */}
+              <View style={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                borderRadius: 16,
+                padding: 6,
+                width: 28,
+                height: 28,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <Text style={{ color: 'white', fontSize: 12 }}>✏️</Text>
+              </View>
+            </View>
+          ) : (
+            <LinearGradient 
+              colors={['#8e78fb', '#47c7ea']} 
+              start={{ x: 0, y: 0 }} 
+              end={{ x: 1, y: 0 }} 
+              style={coverStyles.coverUploadGradient}
+            >
+              <CameraIcon />
+              <Text style={coverStyles.coverUploadText}>Tap to add cover image</Text>
+            </LinearGradient>
+          )}
         </TouchableOpacity>
-        <Text style={styles.photoUploadText}>{title}</Text>
       </View>
 
       {/* Image Picker Modal */}
@@ -107,6 +145,45 @@ const UploadImage: React.FC<UploadImageProps> = ({ selectedImage, handleImagePic
   );
 };
 
+const coverStyles = StyleSheet.create({
+  coverUploadContainer: {
+    marginBottom: 8,
+  },
+  coverUploadLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  coverUploadButton: {
+    width: '100%',
+    height: 120,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(142, 120, 251, 0.2)',
+    borderStyle: 'dashed',
+    backgroundColor: 'rgba(142, 120, 251, 0.05)',
+  },
+  coverUploadGradient: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  selectedCoverImage: {
+    width: '100%',
+    height: '100%',
+  },
+  coverUploadText: {
+    fontSize: 12,
+    color: 'white',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+});
+
 const modalStyles = StyleSheet.create({
   bottomModalOverlay: {
     flex: 1,
@@ -142,4 +219,4 @@ const modalStyles = StyleSheet.create({
   },
 });
 
-export default UploadImage;
+export default UploadCoverImage;

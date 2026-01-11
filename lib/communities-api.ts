@@ -12,20 +12,67 @@ import { getImageUrl } from './image-utils';
  */
 function transformCommunityImages(community: any): any {
   if (!community) return community;
+
+  // Helper to check if URL is a placeholder
+  const isPlaceholderUrl = (url: string | null | undefined): boolean => {
+    if (!url || typeof url !== 'string') return true;
+    return url.includes('placeholder') || url.includes('placehold.co') || url.includes('placehold.it') || url.includes('via.placeholder');
+  };
+
+  // Helper to extract creator avatar from various field names
+  const getCreatorAvatarUrl = (creatorObj: any, source: string): string | null => {
+    if (!creatorObj || typeof creatorObj !== 'object') {
+      return null;
+    }
+
+    // Try all possible field names for profile picture
+    const rawUrl = creatorObj.avatar || creatorObj.profile_picture || creatorObj.photo_profil;
+
+    // Skip placeholder URLs - return null so Avatar component shows fallback
+    if (isPlaceholderUrl(rawUrl)) {
+      return null;
+    }
+
+    const transformed = getImageUrl(rawUrl);
+    console.log(`👤 [TRANSFORM] ${source}: Transformed URL:`, transformed);
+    return transformed;
+  };
+
+  // Get the creator avatar from the populated creator/createur object or direct field
+  console.log(`\n🔍 [TRANSFORM] Processing community: ${community.name || community.slug}`);
+
+  const creatorAvatarFromCreator = getCreatorAvatarUrl(community.creator, 'creator');
+  const creatorAvatarFromCreateur = getCreatorAvatarUrl(community.createur, 'createur');
+
+  // Check direct creatorAvatar field
+  let directCreatorAvatar: string | null = null;
+  if (community.creatorAvatar && !isPlaceholderUrl(community.creatorAvatar)) {
+    directCreatorAvatar = getImageUrl(community.creatorAvatar);
+    console.log(`👤 [TRANSFORM] direct creatorAvatar:`, directCreatorAvatar);
+  } else {
+    console.log(`👤 [TRANSFORM] direct creatorAvatar: null or placeholder`);
+  }
+
+  // Use the first available avatar with proper fallback chain
+  const finalCreatorAvatar = creatorAvatarFromCreator || creatorAvatarFromCreateur || directCreatorAvatar;
+  console.log(`👤 [TRANSFORM] Final avatar:`, finalCreatorAvatar || '(empty - will use fallback)');
+
   return {
     ...community,
     logo: getImageUrl(community.logo),
     coverImage: getImageUrl(community.coverImage),
     image: getImageUrl(community.image),
     photo_de_couverture: getImageUrl(community.photo_de_couverture),
-    creatorAvatar: getImageUrl(community.creatorAvatar),
+    creatorAvatar: finalCreatorAvatar,
     creator: community.creator && typeof community.creator === 'object' ? {
       ...community.creator,
-      avatar: getImageUrl(community.creator.avatar),
+      avatar: creatorAvatarFromCreator,
+      profile_picture: creatorAvatarFromCreator,
     } : community.creator,
     createur: community.createur && typeof community.createur === 'object' ? {
       ...community.createur,
-      avatar: getImageUrl(community.createur.avatar),
+      avatar: creatorAvatarFromCreateur,
+      profile_picture: creatorAvatarFromCreateur,
     } : community.createur,
   };
 }

@@ -9,10 +9,11 @@ const { width, height } = Dimensions.get('window');
 interface SuccessProps {
   communityName?: string;
   communityImage?: string | null;
+  communityCoverImage?: string | null;
   onGoToCommunities: () => void;
 }
 
-const Success = ({ communityName = "Your Community", communityImage, onGoToCommunities }: SuccessProps) => {
+const Success = ({ communityName = "Your Community", communityImage, communityCoverImage, onGoToCommunities }: SuccessProps) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
@@ -53,7 +54,29 @@ const Success = ({ communityName = "Your Community", communityImage, onGoToCommu
           transform: [{ scale: scaleAnim }],
         }}
       >
-          {/* Community Image */}
+          {/* Cover Image (if available) */}
+          {communityCoverImage && (
+            <View
+              style={{
+                width: '100%',
+                height: 120,
+                borderRadius: 16,
+                marginBottom: 20,
+                overflow: 'hidden',
+              }}
+            >
+              <Image
+                source={{ uri: communityCoverImage }}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                }}
+                resizeMode="cover"
+              />
+            </View>
+          )}
+
+          {/* Community Logo */}
           <View
             style={{
               width: 120,

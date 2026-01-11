@@ -17,6 +17,7 @@ import PlatformUtils from '@/lib/platform-utils';
 import { useAdaptiveColors } from '@/hooks/useAdaptiveColors';
 import { ExploreData } from '@/lib/data-communities';
 import { getCommunities, Community } from '@/lib/communities-api';
+import { getImageUrl } from '@/lib/image-utils';
 import { communityStyles } from './_styles';
 import CommunityCard from './_components/_ComponentCard';
 import SearchBar from './_components/SearchBar';
@@ -63,30 +64,41 @@ export default function CommunitiesScreen() {
 
         // Transform backend data to match frontend format
         const transformedCommunities = response.data.map((community: any) => {
-          // Helper to fix URLs
-          const fixUrl = (url: string | null | undefined) => {
-            if (!url) return null;
-            const apiBase = PlatformUtils.getApiUrl();
-            if (url.startsWith('http')) {
-              return url.replace('http://localhost:3000', apiBase)
-                .replace('http://127.0.0.1:3000', apiBase);
-            }
-            return `${apiBase}${url.startsWith('/') ? '' : '/'}${url}`;
-          };
-
-          // Extract creator info
+          // Extract creator info with better fallback logic
           let creatorName = 'Unknown Creator';
           let rawCreatorAvatar = null;
 
           if (typeof community.creator === 'object' && community.creator !== null) {
+            // Creator is populated object
             creatorName = community.creator.name || 'Unknown Creator';
-            rawCreatorAvatar = community.creator.avatar;
+            rawCreatorAvatar = community.creator.avatar || community.creator.profile_picture || community.creator.photo_profil;
+          } else if (typeof community.createur === 'object' && community.createur !== null) {
+            // Backend uses 'createur' field (populated)
+            creatorName = community.createur.name || 'Unknown Creator';
+            rawCreatorAvatar = community.createur.profile_picture || community.createur.photo_profil || community.createur.avatar;
           } else if (typeof community.creator === 'string') {
+            // Creator is just a string name
             creatorName = community.creator;
+            rawCreatorAvatar = community.creatorAvatar;
+          } else {
+            // Fallback to direct fields
+            creatorName = community.creatorName || 'Unknown Creator';
             rawCreatorAvatar = community.creatorAvatar;
           }
 
-          const creatorAvatar = fixUrl(rawCreatorAvatar) || `https://placehold.co/64x64?text=${creatorName.charAt(0)}`;
+          // Transform creator avatar URL with proper fallback
+          let creatorAvatar = '';
+          if (rawCreatorAvatar && rawCreatorAvatar.trim()) {
+            const isPlaceholderAvatar = (url: string) => {
+              return url.includes('placeholder') || url.includes('placehold.co') || url.includes('placehold.it');
+            };
+
+            if (!isPlaceholderAvatar(rawCreatorAvatar)) {
+              // Use the already transformed URL if available, or transform it now
+              creatorAvatar = getImageUrl(rawCreatorAvatar);
+            }
+          }
+          // Empty string lets Avatar component show the colored initial fallback
 
           // Map category images based on category name
           const getCategoryImage = (category: string) => {
@@ -111,13 +123,23 @@ export default function CommunitiesScreen() {
           };
 
           if (rawImageUrl && rawImageUrl.trim() && !isPlaceholderUrl(rawImageUrl)) {
-            // If we have a valid non-placeholder URL, fix it and use it
-            const fixedUrl = fixUrl(rawImageUrl);
-            finalImageUrl = fixedUrl || getCategoryImage(community.category || 'General');
+            // Use getImageUrl to handle all URL inconsistencies
+            finalImageUrl = getImageUrl(rawImageUrl);
           } else {
             // If no URL, placeholder URL, or mobile can't access it, use category fallback
             finalImageUrl = getCategoryImage(community.category || 'General');
           }
+
+          // DEBUG: Log creator data
+          console.log('👤 [CREATOR DEBUG]', {
+            communityName: community.name,
+            creator: community.creator,
+            createur: community.createur,
+            creatorAvatar: community.creatorAvatar,
+            rawCreatorAvatar,
+            finalCreatorAvatar: creatorAvatar,
+            creatorName
+          });
 
           // DEBUG: Log image data
           console.log('🖼️ [IMAGE DEBUG]', {

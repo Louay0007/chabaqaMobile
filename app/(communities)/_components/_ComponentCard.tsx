@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import React from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { communityStyles } from '../_styles';
+import Avatar from './Avatar';
 
 interface CommunityCardProps {
   community: {
@@ -124,20 +125,6 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
                   console.log('   Error:', error.nativeEvent.error);
                 }}
               />
-              {/* DEBUG BADGE - Remove before production */}
-              <View style={{
-                position: 'absolute',
-                top: 5,
-                left: 5,
-                backgroundColor: typeof community.image === 'string' ? 'rgba(0, 255, 0, 0.7)' : 'rgba(255, 165, 0, 0.7)',
-                padding: 4,
-                borderRadius: 4,
-                zIndex: 10
-              }}>
-                <Text style={{ fontSize: 10, color: 'white', fontWeight: 'bold' }}>
-                  {typeof community.image === 'string' ? 'REMOTE' : 'LOCAL'}
-                </Text>
-              </View>
 
               {/* Overlay Gradient */}
               <View style={communityStyles.imageOverlay} />
@@ -174,9 +161,11 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
 
                 {/* Creator */}
                 <View style={communityStyles.creatorRow}>
-                  <Image
-                    source={{ uri: community.creatorAvatar }}
-                    style={communityStyles.communityCardCreatorAvatar}
+                  <Avatar
+                    uri={community.creatorAvatar}
+                    name={community.creator}
+                    size={24}
+                    style={{ marginRight: 8 }}
                   />
                   <Text style={communityStyles.creatorText}>
                     by <Text style={communityStyles.communityCardCreatorName}>{community.creator}</Text>
@@ -263,20 +252,6 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
               console.log('   Error:', error.nativeEvent.error);
             }}
           />
-          {/* DEBUG BADGE - Remove before production */}
-          <View style={{
-            position: 'absolute',
-            top: 5,
-            left: 5,
-            backgroundColor: typeof community.image === 'string' ? 'rgba(0, 255, 0, 0.7)' : 'rgba(255, 165, 0, 0.7)',
-            padding: 4,
-            borderRadius: 4,
-            zIndex: 10
-          }}>
-            <Text style={{ fontSize: 10, color: 'white', fontWeight: 'bold' }}>
-              {typeof community.image === 'string' ? 'REMOTE' : 'LOCAL'}
-            </Text>
-          </View>
 
           {/* Overlay */}
           <View style={communityStyles.gridImageOverlay} />
@@ -302,9 +277,11 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
 
           {/* Creator */}
           <View style={communityStyles.gridCreatorRow}>
-            <Image
-              source={{ uri: community.creatorAvatar }}
-              style={communityStyles.gridCreatorAvatar}
+            <Avatar
+              uri={community.creatorAvatar}
+              name={community.creator}
+              size={20}
+              style={{ marginRight: 6 }}
             />
             <Text style={communityStyles.gridCreatorText}>
               by <Text style={communityStyles.communityCardCreatorName}>{community.creator}</Text>

@@ -632,6 +632,7 @@ export const communityStyles = StyleSheet.create({
     marginRight: spacing.sm,
     borderWidth: 1,
     borderColor: colors.primaryBorder,
+    backgroundColor: colors.gray100, // Fallback background
   },
 
   creatorText: {
@@ -887,6 +888,7 @@ export const communityStyles = StyleSheet.create({
     marginRight: 6,
     borderWidth: 1,
     borderColor: '#e2e8f0',
+    backgroundColor: colors.gray100, // Fallback background
   },
 
   gridCreatorText: {

@@ -31,11 +31,13 @@ type CommunityFormData = {
     linkedin: string;
     website: string;
   };
+  coverImage?: string; // Add cover image field
 };
 
 export default function BuildCommunityScreen() {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedCoverImage, setSelectedCoverImage] = useState<string | null>(null); // Add cover image state
   const [formData, setFormData] = useState<CommunityFormData>({
     name: '',
     bio: '',
@@ -45,6 +47,7 @@ export default function BuildCommunityScreen() {
     feeAmount: '0',
     currency: 'USD',
     socialLinks: { instagram: '', tiktok: '', facebook: '', youtube: '', linkedin: '', website: '' },
+    coverImage: '', // Initialize cover image
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -104,10 +107,19 @@ export default function BuildCommunityScreen() {
 
   const canContinue = () => {
     switch (currentStep) {
-      case 1: return formData.name.trim() !== '' && formData.country.trim() !== '';
-      case 2: return formData.joinFee === 'paid' ? formData.feeAmount && parseFloat(formData.feeAmount) > 0 : true;
-      case 3: return Object.values(formData.socialLinks).some(link => link.trim() !== '') && Object.keys(socialLinkErrors).length === 0;
-      default: return false;
+      case 1: 
+        return formData.name.trim() !== '' && formData.country.trim() !== '';
+      case 2: 
+        return formData.joinFee === 'paid' ? formData.feeAmount && parseFloat(formData.feeAmount) > 0 : true;
+      case 3: {
+        // Check if at least one social link is provided and no validation errors
+        const hasAtLeastOneLink = Object.values(formData.socialLinks).some(link => link.trim() !== '');
+        const hasNoErrors = Object.keys(socialLinkErrors).length === 0;
+        console.log('🔍 Step 3 validation:', { hasAtLeastOneLink, hasNoErrors, socialLinks: formData.socialLinks });
+        return hasAtLeastOneLink && hasNoErrors;
+      }
+      default: 
+        return false;
     }
   };
 
@@ -118,13 +130,42 @@ export default function BuildCommunityScreen() {
     setIsSubmitting(true);
     setError('');
     try {
-      const dataToSubmit = { ...formData, feeAmount: formData.joinFee === 'paid' ? formData.feeAmount : '0' };
-      const result = await createCommunityAction(dataToSubmit);
+      // Validate that at least one social link is provided
+      const hasAtLeastOneLink = Object.values(formData.socialLinks).some(link => link.trim() !== '');
+      if (!hasAtLeastOneLink) {
+        setError('Au moins un lien social est requis pour créer une communauté');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const dataToSubmit = { 
+        ...formData, 
+        feeAmount: formData.joinFee === 'paid' ? formData.feeAmount : '0' 
+      };
+      
+      console.log('📤 Données à envoyer:', JSON.stringify(dataToSubmit, null, 2));
+      
+      const result = await createCommunityAction(dataToSubmit, selectedImage || undefined, selectedCoverImage || undefined);
+      
       if (result.success) {
+        console.log('✅ Communauté créée avec succès:', result);
         setSuccess(true);
-        setTimeout(() => router.push('/(tabs)'), 2000);
-      } else setError(result.error || "Une erreur s'est produite");
+        // Navigate after a short delay to show success message
+        setTimeout(() => {
+          try {
+            router.push('/(communities)');
+          } catch (error) {
+            console.log('Navigation error:', error);
+            // Fallback navigation
+            router.replace('/');
+          }
+        }, 2000);
+      } else {
+        console.error('❌ Erreur lors de la création:', result.error);
+        setError(result.error || "Une erreur s'est produite");
+      }
     } catch (error) {
+      console.error('💥 Exception lors de la création:', error);
       setError('Erreur de connexion. Veuillez réessayer.');
     } finally {
       setIsSubmitting(false);
@@ -133,6 +174,11 @@ export default function BuildCommunityScreen() {
 
   const handleImagePicker = (imageUri: string) => {
     setSelectedImage(imageUri);
+  };
+
+  const handleCoverImagePicker = (imageUri: string) => {
+    setSelectedCoverImage(imageUri);
+    updateFormData('coverImage', imageUri);
   };
 
   return (
@@ -153,7 +199,7 @@ export default function BuildCommunityScreen() {
               <View style={styles.form}>
                 {error ? <Text style={styles.errorText}>{error}</Text> : null}
                 <Stepper currentStep={currentStep} />
-                {currentStep === 1 && <StepOne formData={formData} updateFormData={updateFormData} selectedImage={selectedImage} handleImagePicker={handleImagePicker} />}
+                {currentStep === 1 && <StepOne formData={formData} updateFormData={updateFormData} selectedImage={selectedImage} handleImagePicker={handleImagePicker} selectedCoverImage={selectedCoverImage} handleCoverImagePicker={handleCoverImagePicker} />}
                 {currentStep === 2 && <StepTwo formData={formData} updateFormData={updateFormData} selectedCurrency={selectedCurrency} setSelectedCurrency={setSelectedCurrency} showCurrencyModal={showCurrencyModal} setShowCurrencyModal={setShowCurrencyModal} currencies={currencies} />}
                 {currentStep === 3 && <StepThree formData={formData} updateFormData={updateFormData} socialLinkErrors={socialLinkErrors} />}
                 <View style={styles.navigation}>
@@ -182,11 +228,12 @@ export default function BuildCommunityScreen() {
               <Success 
                 communityName={formData.name}
                 communityImage={selectedImage}
+                communityCoverImage={selectedCoverImage}
                 onGoToCommunities={() => {
                   // Use setTimeout to ensure navigation happens after component is fully mounted
                   setTimeout(() => {
                     try {
-                      router.push('/(tabs)');
+                      router.push('/(communities)');
                     } catch (error) {
                       console.log('Navigation error:', error);
                       // Fallback navigation
