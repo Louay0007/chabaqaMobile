@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Image, View, Text, StyleSheet } from 'react-native';
 import { colors } from '@/lib/design-tokens';
 
@@ -24,6 +24,12 @@ const Avatar: React.FC<AvatarProps> = ({
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Reset state when URI changes
+  useEffect(() => {
+    setImageError(false);
+    setIsLoading(true);
+  }, [uri]);
+
   const avatarStyle = {
     width: size,
     height: size,
@@ -31,7 +37,7 @@ const Avatar: React.FC<AvatarProps> = ({
     borderWidth,
     borderColor,
     backgroundColor,
-    overflow: 'hidden' as const, // Ensure image doesn't overflow
+    overflow: 'hidden' as const,
     ...style,
   };
 
@@ -42,7 +48,7 @@ const Avatar: React.FC<AvatarProps> = ({
   };
 
   const textStyle = {
-    fontSize: Math.max(size * 0.4, 8), // Minimum 8px font size
+    fontSize: Math.max(size * 0.4, 8),
     fontWeight: '600' as const,
     color: '#ffffff',
     textAlign: 'center' as const,
@@ -51,7 +57,7 @@ const Avatar: React.FC<AvatarProps> = ({
   // Generate a consistent color based on name
   const getBackgroundColor = (name: string) => {
     const colors = [
-      '#8e78fb', '#3b82f6', '#10b981', '#f59e0b', 
+      '#8e78fb', '#3b82f6', '#10b981', '#f59e0b',
       '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16',
       '#f97316', '#ec4899', '#6366f1', '#14b8a6'
     ];
@@ -68,7 +74,7 @@ const Avatar: React.FC<AvatarProps> = ({
   if (showFallback) {
     const initial = name.charAt(0).toUpperCase() || '?';
     const bgColor = getBackgroundColor(name);
-    
+
     return (
       <View style={[fallbackStyle, { backgroundColor: bgColor }]}>
         <Text style={textStyle}>{initial}</Text>
@@ -81,15 +87,10 @@ const Avatar: React.FC<AvatarProps> = ({
       source={{ uri }}
       style={avatarStyle}
       onError={() => {
-        console.log('❌ [AVATAR] Failed to load image:', uri);
         setImageError(true);
       }}
       onLoad={() => {
         setIsLoading(false);
-      }}
-      onLoadStart={() => {
-        setIsLoading(true);
-        setImageError(false);
       }}
       resizeMode="cover"
     />
