@@ -1,7 +1,7 @@
 import { tryEndpoints } from './http';
 import { getAccessToken, User } from './auth';
 import { getCurrentUser } from './user-api';
-import { getMyJoinedCommunities, Community } from './communities-api';
+import { getImageUrl } from './image-utils';
 
 /**
  * 👤 Profile API Client
@@ -12,10 +12,8 @@ import { getMyJoinedCommunities, Community } from './communities-api';
 
 export interface UserStats {
   communitiesJoined: number;
-  coursesCompleted: number;
-  challengesCompleted: number;
-  totalPoints?: number;
-  badgesEarned?: number;
+  coursesEnrolled: number;
+  challengesParticipating: number;
 }
 
 export interface UserActivity {
@@ -24,8 +22,19 @@ export interface UserActivity {
   title: string;
   description: string;
   timestamp: string;
-  relatedId?: string; // ID of related community, course, etc.
-  metadata?: any; // Additional activity-specific data
+  relatedId?: string;
+  metadata?: any;
+}
+
+export interface Community {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  image?: string;
+  logo?: string;
+  coverImage?: string;
+  membersCount?: number;
 }
 
 export interface ProfileData {
@@ -35,284 +44,256 @@ export interface ProfileData {
   recentActivities: UserActivity[];
 }
 
-export interface CourseProgress {
-  id: string;
-  courseId: string;
-  courseName: string;
-  progress: number; // 0-100
-  completedAt?: string;
-  lastAccessedAt: string;
-}
-
-export interface Challenge {
-  id: string;
-  title: string;
-  description: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  points: number;
-  completedAt?: string;
-  status: 'not_started' | 'in_progress' | 'completed';
-}
-
 // ==================== API FUNCTIONS ====================
 
 /**
+ * Get user's joined communities count
+ * Uses: GET /api/community-aff-crea-join/my-joined
+ */
+const getCommunitiesCount = async (accessToken: string): Promise<number> => {
+  try {
+    const resp = await tryEndpoints<any>(
+      '/api/community-aff-crea-join/my-joined',
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        timeout: 10000,
+      }
+    );
+    const communities = resp.data?.communities || resp.data?.data || [];
+    return communities.length;
+  } catch (error) {
+    console.log('⚠️ [PROFILE-API] Could not get communities count');
+    return 0;
+  }
+};
+
+/**
+ * Get user's enrolled courses count
+ * Uses: GET /api/cours/user/mes-cours
+ */
+const getCoursesCount = async (accessToken: string): Promise<number> => {
+  try {
+    const resp = await tryEndpoints<any>(
+      '/api/cours/user/mes-cours?page=1&limit=1',
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        timeout: 10000,
+      }
+    );
+    // Response has pagination.total or total field
+    return resp.data?.pagination?.total || resp.data?.total || resp.data?.data?.pagination?.total || 0;
+  } catch (error) {
+    console.log('⚠️ [PROFILE-API] Could not get courses count');
+    return 0;
+  }
+};
+
+/**
+ * Get user's challenge participations count
+ * Uses: GET /api/challenges/user/my-participations
+ */
+const getChallengesCount = async (accessToken: string): Promise<number> => {
+  try {
+    const resp = await tryEndpoints<any>(
+      '/api/challenges/user/my-participations?status=all',
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        timeout: 10000,
+      }
+    );
+    // Response has data.total or data.participations.length
+    return resp.data?.data?.total || resp.data?.data?.participations?.length || resp.data?.total || 0;
+  } catch (error) {
+    console.log('⚠️ [PROFILE-API] Could not get challenges count');
+    return 0;
+  }
+};
+
+/**
+ * Get user's joined communities list
+ * Uses: GET /api/community-aff-crea-join/my-joined
+ */
+const getJoinedCommunities = async (accessToken: string): Promise<Community[]> => {
+  try {
+    const resp = await tryEndpoints<any>(
+      '/api/community-aff-crea-join/my-joined',
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        timeout: 10000,
+      }
+    );
+    return resp.data?.communities || resp.data?.data || [];
+  } catch (error) {
+    console.log('⚠️ [PROFILE-API] Could not get joined communities');
+    return [];
+  }
+};
+
+/**
+ * Generate recent activities based on user data
+ * Since there's no dedicated activities API, we'll create activities from user's data
+ */
+const generateRecentActivities = async (accessToken: string, userData: any): Promise<UserActivity[]> => {
+  const activities: UserActivity[] = [];
+  
+  try {
+    // Get joined communities and create activities
+    const communities = await getJoinedCommunities(accessToken);
+    communities.slice(0, 3).forEach((community, index) => {
+      activities.push({
+        id: `community_${community._id}`,
+        type: 'community_joined',
+        title: 'Joined Community',
+        description: `Joined ${community.name}`,
+        timestamp: new Date(Date.now() - (index + 1) * 24 * 60 * 60 * 1000).toISOString(), // Mock dates
+        relatedId: community._id,
+      });
+    });
+
+    // Get enrolled courses and create activities
+    try {
+      const coursesResp = await tryEndpoints<any>(
+        '/api/cours/user/mes-cours?page=1&limit=3',
+        {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${accessToken}` },
+          timeout: 5000,
+        }
+      );
+      const courses = coursesResp.data?.data?.courses || [];
+      courses.forEach((course: any, index: number) => {
+        activities.push({
+          id: `course_${course._id}`,
+          type: 'course_completed',
+          title: 'Enrolled in Course',
+          description: `Started learning ${course.title}`,
+          timestamp: new Date(Date.now() - (index + 4) * 24 * 60 * 60 * 1000).toISOString(),
+          relatedId: course._id,
+        });
+      });
+    } catch (error) {
+      console.log('⚠️ [PROFILE-API] Could not get courses for activities');
+    }
+
+    // Get challenge participations and create activities
+    try {
+      const challengesResp = await tryEndpoints<any>(
+        '/api/challenges/user/my-participations?status=all',
+        {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${accessToken}` },
+          timeout: 5000,
+        }
+      );
+      const challenges = challengesResp.data?.data?.participations || [];
+      challenges.slice(0, 2).forEach((participation: any, index: number) => {
+        activities.push({
+          id: `challenge_${participation.challengeId}`,
+          type: 'challenge_completed',
+          title: 'Joined Challenge',
+          description: `Participating in ${participation.challenge?.title || 'Challenge'}`,
+          timestamp: new Date(Date.now() - (index + 7) * 24 * 60 * 60 * 1000).toISOString(),
+          relatedId: participation.challengeId,
+        });
+      });
+    } catch (error) {
+      console.log('⚠️ [PROFILE-API] Could not get challenges for activities');
+    }
+
+    // Sort by timestamp (most recent first)
+    activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    
+    return activities.slice(0, 10); // Return max 10 activities
+  } catch (error) {
+    console.log('⚠️ [PROFILE-API] Error generating activities:', error);
+    return [];
+  }
+};
+
+/**
  * Get comprehensive profile data
- * Fetches user profile, stats, communities, and activities in parallel
  */
 export const getProfileData = async (): Promise<ProfileData> => {
   try {
-    console.log('📆 [PROFILE-API] Fetching comprehensive profile data');
+    console.log('📆 [PROFILE-API] Fetching profile data');
     
-    // Fetch all data in parallel for better performance
-    const [user, stats, joinedCommunities, recentActivities] = await Promise.allSettled([
-      getCurrentUser(),
-      getUserStats(),
-      getMyJoinedCommunities().catch((error) => {
-        console.log('⚠️ [PROFILE-API] getMyJoinedCommunities failed:', error.message);
-        return { data: [] };
-      }),
-      getUserActivities(10) // Get last 10 activities
-    ]);
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      throw new Error('Not authenticated');
+    }
 
-    // Handle results and provide fallbacks with proper null checks
-    console.log('🗑️ [PROFILE-API] Debug Promise.allSettled results:', {
-      user: user.status,
-      stats: stats.status,
-      joinedCommunities: {
-        status: joinedCommunities.status,
-        value: joinedCommunities.status === 'fulfilled' ? joinedCommunities.value : null,
-        reason: joinedCommunities.status === 'rejected' ? joinedCommunities.reason : null
-      },
-      recentActivities: recentActivities.status
-    });
-    
-    const userData = user.status === 'fulfilled' && user.value ? user.value : null;
-    const statsData = stats.status === 'fulfilled' ? stats.value : getDefaultStats();
-    const communitiesData = joinedCommunities.status === 'fulfilled' && joinedCommunities.value && joinedCommunities.value.data 
-      ? joinedCommunities.value.data 
-      : [];
-    const activitiesData = recentActivities.status === 'fulfilled' && recentActivities.value 
-      ? recentActivities.value 
-      : [];
-
+    // Fetch user data first
+    const userData = await getCurrentUser();
     if (!userData) {
       throw new Error('User data not available');
     }
 
-    console.log('✅ [PROFILE-API] Profile data assembled successfully:', {
-      hasUser: !!userData,
-      userName: userData?.name || 'No name',
-      userEmail: userData?.email || 'No email',
-      userBio: userData?.bio || 'No bio',
-      userPhone: userData?.numtel || 'No phone',
-      userCountry: userData?.pays || 'No country',
-      userCity: userData?.ville || 'No city',
-      hasStats: !!statsData,
-      communitiesCount: communitiesData.length,
-      activitiesCount: activitiesData.length
-    });
+    // Fetch stats and activities in parallel
+    const [communitiesCount, coursesCount, challengesCount, joinedCommunities, recentActivities] = await Promise.all([
+      getCommunitiesCount(accessToken),
+      getCoursesCount(accessToken),
+      getChallengesCount(accessToken),
+      getJoinedCommunities(accessToken),
+      generateRecentActivities(accessToken, userData),
+    ]);
+
+    const stats: UserStats = {
+      communitiesJoined: communitiesCount,
+      coursesEnrolled: coursesCount,
+      challengesParticipating: challengesCount,
+    };
+
+    console.log('✅ [PROFILE-API] Stats fetched:', stats);
+    console.log('✅ [PROFILE-API] Activities generated:', recentActivities.length);
+
+    // Transform avatar URL
+    const transformedUser = {
+      ...userData,
+      avatar: getImageUrl(userData.avatar || userData.photo_profil),
+    };
     
     return {
-      user: userData,
-      stats: statsData,
-      joinedCommunities: communitiesData,
-      recentActivities: activitiesData
+      user: transformedUser,
+      stats,
+      joinedCommunities,
+      recentActivities,
     };
   } catch (error: any) {
-    console.error('💥 [PROFILE-API] Error fetching profile data:', error);
+    console.error('💥 [PROFILE-API] Error:', error);
     throw new Error(error.message || 'Failed to fetch profile data');
   }
 };
 
 /**
- * Get user statistics
- * First tries dedicated endpoint, then falls back to calculating from existing data
+ * Get user statistics only
  */
 export const getUserStats = async (): Promise<UserStats> => {
   try {
-    console.log('📈 [PROFILE-API] Fetching user stats');
     const accessToken = await getAccessToken();
-    
     if (!accessToken) {
-      throw new Error('Not authenticated');
+      return { communitiesJoined: 0, coursesEnrolled: 0, challengesParticipating: 0 };
     }
 
-    // Try dedicated stats endpoint first
-    try {
-      const resp = await tryEndpoints<{
-        success: boolean;
-        data: UserStats;
-      }>(
-        '/api/user/stats',
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-          timeout: 15000, // Shorter timeout
-        }
-      );
+    const [communitiesCount, coursesCount, challengesCount] = await Promise.all([
+      getCommunitiesCount(accessToken),
+      getCoursesCount(accessToken),
+      getChallengesCount(accessToken),
+    ]);
 
-      console.log('✅ [PROFILE-API] User stats fetched from dedicated endpoint');
-      return resp.data.data;
-    } catch (statsError) {
-      console.log('⚠️ [PROFILE-API] Stats endpoint not available, calculating from existing data');
-      
-      // Fallback: Calculate stats from existing data sources
-      const [communities] = await Promise.allSettled([
-        getMyJoinedCommunities().catch(() => ({ data: [] }))
-      ]);
-      
-      const communitiesCount = communities.status === 'fulfilled' && communities.value && communities.value.data 
-        ? communities.value.data.length 
-        : 0;
-      
-      const calculatedStats: UserStats = {
-        communitiesJoined: communitiesCount,
-        coursesCompleted: 0, // Will be updated when course endpoints are available
-        challengesCompleted: 0, // Will be updated when challenge endpoints are available
-        totalPoints: 0,
-        badgesEarned: 0,
-      };
-      
-      console.log('✅ [PROFILE-API] Stats calculated from existing data:', calculatedStats);
-      return calculatedStats;
-    }
-  } catch (error: any) {
-    console.error('💥 [PROFILE-API] Error fetching user stats:', error);
-    // Return default stats as fallback
-    return getDefaultStats();
+    return {
+      communitiesJoined: communitiesCount,
+      coursesEnrolled: coursesCount,
+      challengesParticipating: challengesCount,
+    };
+  } catch (error) {
+    console.error('💥 [PROFILE-API] Error fetching stats:', error);
+    return { communitiesJoined: 0, coursesEnrolled: 0, challengesParticipating: 0 };
   }
 };
-
-/**
- * Get user activities
- */
-export const getUserActivities = async (limit: number = 20): Promise<UserActivity[]> => {
-  try {
-    console.log('📋 [PROFILE-API] Fetching user activities');
-    const accessToken = await getAccessToken();
-    
-    if (!accessToken) {
-      console.log('⚠️ [PROFILE-API] No access token, returning empty activities');
-      return [];
-    }
-
-    const resp = await tryEndpoints<{
-      success: boolean;
-      data: UserActivity[];
-    }>(
-      `/api/user/activities?limit=${limit}`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        timeout: 15000, // Shorter timeout
-      }
-    );
-
-    console.log('✅ [PROFILE-API] User activities fetched successfully');
-    return resp.data.data;
-  } catch (error: any) {
-    console.log('⚠️ [PROFILE-API] Activities endpoint not available:', error.message);
-    // Return empty array as fallback - this is expected if endpoint doesn't exist
-    return [];
-  }
-};
-
-/**
- * Get user's course progress
- */
-export const getUserCourseProgress = async (): Promise<CourseProgress[]> => {
-  try {
-    console.log('📚 [PROFILE-API] Fetching user course progress');
-    const accessToken = await getAccessToken();
-    
-    if (!accessToken) {
-      throw new Error('Not authenticated');
-    }
-
-    const resp = await tryEndpoints<{
-      success: boolean;
-      data: CourseProgress[];
-    }>(
-      '/api/user/courses/progress',
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        timeout: 30000,
-      }
-    );
-
-    console.log('✅ [PROFILE-API] Course progress fetched successfully');
-    return resp.data.data;
-  } catch (error: any) {
-    console.error('💥 [PROFILE-API] Error fetching course progress:', error);
-    // Return empty array as fallback
-    return [];
-  }
-};
-
-/**
- * Get user's challenges
- */
-export const getUserChallenges = async (): Promise<Challenge[]> => {
-  try {
-    console.log('🏆 [PROFILE-API] Fetching user challenges');
-    const accessToken = await getAccessToken();
-    
-    if (!accessToken) {
-      throw new Error('Not authenticated');
-    }
-
-    const resp = await tryEndpoints<{
-      success: boolean;
-      data: Challenge[];
-    }>(
-      '/api/user/challenges',
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        timeout: 30000,
-      }
-    );
-
-    console.log('✅ [PROFILE-API] User challenges fetched successfully');
-    return resp.data.data;
-  } catch (error: any) {
-    console.error('💥 [PROFILE-API] Error fetching user challenges:', error);
-    // Return empty array as fallback
-    return [];
-  }
-};
-
-/**
- * Refresh all profile data
- * Clears cache and fetches fresh data
- */
-export const refreshProfileData = async (): Promise<ProfileData> => {
-  console.log('🔄 [PROFILE-API] Refreshing all profile data');
-  return await getProfileData();
-};
-
-// ==================== UTILITY FUNCTIONS ====================
-
-/**
- * Get default stats when API fails
- */
-const getDefaultStats = (): UserStats => ({
-  communitiesJoined: 0,
-  coursesCompleted: 0,
-  challengesCompleted: 0,
-  totalPoints: 0,
-  badgesEarned: 0,
-});
 
 /**
  * Format activity timestamp
@@ -357,15 +338,9 @@ export const getActivityColor = (type: UserActivity['type']): string => {
   }
 };
 
-// ==================== EXPORT ====================
-
 export default {
   getProfileData,
   getUserStats,
-  getUserActivities,
-  getUserCourseProgress,
-  getUserChallenges,
-  refreshProfileData,
   formatActivityTime,
   getActivityIcon,
   getActivityColor,

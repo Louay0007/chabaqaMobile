@@ -1,10 +1,34 @@
 import { tryEndpoints } from './http';
 import { getAccessToken } from './auth';
+import { getImageUrl } from './image-utils';
 
 /**
  * 🏘️ Communities API Client
  * Handles all community-related API calls for discovery and exploration
  */
+
+/**
+ * Transform community object to fix image URLs
+ */
+function transformCommunityImages(community: any): any {
+  if (!community) return community;
+  return {
+    ...community,
+    logo: getImageUrl(community.logo),
+    coverImage: getImageUrl(community.coverImage),
+    image: getImageUrl(community.image),
+    photo_de_couverture: getImageUrl(community.photo_de_couverture),
+    creatorAvatar: getImageUrl(community.creatorAvatar),
+    creator: community.creator && typeof community.creator === 'object' ? {
+      ...community.creator,
+      avatar: getImageUrl(community.creator.avatar),
+    } : community.creator,
+    createur: community.createur && typeof community.createur === 'object' ? {
+      ...community.createur,
+      avatar: getImageUrl(community.createur.avatar),
+    } : community.createur,
+  };
+}
 
 // ==================== INTERFACES ====================
 
@@ -218,7 +242,11 @@ export const getCommunities = async (
       total: resp.data.pagination?.total || resp.data.data?.length || 0,
     });
 
-    return resp.data;
+    // Transform image URLs in the response
+    return {
+      ...resp.data,
+      data: resp.data.data?.map(transformCommunityImages) || [],
+    };
   } catch (error: any) {
     console.error('💥 [COMMUNITIES-API] Error fetching communities:', error);
     throw new Error(error.message || 'Failed to fetch communities');
@@ -245,7 +273,11 @@ export const getCommunityBySlug = async (slug: string): Promise<CommunityRespons
 
     console.log('✅ [COMMUNITIES-API] Community fetched successfully:', resp.data.data?.name || 'Community');
 
-    return resp.data;
+    // Transform image URLs in the response
+    return {
+      ...resp.data,
+      data: transformCommunityImages(resp.data.data),
+    };
   } catch (error: any) {
     console.error('💥 [COMMUNITIES-API] Error fetching community:', error);
     if (error.message?.includes('404')) {
@@ -512,7 +544,11 @@ export const getMyJoinedCommunities = async (): Promise<{
     }
 
     console.log('✅ [COMMUNITIES] Joined communities:', resp.data.data.length);
-    return resp.data;
+    // Transform image URLs in the response
+    return {
+      ...resp.data,
+      data: resp.data.data?.map(transformCommunityImages) || [],
+    };
   } catch (error: any) {
     console.error('💥 [COMMUNITIES] Error fetching joined communities:', error);
     // Return empty array instead of throwing

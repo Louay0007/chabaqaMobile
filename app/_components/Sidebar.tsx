@@ -7,6 +7,7 @@ import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View, Mod
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getMyJoinedCommunities } from '@/lib/communities-api';
 import { logout, getCachedUser } from '@/lib/auth';
+import { getImageUrl } from '@/lib/image-utils';
 
 interface SidebarProps {
   isVisible: boolean;
@@ -231,7 +232,7 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
               }}>
                 {currentUser?.avatar ? (
                   <Image
-                    source={{ uri: currentUser.avatar }}
+                    source={{ uri: getImageUrl(currentUser.avatar) }}
                     style={{ width: 52, height: 52 }}
                   />
                 ) : (
@@ -297,7 +298,7 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
               <View style={{ marginRight: 12 }}>
                 {item.logo ? (
                   <Image
-                    source={{ uri: item.logo }}
+                    source={{ uri: getImageUrl(item.logo) }}
                     style={{ width: 20, height: 20, borderRadius: 4 }}
                   />
                 ) : (
@@ -371,7 +372,7 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
                     <View style={{ marginRight: 12 }}>
                       <Image
                         source={{
-                          uri: community.logo || generateCommunityLogo(community.name, community.category)
+                          uri: getImageUrl(community.logo) || generateCommunityLogo(community.name, community.category)
                         }}
                         style={{
                           width: 20,

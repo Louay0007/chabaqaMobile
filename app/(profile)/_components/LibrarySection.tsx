@@ -13,6 +13,7 @@ import {
 import { useAdaptiveColors } from '@/hooks/useAdaptiveColors';
 import { getMyJoinedCommunities } from '@/lib/communities-api';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '@/lib/design-tokens';
+import { getImageUrl } from '@/lib/image-utils';
 
 export default function LibrarySection() {
   const adaptiveColors = useAdaptiveColors();
@@ -94,7 +95,7 @@ export default function LibrarySection() {
               >
                 {community.coverImage || community.logo ? (
                   <Image
-                    source={{ uri: community.coverImage || community.logo }}
+                    source={{ uri: getImageUrl(community.coverImage || community.logo) }}
                     style={styles.communityImage}
                     resizeMode="cover"
                   />

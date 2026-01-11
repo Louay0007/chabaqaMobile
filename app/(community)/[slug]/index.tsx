@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import JoinCommunityModal from '../_components/modals/JoinCommunityModal';
 import { commonStyles, communityDetailStyles } from '../community-detail-styles';
+import { getImageUrl } from '@/lib/image-utils';
 
 export default function CommunityDetail() {
   const { slug } = useLocalSearchParams();
@@ -98,7 +99,7 @@ export default function CommunityDetail() {
     <ScrollView style={communityDetailStyles.container}>
       {community.coverImage ? (
         <Image
-          source={{ uri: community.coverImage }}
+          source={{ uri: getImageUrl(community.coverImage) }}
           style={communityDetailStyles.coverImage}
         />
       ) : null}
@@ -106,7 +107,7 @@ export default function CommunityDetail() {
       <View style={communityDetailStyles.content}>
         {community.image ? (
           <Image
-            source={{ uri: community.image }}
+            source={{ uri: getImageUrl(community.image) }}
             style={communityDetailStyles.communityLogo}
           />
         ) : null}

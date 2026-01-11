@@ -1,23 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import * as ImagePicker from 'expo-image-picker';
 import {
   ActivityIndicator,
   Image,
   ImageBackground,
-  Platform,
   RefreshControl,
   ScrollView,
-  StatusBar,
   Text,
   TouchableOpacity,
   View,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ThemedText } from '@/_components/ThemedText';
-import { ThemedView } from '@/_components/ThemedView';
 import GlobalBottomNavigation from '../_components/GlobalBottomNavigation';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -25,10 +19,10 @@ import { useAuth } from '@/hooks/use-auth';
 import { useAdaptiveColors } from '@/hooks/useAdaptiveColors';
 import { enhancedStyles } from './_enhanced-styles';
 import LibrarySection from './_components/LibrarySection';
-import { colors } from '@/lib/design-tokens';
 import Sidebar from '../_components/Sidebar';
 import { communityStyles } from '../(communities)/_styles';
-import { getProfileData, ProfileData, UserActivity, formatActivityTime, getActivityIcon, getActivityColor } from '@/lib/profile-api';
+import { getProfileData, ProfileData, formatActivityTime, getActivityIcon, getActivityColor } from '@/lib/profile-api';
+import { getImageUrl } from '@/lib/image-utils';
 
 export default function ProfileScreen() {
   const { user, isAuthenticated } = useAuth();
@@ -40,7 +34,6 @@ export default function ProfileScreen() {
 
   // Real API data state
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadProfileData();
@@ -52,7 +45,6 @@ export default function ProfileScreen() {
       console.log('🔄 [PROFILE] Screen focused, forcing fresh profile data load');
       // Force a fresh load by clearing current data first
       setProfileData(null);
-      setError(null);
       loadProfileData();
     }, [])
   );
@@ -60,7 +52,6 @@ export default function ProfileScreen() {
   const loadProfileData = async () => {
     try {
       setLoading(true);
-      setError(null);
       
       console.log('🔄 [PROFILE] Loading profile data...');
       const data = await getProfileData();
@@ -74,18 +65,8 @@ export default function ProfileScreen() {
         userCountry: data.user?.pays || 'No country',
         userCity: data.user?.ville || 'No city'
       });
-      
-      console.log('📍 [PROFILE] Location data:', {
-        phone: data.user?.numtel,
-        country: data.user?.pays,
-        city: data.user?.ville,
-        willDisplayPhone: !!(data.user?.numtel),
-        willDisplayCountry: !!(data.user?.pays),
-        willDisplayCity: !!(data.user?.ville)
-      });
     } catch (error: any) {
       console.error('💥 [PROFILE] Error loading profile data:', error);
-      setError(error.message || 'Failed to load profile data');
     } finally {
       setLoading(false);
     }
@@ -95,36 +76,6 @@ export default function ProfileScreen() {
     setRefreshing(true);
     await loadProfileData();
     setRefreshing(false);
-  };
-
-  const handlePickImage = async () => {
-    try {
-      // Request permission
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (permissionResult.granted === false) {
-        Alert.alert('Permission Required', 'Permission to access camera roll is required!');
-        return;
-      }
-
-      // Launch image picker
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        // TODO: Upload the image to your backend
-        // For now, just show success message
-        Alert.alert('Success', 'Photo selected! Upload functionality to be implemented.');
-        console.log('Selected image:', result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image');
-    }
   };
 
   // Function to get tab colors based on tab type
@@ -228,8 +179,15 @@ export default function ProfileScreen() {
             {/* Avatar with Glow Effect */}
             <View style={enhancedStyles.avatarContainer}>
               <View style={enhancedStyles.avatarGlow}>
-                {(profileData?.user?.avatar || user?.avatar) ? (
-                  <Image source={{ uri: profileData?.user?.avatar || user?.avatar }} style={enhancedStyles.avatar} />
+                {(profileData?.user?.avatar || profileData?.user?.photo_profil || user?.avatar) ? (
+                  <Image 
+                    source={{ uri: getImageUrl(profileData?.user?.avatar || profileData?.user?.photo_profil || user?.avatar, true) }} 
+                    style={enhancedStyles.avatar}
+                    onError={(e) => {
+                      console.log('❌ [PROFILE] Avatar image failed to load:', getImageUrl(profileData?.user?.avatar || profileData?.user?.photo_profil || user?.avatar));
+                    }}
+                    defaultSource={require('@/assets/images/logo_chabaqa.png')}
+                  />
                 ) : (
                   <View style={[enhancedStyles.avatar, enhancedStyles.avatarPlaceholder]}>
                     <LinearGradient
@@ -241,13 +199,6 @@ export default function ProfileScreen() {
                   </View>
                 )}
               </View>
-              {/* Edit Avatar Badge */}
-              <TouchableOpacity 
-                style={enhancedStyles.editAvatarBadge}
-                onPress={handlePickImage}
-              >
-                <Ionicons name="camera" size={14} color="#fff" />
-              </TouchableOpacity>
             </View>
 
             {/* User Info */}
@@ -278,7 +229,7 @@ export default function ProfileScreen() {
                   <View style={[enhancedStyles.statIcon, { backgroundColor: '#47c7ea' }]}>
                     <Ionicons name="school" size={18} color="#fff" />
                   </View>
-                  <Text style={enhancedStyles.statValue}>{profileData?.stats?.coursesCompleted || 0}</Text>
+                  <Text style={enhancedStyles.statValue}>{profileData?.stats?.coursesEnrolled || 0}</Text>
                   <Text style={enhancedStyles.statLabel}>Courses</Text>
                 </View>
               </View>
@@ -288,7 +239,7 @@ export default function ProfileScreen() {
                   <View style={[enhancedStyles.statIcon, { backgroundColor: '#ff9b28' }]}>
                     <Ionicons name="trophy" size={18} color="#fff" />
                   </View>
-                  <Text style={enhancedStyles.statValue}>{profileData?.stats?.challengesCompleted || 0}</Text>
+                  <Text style={enhancedStyles.statValue}>{profileData?.stats?.challengesParticipating || 0}</Text>
                   <Text style={enhancedStyles.statLabel}>Challenges</Text>
                 </View>
               </View>
@@ -299,7 +250,7 @@ export default function ProfileScreen() {
         {/* Modern Action Buttons */}
         <View style={enhancedStyles.actionsContainer}>
           <TouchableOpacity
-            style={enhancedStyles.actionButtonPrimary}
+            style={[enhancedStyles.actionButtonPrimary, { flex: 1 }]}
             onPress={() => router.push('/(profile)/edit')}
           >
             <LinearGradient
@@ -311,14 +262,6 @@ export default function ProfileScreen() {
               <Ionicons name="pencil" size={18} color="#fff" />
               <Text style={enhancedStyles.actionButtonPrimaryText}>Edit Profile</Text>
             </LinearGradient>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={enhancedStyles.actionButtonSecondary}
-            onPress={() => {}}
-          >
-            <Ionicons name="share-social" size={16} color="#8e78fb" />
-            <Text style={enhancedStyles.actionButtonSecondaryText}>Share</Text>
           </TouchableOpacity>
         </View>
 
