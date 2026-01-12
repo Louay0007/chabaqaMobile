@@ -18,6 +18,10 @@ interface StepThreeProps {
       youtube: string;
       linkedin: string;
       website: string;
+      twitter?: string;
+      discord?: string;
+      behance?: string;
+      github?: string;
     };
   };
   updateFormData: (field: string, value: string) => void;
@@ -28,6 +32,10 @@ interface StepThreeProps {
     youtube?: string;
     linkedin?: string;
     website?: string;
+    twitter?: string;
+    discord?: string;
+    behance?: string;
+    github?: string;
   };
 }
 
@@ -66,6 +74,30 @@ const StepThree = ({ formData, updateFormData, socialLinkErrors }: StepThreeProp
         <TextInput style={[styles.socialInput, socialLinkErrors.website && styles.inputError]} value={formData.socialLinks.website} onChangeText={text => updateFormData('socialLinks.website', text)} placeholder="Your website URL" placeholderTextColor="#9CA3AF" />
       </View>
       {socialLinkErrors.website && <Text style={styles.errorText}>{socialLinkErrors.website}</Text>}
+
+      <View style={styles.socialLinkRow}>
+        <View style={styles.socialIconContainer}><LinearGradient colors={['#111827', '#374151']} style={styles.socialIcon}><Text style={{ color: '#fff', fontWeight: '700' }}>X</Text></LinearGradient></View>
+        <TextInput style={[styles.socialInput, socialLinkErrors.twitter && styles.inputError]} value={formData.socialLinks.twitter || ''} onChangeText={text => updateFormData('socialLinks.twitter', text)} placeholder="Twitter/X username or URL" placeholderTextColor="#9CA3AF" />
+      </View>
+      {socialLinkErrors.twitter && <Text style={styles.errorText}>{socialLinkErrors.twitter}</Text>}
+
+      <View style={styles.socialLinkRow}>
+        <View style={styles.socialIconContainer}><LinearGradient colors={['#5865F2', '#4752C4']} style={styles.socialIcon}><Text style={{ color: '#fff', fontWeight: '700' }}>D</Text></LinearGradient></View>
+        <TextInput style={[styles.socialInput, socialLinkErrors.discord && styles.inputError]} value={formData.socialLinks.discord || ''} onChangeText={text => updateFormData('socialLinks.discord', text)} placeholder="Discord invite link" placeholderTextColor="#9CA3AF" />
+      </View>
+      {socialLinkErrors.discord && <Text style={styles.errorText}>{socialLinkErrors.discord}</Text>}
+
+      <View style={styles.socialLinkRow}>
+        <View style={styles.socialIconContainer}><LinearGradient colors={['#1769FF', '#0057D9']} style={styles.socialIcon}><Text style={{ color: '#fff', fontWeight: '700' }}>B</Text></LinearGradient></View>
+        <TextInput style={[styles.socialInput, socialLinkErrors.behance && styles.inputError]} value={formData.socialLinks.behance || ''} onChangeText={text => updateFormData('socialLinks.behance', text)} placeholder="Behance profile URL" placeholderTextColor="#9CA3AF" />
+      </View>
+      {socialLinkErrors.behance && <Text style={styles.errorText}>{socialLinkErrors.behance}</Text>}
+
+      <View style={styles.socialLinkRow}>
+        <View style={styles.socialIconContainer}><LinearGradient colors={['#111827', '#374151']} style={styles.socialIcon}><Text style={{ color: '#fff', fontWeight: '700' }}>GH</Text></LinearGradient></View>
+        <TextInput style={[styles.socialInput, socialLinkErrors.github && styles.inputError]} value={formData.socialLinks.github || ''} onChangeText={text => updateFormData('socialLinks.github', text)} placeholder="GitHub profile URL" placeholderTextColor="#9CA3AF" />
+      </View>
+      {socialLinkErrors.github && <Text style={styles.errorText}>{socialLinkErrors.github}</Text>}
     </View>
   </View>
 );

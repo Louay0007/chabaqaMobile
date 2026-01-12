@@ -1,8 +1,9 @@
 import { useAuth } from '@/hooks/use-auth';
-import { getCommunityBySlug as getRealCommunity } from '@/lib/communities-api';
-import { Link, useLocalSearchParams } from 'expo-router';
+import { getCommunityBySlug as getRealCommunity, checkCommunityMembership } from '@/lib/communities-api';
+import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import JoinCommunityModal from '../_components/modals/JoinCommunityModal';
 import { commonStyles, communityDetailStyles } from '../community-detail-styles';
 import { getImageUrl } from '@/lib/image-utils';
@@ -13,11 +14,32 @@ export default function CommunityDetail() {
   const [joinModalVisible, setJoinModalVisible] = useState(false);
   const [community, setCommunity] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [checkingMembership, setCheckingMembership] = useState(true);
+  const [isMember, setIsMember] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCommunityData();
   }, [slug]);
+
+  useEffect(() => {
+    if (community && isAuthenticated) {
+      checkMembershipStatus();
+    }
+  }, [community, isAuthenticated]);
+
+  const checkMembershipStatus = async () => {
+    try {
+      setCheckingMembership(true);
+      const result = await checkCommunityMembership(community.id);
+      setIsMember(result.isMember);
+    } catch (error) {
+      console.error('Error checking membership:', error);
+      setIsMember(false);
+    } finally {
+      setCheckingMembership(false);
+    }
+  };
 
   const fetchCommunityData = async () => {
     try {
@@ -77,6 +99,21 @@ export default function CommunityDetail() {
     }
   };
 
+  const handleEnterCommunity = () => {
+    if (isMember) {
+      // Member: navigate to community home
+      router.push(`/(community)/${slug}/(loggedUser)/home`);
+    } else {
+      // Non-member: navigate to manual payment page
+      router.push(`/(communities)/manual-payment?communityId=${community.id}`);
+    }
+  };
+
+  const handleJoinPress = () => {
+    // Navigate to manual payment page
+    router.push(`/(communities)/manual-payment?communityId=${community.id}`);
+  };
+
   if (loading) {
     return (
       <View style={[communityDetailStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -94,6 +131,42 @@ export default function CommunityDetail() {
       </View>
     );
   }
+
+  // Determine button text and action based on membership
+  const getButtonConfig = () => {
+    if (!isAuthenticated) {
+      return {
+        text: 'Join Community',
+        action: () => setJoinModalVisible(true),
+        color: '#8e78fb',
+      };
+    }
+    
+    if (checkingMembership) {
+      return {
+        text: 'Checking...',
+        action: () => {},
+        color: '#9ca3af',
+      };
+    }
+    
+    if (isMember) {
+      return {
+        text: 'Explore Community',
+        action: handleEnterCommunity,
+        color: '#10b981',
+      };
+    }
+    
+    // Not a member, paid community
+    return {
+      text: 'Join Community',
+      action: handleJoinPress,
+      color: '#8e78fb',
+    };
+  };
+
+  const buttonConfig = getButtonConfig();
 
   return (
     <ScrollView style={communityDetailStyles.container}>
@@ -136,20 +209,41 @@ export default function CommunityDetail() {
           </View>
         </View>
 
-        {isAuthenticated ? (
-          <Link href={`/(community)/${slug}/(loggedUser)/home`} asChild>
-            <TouchableOpacity style={commonStyles.primaryButton}>
-              <Text style={commonStyles.primaryButtonText}>Enter Community</Text>
-            </TouchableOpacity>
-          </Link>
-        ) : (
-          <TouchableOpacity
-            style={commonStyles.primaryButton}
-            onPress={() => setJoinModalVisible(true)}
-          >
-            <Text style={commonStyles.primaryButtonText}>Join Community</Text>
-          </TouchableOpacity>
+        {/* Membership Status Banner */}
+        {isAuthenticated && !checkingMembership && (
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+            padding: 16,
+            backgroundColor: isMember ? '#d1fae5' : '#fef3c7',
+            borderRadius: 12,
+            marginBottom: 16,
+          }}>
+            <Ionicons
+              name={isMember ? 'checkmark-circle' : 'lock-closed'}
+              size={20}
+              color={isMember ? '#10b981' : '#f59e0b'}
+            />
+            <Text style={{
+              flex: 1,
+              fontSize: 14,
+              color: isMember ? '#065f46' : '#92400e',
+            }}>
+              {isMember
+                ? 'You are a member of this community'
+                : 'Join this community to access all content'}
+            </Text>
+          </View>
         )}
+
+        <TouchableOpacity
+          style={[commonStyles.primaryButton, { backgroundColor: buttonConfig.color }]}
+          onPress={buttonConfig.action}
+          disabled={checkingMembership}
+        >
+          <Text style={commonStyles.primaryButtonText}>{buttonConfig.text}</Text>
+        </TouchableOpacity>
 
         <JoinCommunityModal
           visible={joinModalVisible}

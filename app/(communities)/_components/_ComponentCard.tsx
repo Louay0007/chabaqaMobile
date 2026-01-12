@@ -1,10 +1,11 @@
 import { Card } from '@/_components/ui/card';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { communityStyles } from '../_styles';
 import Avatar from './Avatar';
+import { checkCommunityMembership } from '@/lib/communities-api';
 
 interface CommunityCardProps {
   community: {
@@ -29,8 +30,39 @@ interface CommunityCardProps {
 }
 
 export default function CommunityCard({ community, viewMode = 'list' }: CommunityCardProps) {
+  const [isMember, setIsMember] = useState(false);
+  const [checkingMembership, setCheckingMembership] = useState(true);
+
+  useEffect(() => {
+    checkMembershipStatus();
+  }, [community.id]);
+
+  const checkMembershipStatus = async () => {
+    try {
+      setCheckingMembership(true);
+      const result = await checkCommunityMembership(community.id);
+      setIsMember(result.isMember);
+    } catch (error) {
+      console.error('Error checking membership:', error);
+      setIsMember(false);
+    } finally {
+      setCheckingMembership(false);
+    }
+  };
+
   const handlePress = () => {
-    router.push(`/(communities)/${community.slug}`);
+    if (isMember) {
+      // Member: navigate to community home
+      router.push(`/(community)/${community.slug}/home`);
+    } else {
+      // Non-member: navigate to manual payment page
+      router.push(`/(communities)/manual-payment?communityId=${community.id}`);
+    }
+  };
+
+  const handleJoinPress = () => {
+    // Navigate to manual payment page
+    router.push(`/(communities)/manual-payment?communityId=${community.id}`);
   };
 
   const formatMembers = (count: number) => {
@@ -98,6 +130,19 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
   };
 
   const typeConfig = getTypeConfig(community.type);
+
+  // Determine CTA text and color based on membership status
+  const getCTAConfig = () => {
+    if (checkingMembership) {
+      return { text: 'Checking...', color: '#9ca3af', disabled: true };
+    }
+    if (isMember) {
+      return { text: 'Explore', color: '#10b981', disabled: false };
+    }
+    return { text: 'Join', color: '#8e78fb', disabled: false };
+  };
+
+  const ctaConfig = getCTAConfig();
 
   if (viewMode === "list") {
     return (
@@ -214,10 +259,11 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
 
                 {/* CTA Button */}
                 <TouchableOpacity
-                  style={[communityStyles.communityCardCtaButton, { backgroundColor: '#8e78fb' }]}
+                  style={[communityStyles.communityCardCtaButton, { backgroundColor: ctaConfig.color }]}
                   onPress={handlePress}
+                  disabled={ctaConfig.disabled}
                 >
-                  <Text style={communityStyles.communityCardCtaButtonText}>{typeConfig.ctaText}</Text>
+                  <Text style={communityStyles.communityCardCtaButtonText}>{ctaConfig.text}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -313,10 +359,11 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
 
           {/* CTA */}
           <TouchableOpacity
-            style={[communityStyles.communityCardGridCtaButton, { backgroundColor: '#8e78fb' }]}
+            style={[communityStyles.communityCardGridCtaButton, { backgroundColor: ctaConfig.color }]}
             onPress={handlePress}
+            disabled={ctaConfig.disabled}
           >
-            <Text style={communityStyles.communityCardCtaButtonText}>{typeConfig.ctaText}</Text>
+            <Text style={communityStyles.communityCardCtaButtonText}>{ctaConfig.text}</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>

@@ -11,11 +11,15 @@ export const unstable_settings = {
 interface CommunityFormData {
   name: string;
   bio: string;
+  longDescription?: string;
   country: string;
-  status: string;
-  joinFee: string;
+  category?: string;
+  type?: string;
+  tags?: string[];
+  status: 'public' | 'private';
+  joinFee: 'free' | 'paid';
   feeAmount: string;
-  currency: string;
+  currency: 'USD' | 'TND' | 'EUR';
   socialLinks: {
     instagram: string;
     tiktok: string;
@@ -23,6 +27,10 @@ interface CommunityFormData {
     youtube: string;
     linkedin: string;
     website: string;
+    twitter?: string;
+    discord?: string;
+    behance?: string;
+    github?: string;
   };
   coverImage?: string;
 }

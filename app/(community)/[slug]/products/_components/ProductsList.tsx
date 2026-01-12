@@ -12,6 +12,7 @@ interface ProductsListProps {
   onProductPress: (productId: string) => void;
   onPurchase: (product: Product) => void;
   onDownload: (product: Product) => void;
+  accessMap: Record<string, { purchased: boolean; pending: boolean }>;
 }
 
 export const ProductsList: React.FC<ProductsListProps> = ({
@@ -21,15 +22,18 @@ export const ProductsList: React.FC<ProductsListProps> = ({
   onProductPress,
   onPurchase,
   onDownload,
+  accessMap,
 }) => {
   const renderProductItem = ({ item }: { item: Product }) => {
-    const isPurchased = userPurchases.some((p: Purchase) => p.productId === item.id);
+    const isPurchased = accessMap[String(item.id)]?.purchased || userPurchases.some((p: Purchase) => p.productId === item.id);
+    const isPending = !!accessMap[String(item.id)]?.pending;
 
     return (
       <ProductCard
         product={item}
         isPurchased={isPurchased}
-        onPress={() => onProductPress(item.id)}
+        isPending={isPending}
+        onPress={() => (isPurchased ? onProductPress(item.id) : onPurchase(item))}
         onPurchase={() => onPurchase(item)}
         onDownload={() => onDownload(item)}
       />

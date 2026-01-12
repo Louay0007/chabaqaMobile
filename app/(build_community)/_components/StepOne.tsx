@@ -9,6 +9,10 @@ interface StepOneProps {
     name: string;
     country: string;
     bio: string;
+    longDescription?: string;
+    category?: string;
+    type?: string;
+    tags?: string[];
   };
   updateFormData: (field: string, value: string) => void;
   selectedImage: string | null;
@@ -43,6 +47,32 @@ const StepOne = ({ formData, updateFormData, selectedImage, handleImagePicker, s
     <View style={styles.inputContainer}>
       <Text style={styles.label}>Bio (optional)</Text>
       <TextInput style={[styles.input, styles.textArea]} value={formData.bio} onChangeText={text => updateFormData('bio', text)} placeholder="Tell people what your community is about..." placeholderTextColor="#9CA3AF" multiline numberOfLines={4} />
+    </View>
+    <View style={styles.inputContainer}>
+      <Text style={styles.label}>Category (optional)</Text>
+      <TextInput style={styles.input} value={formData.category || ''} onChangeText={text => updateFormData('category', text)} placeholder="e.g Technology, Marketing..." placeholderTextColor="#9CA3AF" />
+    </View>
+    <View style={styles.inputContainer}>
+      <Text style={styles.label}>Tags (optional)</Text>
+      <TextInput
+        style={styles.input}
+        value={(formData.tags || []).join(', ')}
+        onChangeText={text => updateFormData('tags', text)}
+        placeholder="e.g React, JavaScript, AI"
+        placeholderTextColor="#9CA3AF"
+      />
+    </View>
+    <View style={styles.inputContainer}>
+      <Text style={styles.label}>Long description (optional)</Text>
+      <TextInput
+        style={[styles.input, styles.textArea]}
+        value={formData.longDescription || ''}
+        onChangeText={text => updateFormData('longDescription', text)}
+        placeholder="Write a detailed description of your community..."
+        placeholderTextColor="#9CA3AF"
+        multiline
+        numberOfLines={5}
+      />
     </View>
   </View>
 );

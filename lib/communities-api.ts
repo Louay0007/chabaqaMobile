@@ -683,6 +683,67 @@ export const joinCommunity = async (
 };
 
 /**
+ * Check if user is a member of a community
+ * @param communityId - Community ID
+ * @returns Promise with membership status
+ */
+export const checkCommunityMembership = async (
+  communityId: string
+): Promise<{
+  success: boolean;
+  message: string;
+  isMember: boolean;
+}> => {
+  try {
+    console.log('🔍 [COMMUNITIES] Checking membership for community:', communityId);
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      return { success: true, message: 'Not authenticated', isMember: false };
+    }
+
+    const resp = await tryEndpoints<{
+      success: boolean;
+      message: string;
+      data?: any;
+    }>(`/api/community-aff-crea-join/${communityId}/check-membership`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      timeout: 30000,
+    });
+
+    // If endpoint doesn't exist, fallback to checking joined communities
+    if (resp.status === 404) {
+      console.log('⚠️ [COMMUNITIES] Membership check endpoint not found, using fallback');
+      const joinedResp = await getMyJoinedCommunities();
+      const isMember = joinedResp.data?.some((c: any) => 
+        c._id === communityId || c.id === communityId
+      );
+      return { success: true, message: 'Membership checked', isMember };
+    }
+
+    return {
+      success: resp.data.success,
+      message: resp.data.message || 'Membership checked',
+      isMember: resp.data.data?.isMember || false,
+    };
+  } catch (error: any) {
+    console.error('💥 [COMMUNITIES] Error checking membership:', error);
+    // Fallback to checking joined communities on error
+    try {
+      const joinedResp = await getMyJoinedCommunities();
+      const isMember = joinedResp.data?.some((c: any) => 
+        c._id === communityId || c.id === communityId
+      );
+      return { success: true, message: 'Membership checked (fallback)', isMember };
+    } catch {
+      return { success: false, message: 'Failed to check membership', isMember: false };
+    }
+  }
+};
+
+/**
  * Get active/online members of a community by slug
  */
 export const getActiveMembersByCommunity = async (

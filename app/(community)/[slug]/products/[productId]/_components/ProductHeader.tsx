@@ -1,6 +1,6 @@
-import { MessageCircle, Star } from 'lucide-react-native';
+import { Star } from 'lucide-react-native';
 import React from 'react';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
 import { styles } from '../../styles';
 
 interface ProductHeaderProps {
@@ -55,10 +55,6 @@ export const ProductHeader: React.FC<ProductHeaderProps> = ({ product }) => {
               </View>
             )}
           </View>
-          <TouchableOpacity style={styles.messageButton}>
-            <MessageCircle size={16} color="#6366f1" />
-            <Text style={styles.messageText}>Message</Text>
-          </TouchableOpacity>
         </View>
       </View>
     </>

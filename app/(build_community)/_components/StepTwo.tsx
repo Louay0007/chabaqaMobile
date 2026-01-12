@@ -15,11 +15,11 @@ interface StepTwoProps {
     feeAmount: string;
   };
   updateFormData: (field: string, value: string) => void;
-  selectedCurrency: string;
-  setSelectedCurrency: (currency: string) => void;
+  selectedCurrency: 'USD' | 'TND' | 'EUR';
+  setSelectedCurrency: (currency: 'USD' | 'TND' | 'EUR') => void;
   showCurrencyModal: boolean;
   setShowCurrencyModal: (show: boolean) => void;
-  currencies: Array<{ code: string; name: string; symbol: string; }>;
+  currencies: Array<{ code: 'USD' | 'TND' | 'EUR'; name: string; symbol: string; }>;
 }
 
 const StepTwo = ({ formData, updateFormData, selectedCurrency, setSelectedCurrency, showCurrencyModal, setShowCurrencyModal, currencies }: StepTwoProps) => (

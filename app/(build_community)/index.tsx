@@ -5,7 +5,7 @@ import { createCommunityAction } from '@/lib/build-community-api';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import StepOne from './_components/StepOne';
 import Stepper from './_components/Stepper';
@@ -18,11 +18,15 @@ import styles from './styles';
 type CommunityFormData = {
   name: string;
   bio: string;
+  longDescription?: string;
   country: string;
+  category?: string;
+  type?: string;
+  tags?: string[];
   status: 'public' | 'private';
   joinFee: 'free' | 'paid';
   feeAmount: string;
-  currency: string;
+  currency: 'USD' | 'TND' | 'EUR';
   socialLinks: {
     instagram: string;
     tiktok: string;
@@ -30,6 +34,10 @@ type CommunityFormData = {
     youtube: string;
     linkedin: string;
     website: string;
+    twitter?: string;
+    discord?: string;
+    behance?: string;
+    github?: string;
   };
   coverImage?: string; // Add cover image field
 };
@@ -41,21 +49,26 @@ export default function BuildCommunityScreen() {
   const [formData, setFormData] = useState<CommunityFormData>({
     name: '',
     bio: '',
+    longDescription: '',
     country: '',
+    category: 'Technology',
+    type: 'community',
+    tags: [],
     status: 'public',
     joinFee: 'free',
     feeAmount: '0',
     currency: 'USD',
-    socialLinks: { instagram: '', tiktok: '', facebook: '', youtube: '', linkedin: '', website: '' },
+    socialLinks: { instagram: '', tiktok: '', facebook: '', youtube: '', linkedin: '', website: '', twitter: '', discord: '', behance: '', github: '' },
     coverImage: '', // Initialize cover image
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [socialLinkErrors, setSocialLinkErrors] = useState<Record<string, string>>({});
-  const [selectedCurrency, setSelectedCurrency] = useState('USD');
+  const [selectedCurrency, setSelectedCurrency] = useState<'USD' | 'TND' | 'EUR'>('USD');
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
-  const currencies = [
+  const currencies: Array<{ code: 'USD' | 'TND' | 'EUR'; name: string; symbol: string }> = [
     { code: 'USD', name: 'United States Dollar', symbol: '$' },
     { code: 'TND', name: 'Tunisian Dinar', symbol: 'د.ت' },
     { code: 'EUR', name: 'Euro', symbol: '€' }
@@ -74,6 +87,12 @@ export default function BuildCommunityScreen() {
         }));
         validateAndSetSocialLink(child, value);
       }
+    } else if (field === 'tags') {
+      const tags = value
+        .split(',')
+        .map(t => t.trim())
+        .filter(Boolean);
+      setFormData(prev => ({ ...prev, tags }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value } as CommunityFormData));
     }
@@ -100,6 +119,10 @@ export default function BuildCommunityScreen() {
       youtube: /^(https?:\/\/)?(www\.)?youtube\.com\/(channel|c|user)\/[A-Za-z0-9._-]+\/?$/,
       linkedin: /^(https?:\/\/)?(www\.)?linkedin\.com\/(in|company)\/[A-Za-z0-9._-]+\/?$/,
       website: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
+      twitter: /^(https?:\/\/)?(www\.)?(twitter\.com|x\.com)\/[A-Za-z0-9_]+\/?$|^@?[A-Za-z0-9_]{1,15}$/,
+      discord: /^(https?:\/\/)?(www\.)?discord\.(gg|com\/invite)\/[A-Za-z0-9]+\/?$/,
+      behance: /^(https?:\/\/)?(www\.)?behance\.net\/[A-Za-z0-9._-]+\/?$/,
+      github: /^(https?:\/\/)?(www\.)?github\.com\/[A-Za-z0-9._-]+\/?$/,
     } as const;
     const key = platform.toLowerCase() as keyof typeof regexMap;
     return !url.trim() || (regexMap[key]?.test(url.trim()) ?? false);
@@ -126,6 +149,11 @@ export default function BuildCommunityScreen() {
   const nextStep = () => canContinue() && currentStep < 3 && setCurrentStep(currentStep + 1);
   const prevStep = () => currentStep > 1 && setCurrentStep(currentStep - 1);
 
+  useEffect(() => {
+    // Keep formData.currency in sync with the UI-selected currency
+    setFormData(prev => ({ ...prev, currency: selectedCurrency }));
+  }, [selectedCurrency]);
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setError('');
@@ -138,9 +166,10 @@ export default function BuildCommunityScreen() {
         return;
       }
 
-      const dataToSubmit = { 
+      const dataToSubmit: CommunityFormData = { 
         ...formData, 
-        feeAmount: formData.joinFee === 'paid' ? formData.feeAmount : '0' 
+        feeAmount: formData.joinFee === 'paid' ? formData.feeAmount : '0',
+        currency: selectedCurrency,
       };
       
       console.log('📤 Données à envoyer:', JSON.stringify(dataToSubmit, null, 2));

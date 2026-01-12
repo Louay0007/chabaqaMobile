@@ -186,8 +186,13 @@ export const getUserById = async (userId: string): Promise<User> => {
       }
     );
 
-    console.log('✅ [USER-API] User fetched successfully:', resp.data.user.name);
-    return transformUserImages(resp.data.user);
+    const user = (resp as any)?.data?.user;
+    if (!user) {
+      throw new Error('Invalid user response');
+    }
+
+    console.log('✅ [USER-API] User fetched successfully:', user.name);
+    return transformUserImages(user);
   } catch (error: any) {
     console.error('💥 [USER-API] Error fetching user:', error);
     throw new Error(error.message || 'Failed to fetch user');
