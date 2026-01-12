@@ -14,11 +14,23 @@ export interface UserStats {
   communitiesJoined: number;
   coursesEnrolled: number;
   challengesParticipating: number;
+  productsPurchased: number;
 }
+
+export type ActivityType = 
+  | 'community_joined' 
+  | 'course_enrolled' 
+  | 'course_completed' 
+  | 'challenge_joined'
+  | 'challenge_completed' 
+  | 'product_purchased'
+  | 'wallet_topup'
+  | 'badge_earned' 
+  | 'post_created';
 
 export interface UserActivity {
   id: string;
-  type: 'community_joined' | 'course_completed' | 'challenge_completed' | 'badge_earned' | 'post_created';
+  type: ActivityType;
   title: string;
   description: string;
   timestamp: string;
@@ -35,6 +47,8 @@ export interface Community {
   logo?: string;
   coverImage?: string;
   membersCount?: number;
+  createdAt?: string;
+  joinedAt?: string;
 }
 
 export interface ProfileData {
@@ -47,10 +61,9 @@ export interface ProfileData {
 // ==================== API FUNCTIONS ====================
 
 /**
- * Get user's joined communities count
- * Uses: GET /api/community-aff-crea-join/my-joined
+ * Get user's joined communities with dates
  */
-const getCommunitiesCount = async (accessToken: string): Promise<number> => {
+const getJoinedCommunitiesWithDates = async (accessToken: string): Promise<Community[]> => {
   try {
     const resp = await tryEndpoints<any>(
       '/api/community-aff-crea-join/my-joined',
@@ -61,40 +74,67 @@ const getCommunitiesCount = async (accessToken: string): Promise<number> => {
       }
     );
     const communities = resp.data?.communities || resp.data?.data || [];
-    return communities.length;
+    return communities.map((c: any) => ({
+      ...c,
+      joinedAt: c.joinedAt || c.createdAt || new Date().toISOString(),
+    }));
   } catch (error) {
-    console.log('⚠️ [PROFILE-API] Could not get communities count');
-    return 0;
+    console.log('⚠️ [PROFILE-API] Could not get communities');
+    return [];
   }
 };
 
 /**
- * Get user's enrolled courses count
- * Uses: GET /api/cours/user/mes-cours
+ * Get user's enrolled courses with dates
  */
-const getCoursesCount = async (accessToken: string): Promise<number> => {
+const getEnrolledCoursesWithDates = async (accessToken: string): Promise<any[]> => {
   try {
-    const resp = await tryEndpoints<any>(
-      '/api/cours/user/mes-cours?page=1&limit=1',
+    // Try the course-enrollment endpoint first (more reliable)
+    const enrollmentResp = await tryEndpoints<any>(
+      '/api/course-enrollment/my-enrollments',
       {
         method: 'GET',
         headers: { Authorization: `Bearer ${accessToken}` },
         timeout: 10000,
       }
     );
-    // Response has pagination.total or total field
-    return resp.data?.pagination?.total || resp.data?.total || resp.data?.data?.pagination?.total || 0;
+    
+    const enrollments = enrollmentResp.data?.enrollments || [];
+    if (enrollments.length > 0) {
+      console.log(`✅ [PROFILE-API] Found ${enrollments.length} course enrollments`);
+      return enrollments.map((e: any) => ({
+        _id: e.courseId || e.id,
+        id: e.courseId || e.id,
+        title: e.courseTitle || e.title || 'Course',
+        enrolledAt: e.enrolledAt || new Date().toISOString(),
+      }));
+    }
+    
+    // Fallback to mes-cours endpoint
+    const resp = await tryEndpoints<any>(
+      '/api/cours/user/mes-cours?page=1&limit=50',
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        timeout: 10000,
+      }
+    );
+    const courses = resp.data?.data?.courses || resp.data?.cours || resp.data?.courses || [];
+    console.log(`✅ [PROFILE-API] Found ${courses.length} courses from mes-cours`);
+    return courses.map((c: any) => ({
+      ...c,
+      enrolledAt: c.enrolledAt || c.createdAt || new Date().toISOString(),
+    }));
   } catch (error) {
-    console.log('⚠️ [PROFILE-API] Could not get courses count');
-    return 0;
+    console.log('⚠️ [PROFILE-API] Could not get courses:', error);
+    return [];
   }
 };
 
 /**
- * Get user's challenge participations count
- * Uses: GET /api/challenges/user/my-participations
+ * Get user's challenge participations with dates
  */
-const getChallengesCount = async (accessToken: string): Promise<number> => {
+const getChallengeParticipationsWithDates = async (accessToken: string): Promise<any[]> => {
   try {
     const resp = await tryEndpoints<any>(
       '/api/challenges/user/my-participations?status=all',
@@ -104,110 +144,118 @@ const getChallengesCount = async (accessToken: string): Promise<number> => {
         timeout: 10000,
       }
     );
-    // Response has data.total or data.participations.length
-    return resp.data?.data?.total || resp.data?.data?.participations?.length || resp.data?.total || 0;
+    const participations = resp.data?.data?.participations || resp.data?.participations || [];
+    return participations.map((p: any) => ({
+      ...p,
+      joinedAt: p.joinedAt || p.createdAt || new Date().toISOString(),
+    }));
   } catch (error) {
-    console.log('⚠️ [PROFILE-API] Could not get challenges count');
-    return 0;
+    console.log('⚠️ [PROFILE-API] Could not get challenges');
+    return [];
   }
 };
 
 /**
- * Get user's joined communities list
- * Uses: GET /api/community-aff-crea-join/my-joined
+ * Get user's wallet transactions (for purchase and topup activities)
  */
-const getJoinedCommunities = async (accessToken: string): Promise<Community[]> => {
+const getWalletTransactions = async (accessToken: string): Promise<any[]> => {
   try {
     const resp = await tryEndpoints<any>(
-      '/api/community-aff-crea-join/my-joined',
+      '/api/wallet/transactions?limit=20',
       {
         method: 'GET',
         headers: { Authorization: `Bearer ${accessToken}` },
         timeout: 10000,
       }
     );
-    return resp.data?.communities || resp.data?.data || [];
+    return resp.data?.data || resp.data?.transactions || [];
   } catch (error) {
-    console.log('⚠️ [PROFILE-API] Could not get joined communities');
+    console.log('⚠️ [PROFILE-API] Could not get wallet transactions');
     return [];
   }
 };
 
 /**
- * Generate recent activities based on user data
- * Since there's no dedicated activities API, we'll create activities from user's data
+ * Generate recent activities from real user data with actual timestamps
  */
-const generateRecentActivities = async (accessToken: string, userData: any): Promise<UserActivity[]> => {
+const generateRecentActivities = async (accessToken: string): Promise<UserActivity[]> => {
   const activities: UserActivity[] = [];
   
   try {
-    // Get joined communities and create activities
-    const communities = await getJoinedCommunities(accessToken);
-    communities.slice(0, 3).forEach((community, index) => {
+    // Fetch all data in parallel
+    const [communities, courses, challenges, transactions] = await Promise.all([
+      getJoinedCommunitiesWithDates(accessToken),
+      getEnrolledCoursesWithDates(accessToken),
+      getChallengeParticipationsWithDates(accessToken),
+      getWalletTransactions(accessToken),
+    ]);
+
+    // Add community join activities
+    communities.forEach((community) => {
       activities.push({
         id: `community_${community._id}`,
         type: 'community_joined',
         title: 'Joined Community',
         description: `Joined ${community.name}`,
-        timestamp: new Date(Date.now() - (index + 1) * 24 * 60 * 60 * 1000).toISOString(), // Mock dates
+        timestamp: community.joinedAt || community.createdAt || new Date().toISOString(),
         relatedId: community._id,
+        metadata: { communitySlug: community.slug },
       });
     });
 
-    // Get enrolled courses and create activities
-    try {
-      const coursesResp = await tryEndpoints<any>(
-        '/api/cours/user/mes-cours?page=1&limit=3',
-        {
-          method: 'GET',
-          headers: { Authorization: `Bearer ${accessToken}` },
-          timeout: 5000,
-        }
-      );
-      const courses = coursesResp.data?.data?.courses || [];
-      courses.forEach((course: any, index: number) => {
-        activities.push({
-          id: `course_${course._id}`,
-          type: 'course_completed',
-          title: 'Enrolled in Course',
-          description: `Started learning ${course.title}`,
-          timestamp: new Date(Date.now() - (index + 4) * 24 * 60 * 60 * 1000).toISOString(),
-          relatedId: course._id,
-        });
+    // Add course enrollment activities
+    courses.forEach((course: any) => {
+      activities.push({
+        id: `course_${course._id || course.id}`,
+        type: 'course_enrolled',
+        title: 'Enrolled in Course',
+        description: `Started learning ${course.title || course.name}`,
+        timestamp: course.enrolledAt || course.createdAt || new Date().toISOString(),
+        relatedId: course._id || course.id,
       });
-    } catch (error) {
-      console.log('⚠️ [PROFILE-API] Could not get courses for activities');
-    }
+    });
 
-    // Get challenge participations and create activities
-    try {
-      const challengesResp = await tryEndpoints<any>(
-        '/api/challenges/user/my-participations?status=all',
-        {
-          method: 'GET',
-          headers: { Authorization: `Bearer ${accessToken}` },
-          timeout: 5000,
-        }
-      );
-      const challenges = challengesResp.data?.data?.participations || [];
-      challenges.slice(0, 2).forEach((participation: any, index: number) => {
-        activities.push({
-          id: `challenge_${participation.challengeId}`,
-          type: 'challenge_completed',
-          title: 'Joined Challenge',
-          description: `Participating in ${participation.challenge?.title || 'Challenge'}`,
-          timestamp: new Date(Date.now() - (index + 7) * 24 * 60 * 60 * 1000).toISOString(),
-          relatedId: participation.challengeId,
-        });
+    // Add challenge participation activities
+    challenges.forEach((participation: any) => {
+      const challengeTitle = participation.challenge?.title || participation.title || 'Challenge';
+      activities.push({
+        id: `challenge_${participation.challengeId || participation._id}`,
+        type: 'challenge_joined',
+        title: 'Joined Challenge',
+        description: `Participating in ${challengeTitle}`,
+        timestamp: participation.joinedAt || participation.createdAt || new Date().toISOString(),
+        relatedId: participation.challengeId || participation._id,
       });
-    } catch (error) {
-      console.log('⚠️ [PROFILE-API] Could not get challenges for activities');
-    }
+    });
+
+    // Add wallet transaction activities (purchases and top-ups)
+    transactions.forEach((tx: any) => {
+      if (tx.type === 'purchase') {
+        activities.push({
+          id: `purchase_${tx._id || tx.reference}`,
+          type: 'product_purchased',
+          title: 'Made a Purchase',
+          description: tx.description || `Purchased ${tx.contentType || 'content'}`,
+          timestamp: tx.createdAt || new Date().toISOString(),
+          relatedId: tx.contentId,
+          metadata: { amount: Math.abs(tx.amount), contentType: tx.contentType },
+        });
+      } else if (tx.type === 'topup') {
+        activities.push({
+          id: `topup_${tx._id || tx.reference}`,
+          type: 'wallet_topup',
+          title: 'Wallet Top-Up',
+          description: tx.description || `Added ${tx.amount} points to wallet`,
+          timestamp: tx.createdAt || new Date().toISOString(),
+          metadata: { amount: tx.amount },
+        });
+      }
+    });
 
     // Sort by timestamp (most recent first)
     activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     
-    return activities.slice(0, 10); // Return max 10 activities
+    return activities.slice(0, 15); // Return max 15 activities
   } catch (error) {
     console.log('⚠️ [PROFILE-API] Error generating activities:', error);
     return [];
@@ -232,19 +280,23 @@ export const getProfileData = async (): Promise<ProfileData> => {
       throw new Error('User data not available');
     }
 
-    // Fetch stats and activities in parallel
-    const [communitiesCount, coursesCount, challengesCount, joinedCommunities, recentActivities] = await Promise.all([
-      getCommunitiesCount(accessToken),
-      getCoursesCount(accessToken),
-      getChallengesCount(accessToken),
-      getJoinedCommunities(accessToken),
-      generateRecentActivities(accessToken, userData),
+    // Fetch all data in parallel
+    const [communities, courses, challenges, transactions, recentActivities] = await Promise.all([
+      getJoinedCommunitiesWithDates(accessToken),
+      getEnrolledCoursesWithDates(accessToken),
+      getChallengeParticipationsWithDates(accessToken),
+      getWalletTransactions(accessToken),
+      generateRecentActivities(accessToken),
     ]);
 
+    // Count purchases from transactions
+    const purchaseCount = transactions.filter((tx: any) => tx.type === 'purchase').length;
+
     const stats: UserStats = {
-      communitiesJoined: communitiesCount,
-      coursesEnrolled: coursesCount,
-      challengesParticipating: challengesCount,
+      communitiesJoined: communities.length,
+      coursesEnrolled: courses.length,
+      challengesParticipating: challenges.length,
+      productsPurchased: purchaseCount,
     };
 
     console.log('✅ [PROFILE-API] Stats fetched:', stats);
@@ -259,7 +311,7 @@ export const getProfileData = async (): Promise<ProfileData> => {
     return {
       user: transformedUser,
       stats,
-      joinedCommunities,
+      joinedCommunities: communities,
       recentActivities,
     };
   } catch (error: any) {
@@ -275,66 +327,127 @@ export const getUserStats = async (): Promise<UserStats> => {
   try {
     const accessToken = await getAccessToken();
     if (!accessToken) {
-      return { communitiesJoined: 0, coursesEnrolled: 0, challengesParticipating: 0 };
+      return { communitiesJoined: 0, coursesEnrolled: 0, challengesParticipating: 0, productsPurchased: 0 };
     }
 
-    const [communitiesCount, coursesCount, challengesCount] = await Promise.all([
-      getCommunitiesCount(accessToken),
-      getCoursesCount(accessToken),
-      getChallengesCount(accessToken),
+    const [communities, courses, challenges, transactions] = await Promise.all([
+      getJoinedCommunitiesWithDates(accessToken),
+      getEnrolledCoursesWithDates(accessToken),
+      getChallengeParticipationsWithDates(accessToken),
+      getWalletTransactions(accessToken),
     ]);
 
+    const purchaseCount = transactions.filter((tx: any) => tx.type === 'purchase').length;
+
     return {
-      communitiesJoined: communitiesCount,
-      coursesEnrolled: coursesCount,
-      challengesParticipating: challengesCount,
+      communitiesJoined: communities.length,
+      coursesEnrolled: courses.length,
+      challengesParticipating: challenges.length,
+      productsPurchased: purchaseCount,
     };
   } catch (error) {
     console.error('💥 [PROFILE-API] Error fetching stats:', error);
-    return { communitiesJoined: 0, coursesEnrolled: 0, challengesParticipating: 0 };
+    return { communitiesJoined: 0, coursesEnrolled: 0, challengesParticipating: 0, productsPurchased: 0 };
   }
 };
 
 /**
- * Format activity timestamp
+ * Format activity timestamp with smart relative time
  */
 export const formatActivityTime = (timestamp: string): string => {
   const date = new Date(timestamp);
   const now = new Date();
-  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
+  // Just now (less than 1 minute)
   if (diffInMinutes < 1) return 'Just now';
+  
+  // Minutes ago (1-59 minutes)
   if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-  if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
-  if (diffInMinutes < 10080) return `${Math.floor(diffInMinutes / 1440)}d ago`;
-  return date.toLocaleDateString();
+  
+  // Hours ago (1-23 hours)
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  
+  // Yesterday
+  if (diffInDays === 1) return 'Yesterday';
+  
+  // Days ago (2-6 days)
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+  
+  // Weeks ago (1-4 weeks)
+  if (diffInDays < 30) {
+    const weeks = Math.floor(diffInDays / 7);
+    return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+  }
+  
+  // Months ago (1-11 months)
+  if (diffInDays < 365) {
+    const months = Math.floor(diffInDays / 30);
+    return months === 1 ? '1 month ago' : `${months} months ago`;
+  }
+  
+  // More than a year - show formatted date
+  return date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric',
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+  });
 };
 
 /**
  * Get activity icon based on type
  */
-export const getActivityIcon = (type: UserActivity['type']): string => {
+export const getActivityIcon = (type: ActivityType): string => {
   switch (type) {
-    case 'community_joined': return 'people';
-    case 'course_completed': return 'school';
-    case 'challenge_completed': return 'trophy';
-    case 'badge_earned': return 'medal';
-    case 'post_created': return 'create';
-    default: return 'ellipse';
+    case 'community_joined': return 'people-outline';
+    case 'course_enrolled': return 'book-outline';
+    case 'course_completed': return 'checkmark-done-outline';
+    case 'challenge_joined': return 'flag-outline';
+    case 'challenge_completed': return 'ribbon-outline';
+    case 'product_purchased': return 'cart-outline';
+    case 'wallet_topup': return 'wallet-outline';
+    case 'badge_earned': return 'star-outline';
+    case 'post_created': return 'document-text-outline';
+    default: return 'ellipse-outline';
   }
 };
 
 /**
  * Get activity color based on type
  */
-export const getActivityColor = (type: UserActivity['type']): string => {
+export const getActivityColor = (type: ActivityType): string => {
   switch (type) {
     case 'community_joined': return '#8e78fb';
-    case 'course_completed': return '#47c7ea';
-    case 'challenge_completed': return '#ff9b28';
+    case 'course_enrolled': return '#47c7ea';
+    case 'course_completed': return '#10b981';
+    case 'challenge_joined': return '#ff9b28';
+    case 'challenge_completed': return '#f59e0b';
+    case 'product_purchased': return '#ec4899';
+    case 'wallet_topup': return '#10b981';
     case 'badge_earned': return '#f65887';
-    case 'post_created': return '#10b981';
+    case 'post_created': return '#3b82f6';
     default: return '#6b7280';
+  }
+};
+
+/**
+ * Get activity title based on type
+ */
+export const getActivityTitle = (type: ActivityType): string => {
+  switch (type) {
+    case 'community_joined': return 'Joined Community';
+    case 'course_enrolled': return 'Enrolled in Course';
+    case 'course_completed': return 'Completed Course';
+    case 'challenge_joined': return 'Joined Challenge';
+    case 'challenge_completed': return 'Completed Challenge';
+    case 'product_purchased': return 'Made a Purchase';
+    case 'wallet_topup': return 'Wallet Top-Up';
+    case 'badge_earned': return 'Earned Badge';
+    case 'post_created': return 'Created Post';
+    default: return 'Activity';
   }
 };
 
@@ -344,4 +457,5 @@ export default {
   formatActivityTime,
   getActivityIcon,
   getActivityColor,
+  getActivityTitle,
 };

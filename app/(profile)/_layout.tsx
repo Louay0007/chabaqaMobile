@@ -21,6 +21,18 @@ export default function ProfileLayout() {
           headerShown: false, // Hide the navigation header for settings page too
         }} 
       />
+      <Stack.Screen 
+        name="wallet" 
+        options={{
+          headerShown: false,
+        }} 
+      />
+      <Stack.Screen 
+        name="topup" 
+        options={{
+          headerShown: false,
+        }} 
+      />
     </Stack>
   );
 }

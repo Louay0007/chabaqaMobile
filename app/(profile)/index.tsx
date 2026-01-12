@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
-  ImageBackground,
   RefreshControl,
   ScrollView,
   Text,
@@ -12,7 +11,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import GlobalBottomNavigation from '../_components/GlobalBottomNavigation';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -162,20 +160,9 @@ export default function ProfileScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Enhanced Profile Header with Gradient and Decorative Elements */}
+        {/* Profile Header with Dark Background */}
         <View style={enhancedStyles.headerWrapper}>
-          <ImageBackground
-            source={require('@/assets/images/background.png')}
-            style={enhancedStyles.headerGradient}
-            imageStyle={enhancedStyles.headerBackgroundImage}
-          >
-            {/* Gradient effects removed */}
-            
-            {/* Decorative Circles - keep for additional visual effect */}
-            <View style={enhancedStyles.decorativeCircle1} />
-            <View style={enhancedStyles.decorativeCircle2} />
-            <View style={enhancedStyles.decorativeCircle3} />
-
+          <View style={enhancedStyles.headerGradient}>
             {/* Avatar with Glow Effect */}
             <View style={enhancedStyles.avatarContainer}>
               <View style={enhancedStyles.avatarGlow}>
@@ -183,7 +170,7 @@ export default function ProfileScreen() {
                   <Image 
                     source={{ uri: getImageUrl(profileData?.user?.avatar || profileData?.user?.photo_profil || user?.avatar, true) }} 
                     style={enhancedStyles.avatar}
-                    onError={(e) => {
+                    onError={() => {
                       console.log('❌ [PROFILE] Avatar image failed to load:', getImageUrl(profileData?.user?.avatar || profileData?.user?.photo_profil || user?.avatar));
                     }}
                     defaultSource={require('@/assets/images/logo_chabaqa.png')}
@@ -209,15 +196,15 @@ export default function ProfileScreen() {
               </View>
             )}
             <Text style={enhancedStyles.userEmail}>{profileData?.user?.email || user?.email}</Text>
-          </ImageBackground>
+          </View>
 
-          {/* Glass-morphism Stats Cards */}
+          {/* Stats Cards - Normal Flow */}
           <View style={enhancedStyles.statsContainer}>
             <View style={enhancedStyles.statsRow}>
               <View style={enhancedStyles.statCardWrapper}>
                 <View style={enhancedStyles.statCard}>
                   <View style={[enhancedStyles.statIcon, { backgroundColor: '#8e78fb' }]}>
-                    <Ionicons name="people" size={18} color="#fff" />
+                    <Ionicons name="people-outline" size={18} color="#fff" />
                   </View>
                   <Text style={enhancedStyles.statValue}>{profileData?.stats?.communitiesJoined || 0}</Text>
                   <Text style={enhancedStyles.statLabel}>Communities</Text>
@@ -227,31 +214,43 @@ export default function ProfileScreen() {
               <View style={enhancedStyles.statCardWrapper}>
                 <View style={enhancedStyles.statCard}>
                   <View style={[enhancedStyles.statIcon, { backgroundColor: '#47c7ea' }]}>
-                    <Ionicons name="school" size={18} color="#fff" />
+                    <Ionicons name="book-outline" size={18} color="#fff" />
                   </View>
                   <Text style={enhancedStyles.statValue}>{profileData?.stats?.coursesEnrolled || 0}</Text>
                   <Text style={enhancedStyles.statLabel}>Courses</Text>
                 </View>
               </View>
-
+            </View>
+            
+            <View style={enhancedStyles.statsRow}>
               <View style={enhancedStyles.statCardWrapper}>
                 <View style={enhancedStyles.statCard}>
                   <View style={[enhancedStyles.statIcon, { backgroundColor: '#ff9b28' }]}>
-                    <Ionicons name="trophy" size={18} color="#fff" />
+                    <Ionicons name="flag-outline" size={18} color="#fff" />
                   </View>
                   <Text style={enhancedStyles.statValue}>{profileData?.stats?.challengesParticipating || 0}</Text>
                   <Text style={enhancedStyles.statLabel}>Challenges</Text>
+                </View>
+              </View>
+
+              <View style={enhancedStyles.statCardWrapper}>
+                <View style={enhancedStyles.statCard}>
+                  <View style={[enhancedStyles.statIcon, { backgroundColor: '#ec4899' }]}>
+                    <Ionicons name="cart-outline" size={18} color="#fff" />
+                  </View>
+                  <Text style={enhancedStyles.statValue}>{profileData?.stats?.productsPurchased || 0}</Text>
+                  <Text style={enhancedStyles.statLabel}>Purchases</Text>
                 </View>
               </View>
             </View>
           </View>
         </View>
 
-        {/* Modern Action Buttons */}
+        {/* Action Buttons */}
         <View style={enhancedStyles.actionsContainer}>
           <TouchableOpacity
-            style={[enhancedStyles.actionButtonPrimary, { flex: 1 }]}
-            onPress={() => router.push('/(profile)/edit')}
+            style={[enhancedStyles.actionButtonPrimary, { flex: 1, marginRight: 8 }]}
+            onPress={() => router.push('/(profile)/wallet')}
           >
             <LinearGradient
               colors={['#8e78fb', '#7a68f5']}
@@ -259,7 +258,21 @@ export default function ProfileScreen() {
               end={{ x: 1, y: 0 }}
               style={enhancedStyles.actionButtonGradient}
             >
-              <Ionicons name="pencil" size={18} color="#fff" />
+              <Ionicons name="wallet-outline" size={18} color="#fff" />
+              <Text style={enhancedStyles.actionButtonPrimaryText}>Wallet</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[enhancedStyles.actionButtonPrimary, { flex: 1 }]}
+            onPress={() => router.push('/(profile)/edit')}
+          >
+            <LinearGradient
+              colors={['#374151', '#1f2937']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={enhancedStyles.actionButtonGradient}
+            >
+              <Ionicons name="create-outline" size={18} color="#fff" />
               <Text style={enhancedStyles.actionButtonPrimaryText}>Edit Profile</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -285,7 +298,7 @@ export default function ProfileScreen() {
             <View style={enhancedStyles.bioSection}>
               <View style={enhancedStyles.bioEmptyState}>
                 <View style={enhancedStyles.bioEmptyIcon}>
-                  <Ionicons name="person-outline" size={24} color="#8e78fb" />
+                  <Ionicons name="document-text-outline" size={24} color="#8e78fb" />
                 </View>
                 <Text style={enhancedStyles.bioEmptyText}>No bio added yet</Text>
                 <Text style={enhancedStyles.bioEmptySubtext}>Add a bio to tell others about yourself</Text>
@@ -381,8 +394,8 @@ export default function ProfileScreen() {
               <Text style={enhancedStyles.sectionTitle}>About Me</Text>
               <View style={enhancedStyles.infoCard}>
                 <View style={enhancedStyles.infoRow}>
-                  <View style={[enhancedStyles.infoIcon, { backgroundColor: '#f0edff' }]}>
-                    <Ionicons name="mail" size={20} color="#8e78fb" />
+                  <View style={[enhancedStyles.infoIcon, { backgroundColor: 'rgba(142, 120, 251, 0.15)' }]}>
+                    <Ionicons name="mail-outline" size={20} color="#8e78fb" />
                   </View>
                   <View style={enhancedStyles.infoContent}>
                     <Text style={enhancedStyles.infoLabel}>Email</Text>
@@ -391,8 +404,8 @@ export default function ProfileScreen() {
                 </View>
                 {(profileData?.user?.numtel || user?.numtel) && (
                   <View style={enhancedStyles.infoRow}>
-                    <View style={[enhancedStyles.infoIcon, { backgroundColor: '#e5f8ff' }]}>
-                      <Ionicons name="call" size={20} color="#47c7ea" />
+                    <View style={[enhancedStyles.infoIcon, { backgroundColor: 'rgba(71, 199, 234, 0.15)' }]}>
+                      <Ionicons name="call-outline" size={20} color="#47c7ea" />
                     </View>
                     <View style={enhancedStyles.infoContent}>
                       <Text style={enhancedStyles.infoLabel}>Phone</Text>
@@ -402,8 +415,8 @@ export default function ProfileScreen() {
                 )}
                 {(profileData?.user?.pays || user?.pays) && (
                   <View style={enhancedStyles.infoRow}>
-                    <View style={[enhancedStyles.infoIcon, { backgroundColor: '#fff0e5' }]}>
-                      <Ionicons name="globe-outline" size={20} color="#ff9b28" />
+                    <View style={[enhancedStyles.infoIcon, { backgroundColor: 'rgba(255, 155, 40, 0.15)' }]}>
+                      <Ionicons name="earth-outline" size={20} color="#ff9b28" />
                     </View>
                     <View style={enhancedStyles.infoContent}>
                       <Text style={enhancedStyles.infoLabel}>Country</Text>
@@ -413,8 +426,8 @@ export default function ProfileScreen() {
                 )}
                 {(profileData?.user?.ville || user?.ville) && (
                   <View style={enhancedStyles.infoRow}>
-                    <View style={[enhancedStyles.infoIcon, { backgroundColor: '#f0f9ff' }]}>
-                      <Ionicons name="location" size={20} color="#3b82f6" />
+                    <View style={[enhancedStyles.infoIcon, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
+                      <Ionicons name="location-outline" size={20} color="#3b82f6" />
                     </View>
                     <View style={enhancedStyles.infoContent}>
                       <Text style={enhancedStyles.infoLabel}>City</Text>
@@ -423,8 +436,8 @@ export default function ProfileScreen() {
                   </View>
                 )}
                 <View style={enhancedStyles.infoRow}>
-                  <View style={[enhancedStyles.infoIcon, { backgroundColor: '#ffe5f0' }]}>
-                    <Ionicons name="calendar" size={20} color="#f65887" />
+                  <View style={[enhancedStyles.infoIcon, { backgroundColor: 'rgba(246, 88, 135, 0.15)' }]}>
+                    <Ionicons name="calendar-outline" size={20} color="#f65887" />
                   </View>
                   <View style={enhancedStyles.infoContent}>
                     <Text style={enhancedStyles.infoLabel}>Member Since</Text>
@@ -460,7 +473,7 @@ export default function ProfileScreen() {
               ) : (
                 <View style={enhancedStyles.emptyStateCard}>
                   <View style={enhancedStyles.emptyStateIcon}>
-                    <Ionicons name="pulse-outline" size={48} color="#8e78fb" />
+                    <Ionicons name="time-outline" size={48} color="#8e78fb" />
                   </View>
                   <Text style={enhancedStyles.emptyStateText}>No recent activity</Text>
                   <Text style={enhancedStyles.emptyStateSubtext}>Your activities will appear here</Text>
@@ -476,9 +489,6 @@ export default function ProfileScreen() {
         isVisible={sidebarVisible}
         onClose={() => setSidebarVisible(false)}
       />
-
-      {/* Global Bottom Navigation */}
-      <GlobalBottomNavigation />
     </SafeAreaView>
   );
 }

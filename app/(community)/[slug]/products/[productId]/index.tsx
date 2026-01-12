@@ -101,7 +101,7 @@ export default function ProductDetailScreen() {
     },
     rating: Number((product as any)?.averageRating ?? (product as any)?.rating ?? averageRating ?? 0),
     reviewCount: Number((product as any)?.ratingCount ?? (product as any)?.reviews_count ?? ratingCount ?? 0),
-    image: product.images?.[0],
+    image: getImageUrl(product.images?.[0]),
     description: product.description || 'No description available.',
     features: (product as any)?.features || [],
     type: (product as any)?.type,
@@ -169,7 +169,7 @@ export default function ProductDetailScreen() {
 
   const handlePurchase = () => {
     router.push({
-      pathname: '/(communities)/manual-payment',
+      pathname: '/(communities)/payment',
       params: { contentType: 'product', productId: String(productId || '') },
     } as any);
   };

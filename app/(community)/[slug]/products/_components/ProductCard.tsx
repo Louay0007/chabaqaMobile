@@ -2,7 +2,7 @@ import { Download, Star, Users } from 'lucide-react-native';
 import React from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { Product } from '../../../../../lib/mock-data';
-import { getAvatarUrl } from '../../../../../lib/image-utils';
+import { getAvatarUrl, getImageUrl } from '../../../../../lib/image-utils';
 import { styles } from '../styles';
 
 interface ProductCardProps {
@@ -93,7 +93,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     >
       <View style={styles.productImageContainer}>
         <Image
-          source={{ uri: product?.images?.[0] || 'https://picsum.photos/300/200' }}
+          source={{ uri: getImageUrl(product?.images?.[0]) || 'https://picsum.photos/300/200' }}
           style={styles.productImage}
         />
         <View style={styles.badgeContainer}>
@@ -107,9 +107,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {product.title}
           </Text>
           <View style={styles.ratingContainer}>
-            <Star size={14} color="#f59e0b" />
+            <Star size={14} color="#f59e0b" fill={Number((product as any).rating || 0) > 0 ? "#f59e0b" : "transparent"} />
             <Text style={styles.ratingText}>
-              {product.rating || '4.8'} ({product.sales})
+              {Number((product as any).rating || 0).toFixed(1)} ({(product as any).ratingCount || 0})
             </Text>
           </View>
         </View>
@@ -124,7 +124,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </View>
           <View style={styles.downloadCount}>
             <Users size={14} color="#6b7280" />
-            <Text style={styles.downloadCountText}>{product.sales} downloads</Text>
+            <Text style={styles.downloadCountText}>{(product as any).sales || 0} downloads</Text>
           </View>
         </View>
 

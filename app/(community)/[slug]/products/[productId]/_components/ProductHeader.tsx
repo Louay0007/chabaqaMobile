@@ -44,13 +44,13 @@ export const ProductHeader: React.FC<ProductHeaderProps> = ({ product }) => {
             )}
           </View>
           <View style={styles.creatorDetails}>
-            <Text style={styles.productTitle}>{title}</Text>
+            <Text style={styles.productTitle}>{title || 'Untitled'}</Text>
             <Text style={styles.creatorText}>By {creator?.name || 'Anonymous Creator'}</Text>
-            {rating && (
+            {rating !== undefined && rating !== null && (
               <View style={styles.ratingContainer}>
-                <Star size={12} color="#fbbf24" fill="#fbbf24" />
+                <Star size={12} color="#fbbf24" fill={rating > 0 ? "#fbbf24" : "transparent"} />
                 <Text style={styles.rating}>
-                  {rating.toFixed(1)} ({reviewCount || 0} reviews)
+                  {Number(rating || 0).toFixed(1)} ({reviewCount || 0} reviews)
                 </Text>
               </View>
             )}

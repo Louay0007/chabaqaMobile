@@ -30,6 +30,12 @@ export default function CommunitiesLayout() {
         }} 
       />
       <Stack.Screen 
+        name="payment/index" 
+        options={{ 
+          headerShown: false,
+        }} 
+      />
+      <Stack.Screen 
         name="[slug]/index" 
         options={{ 
           headerShown: false, // Supprime le header avec "Community Details"

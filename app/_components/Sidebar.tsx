@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getMyJoinedCommunities } from '@/lib/communities-api';
 import { logout, getCachedUser } from '@/lib/auth';
 import { getImageUrl } from '@/lib/image-utils';
+import { getWalletBalance, formatAmount } from '@/lib/wallet-api';
 
 interface SidebarProps {
   isVisible: boolean;
@@ -29,6 +30,8 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
   const [joinedCommunities, setJoinedCommunities] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [loadingWallet, setLoadingWallet] = useState(false);
 
   // Load user data
   useEffect(() => {
@@ -57,8 +60,22 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
   useEffect(() => {
     if (isVisible && isAuthenticated) {
       fetchJoinedCommunities();
+      fetchWalletBalance();
     }
   }, [isVisible, isAuthenticated]);
+
+  const fetchWalletBalance = async () => {
+    try {
+      setLoadingWallet(true);
+      const balance = await getWalletBalance();
+      setWalletBalance(balance.balance);
+    } catch (error) {
+      console.error('Error fetching wallet balance:', error);
+      setWalletBalance(0);
+    } finally {
+      setLoadingWallet(false);
+    }
+  };
 
   const fetchJoinedCommunities = async () => {
     try {
@@ -272,6 +289,92 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
                 color={adaptiveColors.isDark ? '#9ca3af' : '#9ca3af'}
               />
             </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Wallet Section */}
+        {isAuthenticated && (
+          <View style={{
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            borderBottomWidth: 1,
+            borderBottomColor: adaptiveColors.isDark ? '#374151' : '#f3f4f6',
+            backgroundColor: adaptiveColors.isDark ? '#1f2937' : '#111827',
+          }}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  flex: 1,
+                }}
+                onPress={() => {
+                  router.push('/(profile)/wallet');
+                  onClose();
+                }}
+              >
+                <View style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 12,
+                }}>
+                  <Ionicons name="wallet" size={20} color="#ffffff" />
+                </View>
+                <View>
+                  <Text style={{
+                    fontSize: 12,
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    marginBottom: 2,
+                  }}>
+                    Wallet Balance
+                  </Text>
+                  {loadingWallet ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <Text style={{
+                      fontSize: 18,
+                      fontWeight: '700',
+                      color: '#ffffff',
+                    }}>
+                      {walletBalance.toFixed(2)} pts
+                    </Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#ffffff',
+                  paddingHorizontal: 14,
+                  paddingVertical: 10,
+                  borderRadius: 10,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                }}
+                onPress={() => {
+                  router.push('/(profile)/topup');
+                  onClose();
+                }}
+              >
+                <Ionicons name="add" size={16} color="#111827" />
+                <Text style={{
+                  color: '#111827',
+                  fontSize: 13,
+                  fontWeight: '600',
+                  marginLeft: 4,
+                }}>
+                  Top Up
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 

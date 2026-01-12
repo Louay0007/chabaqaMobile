@@ -55,14 +55,14 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
       // Member: navigate to community home
       router.push(`/(community)/${community.slug}/home`);
     } else {
-      // Non-member: navigate to manual payment page
-      router.push(`/(communities)/manual-payment?communityId=${community.id}`);
+      // Non-member: navigate to wallet payment page
+      router.push(`/(communities)/payment?communityId=${community.id}`);
     }
   };
 
   const handleJoinPress = () => {
-    // Navigate to manual payment page
-    router.push(`/(communities)/manual-payment?communityId=${community.id}`);
+    // Navigate to wallet payment page
+    router.push(`/(communities)/payment?communityId=${community.id}`);
   };
 
   const formatMembers = (count: number) => {

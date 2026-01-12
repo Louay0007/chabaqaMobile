@@ -32,10 +32,16 @@ export interface CreatorBankDetails {
  */
 export interface ProductForPayment {
   id: string;
+  _id: string;
   title: string;
   description: string;
   price: number;
   currency?: string;
+  images?: string[];
+  creatorId: string;
+  pricing?: {
+    priceType?: string;
+  };
   creator: {
     _id: string;
     name: string;
@@ -159,27 +165,68 @@ export async function getProductForPayment(
 
   const normalizeId = (value: any): string => {
     if (!value) return '';
-    if (typeof value === 'string') return value;
-    if (typeof value === 'object') {
-      return String(value._id || value.id || value.sub || '');
+    
+    // If it's already a clean string ID (24 hex chars for MongoDB ObjectId)
+    if (typeof value === 'string') {
+      // Check if it's a stringified object like "{_id: new ObjectId('...')}"
+      if (value.includes('ObjectId') || value.includes('{_id:')) {
+        // Try to extract the ObjectId from the string
+        const match = value.match(/ObjectId\(['"]([a-f0-9]{24})['"]\)/i) || 
+                      value.match(/['"]?([a-f0-9]{24})['"]?/);
+        if (match && match[1]) {
+          return match[1];
+        }
+      }
+      // If it's a clean 24-char hex string, return it
+      if (/^[a-f0-9]{24}$/i.test(value)) {
+        return value;
+      }
+      // Otherwise return as-is (might be a different ID format)
+      return value;
     }
+    
+    if (typeof value === 'object') {
+      // Handle ObjectId or object with _id/id
+      const id = value._id || value.id || value.sub;
+      if (id) {
+        // Recursively normalize in case _id is also an object
+        return normalizeId(id);
+      }
+    }
+    
     return String(value);
   };
 
-  // Prefer populated creator object if present, otherwise fall back to creatorId
+  // Get creatorId - can be stored as creatorId field or in creator object
+  const creatorIdFromProduct = product?.creatorId;
   const creatorFromProduct = product?.creator;
-  const creatorId = normalizeId(creatorFromProduct?._id || creatorFromProduct?.id || product?.creatorId);
+  
+  // Try to get creator ID from various sources
+  let creatorId = '';
+  if (creatorIdFromProduct) {
+    creatorId = normalizeId(creatorIdFromProduct);
+  } else if (creatorFromProduct) {
+    creatorId = normalizeId(creatorFromProduct._id || creatorFromProduct.id || creatorFromProduct);
+  }
 
-  const creator = creatorId ? await getUserById(creatorId).catch(() => null) : null;
+  // Only fetch user if we have a valid-looking ID
+  let creator = null;
+  if (creatorId && /^[a-f0-9]{24}$/i.test(creatorId)) {
+    creator = await getUserById(creatorId).catch(() => null);
+  }
 
   return {
     success: true,
     data: {
       id: String(product?.id || product?._id || productId),
+      _id: String(product?._id || product?.id || productId),
       title: product?.title || 'Product',
       description: product?.description || '',
       price: Number(product?.price || 0),
       currency: product?.currency,
+      images: product?.images || [],
+      creatorId: creatorId,
+      pricing: product?.pricing,
       creator: {
         _id: creatorId,
         name: (creatorFromProduct?.name || creator?.name || 'Creator') as string,

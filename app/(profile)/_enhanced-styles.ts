@@ -4,85 +4,42 @@ import { colors, spacing, fontSize, fontWeight, borderRadius } from '@/lib/desig
 export const enhancedStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9ff',
+    backgroundColor: '#111827',
   },
 
   // Header Styles
   headerWrapper: {
-    position: 'relative',
-    marginBottom: 0, // Removed margin
+    marginBottom: spacing.md,
   },
 
   headerGradient: {
-    paddingTop: spacing.lg, // Reduced from xxl
-    paddingHorizontal: spacing.md, // Reduced from xl
-    paddingBottom: 60, // Reduced from 80
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  
-  headerBackgroundImage: {
-    width: '150%',
-    height: '150%',
-    resizeMode: 'stretch', // Fully stretch the image to fill the entire area
-  },
-  
-
-  // Decorative Elements - Smaller and subtle
-  decorativeCircle1: {
-    position: 'absolute',
-    width: 100, // Reduced from 150
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    top: -20, // Adjusted position
-    right: -20,
+    paddingTop: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
+    backgroundColor: '#111827',
   },
 
-  decorativeCircle2: {
-    position: 'absolute',
-    width: 70, // Reduced from 100
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    bottom: 30, // Adjusted position
-    left: -15,
-  },
-
-  decorativeCircle3: {
-    position: 'absolute',
-    width: 40, // Reduced from 60
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    top: 70, // Adjusted position
-    left: 20,
-  },
-
-  // Avatar Styles - Enhanced with better spacing
+  // Avatar Styles
   avatarContainer: {
     alignItems: 'center',
-    marginTop: spacing.xl, // Increased for better spacing from nav bar
-    marginBottom: spacing.lg, // Increased for better spacing to user info
-    position: 'relative',
-    paddingHorizontal: spacing.md,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
   },
 
   avatarGlow: {
     shadowColor: '#8e78fb',
-    shadowOffset: { width: 0, height: 6 }, // Enhanced shadow
-    shadowOpacity: 0.4,
-    shadowRadius: 16, // Better glow effect
-    elevation: 8,
-    backgroundColor: 'transparent', // Ensure clean background
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
 
   avatar: {
-    width: 100, // Increased from 80 for better prominence
+    width: 100,
     height: 100,
     borderRadius: 50,
-    borderWidth: 4, // Restored border thickness
-    borderColor: 'rgba(255, 255, 255, 0.8)', // More visible border
+    borderWidth: 3,
+    borderColor: 'rgba(255, 255, 255, 0.9)',
   },
 
   avatarPlaceholder: {
@@ -115,74 +72,63 @@ export const enhancedStyles = StyleSheet.create({
     elevation: 5,
   },
 
-  // User Info - Enhanced with better spacing
+  // User Info
   userName: {
-    fontSize: 24, // Slightly increased for better hierarchy
+    fontSize: 24,
     fontWeight: '700',
-    color: '#1f2937',
+    color: '#ffffff',
     textAlign: 'center',
-    marginBottom: spacing.sm, // Better spacing
-    marginTop: spacing.sm, // Add top margin for breathing room
+    marginBottom: spacing.xs,
+    marginTop: spacing.sm,
     letterSpacing: 0.3,
-    textShadowColor: 'rgba(255, 255, 255, 0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-    paddingHorizontal: spacing.md, // Add horizontal padding
   },
 
   roleBadge: {
-    paddingHorizontal: spacing.lg, // Increased for better proportions
-    paddingVertical: spacing.xs, // Better vertical padding
-    backgroundColor: '#8e78fb',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: 'rgba(142, 120, 251, 0.2)',
     borderRadius: borderRadius.full,
-    marginBottom: spacing.sm, // Better spacing
+    marginBottom: spacing.xs,
     alignSelf: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 }, // Enhanced shadow
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(142, 120, 251, 0.4)',
   },
 
   roleText: {
-    fontSize: fontSize.xs, // Reduced from sm
+    fontSize: fontSize.xs,
     fontWeight: fontWeight.semibold,
-    color: '#fff',
+    color: '#8e78fb',
     textTransform: 'capitalize',
   },
 
   userEmail: {
-    fontSize: fontSize.base, // Restored for better readability
-    color: '#4b5563',
+    fontSize: fontSize.sm,
+    color: '#9ca3af',
     textAlign: 'center',
-    marginBottom: spacing.lg, // Better spacing
+    marginBottom: spacing.md,
     fontWeight: fontWeight.medium,
-    paddingHorizontal: spacing.md, // Add horizontal padding
   },
 
   userBio: {
     fontSize: fontSize.sm,
-    color: '#374151',
+    color: '#9ca3af',
     textAlign: 'center',
-    lineHeight: 22, // Better line height
-    paddingHorizontal: spacing.xl, // Better horizontal padding
-    marginBottom: spacing.md, // Add bottom margin
+    lineHeight: 22,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.md,
     fontWeight: fontWeight.normal,
   },
 
-  // Stats Container - Smaller
+  // Stats Container - 2x2 Grid (Normal Flow)
   statsContainer: {
-    position: 'absolute',
-    bottom: -50,
-    left: 0,
-    right: 0,
-    paddingHorizontal: spacing.md, // Reduced from xl
-    zIndex: 10,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    gap: spacing.sm,
   },
 
   statsRow: {
     flexDirection: 'row',
-    gap: spacing.sm, // Reduced from md
+    gap: spacing.sm,
   },
 
   statCardWrapper: {
@@ -190,58 +136,45 @@ export const enhancedStyles = StyleSheet.create({
   },
 
   statCard: {
-    padding: spacing.md, // Reduced from lg
-    borderRadius: borderRadius.md, // Reduced from lg
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
-    shadowColor: 'rgba(0,0,0,0.3)',
-    shadowOffset: { width: 0, height: 3 }, // Reduced
-    shadowOpacity: 0.2,
-    shadowRadius: 8, // Reduced from 15
-    elevation: 6,
-    borderWidth: 1.5, // Reduced from 2
-    borderColor: 'rgba(142, 120, 251, 0.3)',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: '#1f2937',
+    borderWidth: 1,
+    borderColor: '#374151',
   },
 
   statIcon: {
-    width: 36, // Reduced from 46
+    width: 36,
     height: 36,
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.sm, // Reduced from md
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 }, // Reduced
-    shadowOpacity: 0.25,
-    shadowRadius: 3,
-    elevation: 3,
-    borderWidth: 1.5, // Reduced from 2
-    borderColor: 'rgba(255, 255, 255, 0.4)',
+    marginBottom: spacing.xs,
   },
 
   statValue: {
-    fontSize: fontSize.lg, // Reduced from xl
+    fontSize: fontSize.xl,
     fontWeight: fontWeight.bold,
-    color: '#1f2937',
-    marginBottom: 2, // Reduced
+    color: '#ffffff',
+    marginBottom: 2,
   },
 
   statLabel: {
-    fontSize: 10, // Reduced from xs
-    fontWeight: fontWeight.medium, // Reduced from semibold
-    color: '#6b7280',
+    fontSize: 10,
+    fontWeight: fontWeight.medium,
+    color: '#9ca3af',
     textTransform: 'uppercase',
-    letterSpacing: 0.3, // Reduced
+    letterSpacing: 0.3,
   },
 
-  // Actions Container - Enhanced
+  // Actions Container
   actionsContainer: {
     flexDirection: 'row',
-    gap: spacing.md, // Better spacing between buttons
-    paddingHorizontal: spacing.lg, // Better horizontal padding
-    marginTop: 100,
-    marginBottom: spacing.xxl, // Increased bottom margin to prevent shadow clipping
-    paddingBottom: spacing.md, // Extra padding for shadow
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.lg,
+    marginBottom: spacing.lg,
   },
 
   actionButtonPrimary: {
@@ -302,22 +235,17 @@ export const enhancedStyles = StyleSheet.create({
 
   // Bio Section Styles
   bioSection: {
-    marginHorizontal: spacing.lg,
-    marginVertical: spacing.md,
-    backgroundColor: '#fff',
+    marginHorizontal: spacing.md,
+    marginVertical: spacing.sm,
+    backgroundColor: '#1f2937',
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-    borderLeftWidth: 4,
-    borderLeftColor: '#8e78fb',
+    borderWidth: 1,
+    borderColor: '#374151',
   },
 
   bioTitle: {
-    fontSize: fontSize.base,
+    fontSize: fontSize.sm,
     fontWeight: fontWeight.semibold,
     color: '#8e78fb',
     marginBottom: spacing.sm,
@@ -327,21 +255,21 @@ export const enhancedStyles = StyleSheet.create({
 
   bioText: {
     fontSize: fontSize.base,
-    color: colors.gray700,
+    color: '#e5e7eb',
     lineHeight: 24,
     fontWeight: fontWeight.normal,
   },
 
   bioEmptyState: {
     alignItems: 'center',
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.md,
   },
 
   bioEmptyIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(142, 120, 251, 0.1)',
+    backgroundColor: 'rgba(142, 120, 251, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.sm,
@@ -349,28 +277,30 @@ export const enhancedStyles = StyleSheet.create({
 
   bioEmptyText: {
     fontSize: fontSize.sm,
-    color: colors.gray500,
+    color: '#9ca3af',
     textAlign: 'center',
     marginBottom: spacing.xs,
   },
 
   bioEmptySubtext: {
     fontSize: fontSize.xs,
-    color: colors.gray400,
+    color: '#6b7280',
     textAlign: 'center',
   },
 
   // Tabs Styles
   tabsWrapper: {
-    paddingHorizontal: spacing.xl,
-    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
   },
 
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#f0edff',
+    backgroundColor: '#1f2937',
     borderRadius: borderRadius.lg,
     padding: 4,
+    borderWidth: 1,
+    borderColor: '#374151',
   },
 
   tab: {
@@ -396,9 +326,9 @@ export const enhancedStyles = StyleSheet.create({
   },
 
   tabText: {
-    fontSize: fontSize.base,
+    fontSize: fontSize.sm,
     fontWeight: fontWeight.medium,
-    color: colors.gray600,
+    color: '#9ca3af',
     zIndex: 1,
   },
 
@@ -414,42 +344,40 @@ export const enhancedStyles = StyleSheet.create({
 
   // About Section
   aboutSection: {
-    padding: spacing.xl,
+    padding: spacing.md,
   },
 
   sectionTitle: {
-    fontSize: fontSize.xl,
+    fontSize: fontSize.lg,
     fontWeight: fontWeight.bold,
-    color: colors.gray900,
-    marginBottom: spacing.lg,
+    color: '#ffffff',
+    marginBottom: spacing.md,
   },
 
   infoCard: {
-    backgroundColor: '#fff',
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
+    backgroundColor: '#1f2937',
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: '#374151',
   },
 
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.gray100,
+    borderBottomColor: '#374151',
   },
 
   infoIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: spacing.lg,
+    marginRight: spacing.md,
+    backgroundColor: 'rgba(142, 120, 251, 0.15)',
   },
 
   infoContent: {
@@ -459,7 +387,7 @@ export const enhancedStyles = StyleSheet.create({
   infoLabel: {
     fontSize: fontSize.xs,
     fontWeight: fontWeight.medium,
-    color: colors.gray500,
+    color: '#6b7280',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
@@ -468,27 +396,24 @@ export const enhancedStyles = StyleSheet.create({
   infoText: {
     fontSize: fontSize.base,
     fontWeight: fontWeight.medium,
-    color: colors.gray900,
+    color: '#ffffff',
   },
 
   // Activity Section
   activitySection: {
-    padding: spacing.xl,
+    padding: spacing.md,
   },
 
   activityItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: '#fff',
-    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    backgroundColor: '#1f2937',
+    borderRadius: borderRadius.lg,
     marginBottom: spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#374151',
   },
 
   activityIcon: {
@@ -507,55 +432,52 @@ export const enhancedStyles = StyleSheet.create({
   activityTitle: {
     fontSize: fontSize.base,
     fontWeight: fontWeight.semibold,
-    color: colors.gray900,
+    color: '#ffffff',
     marginBottom: spacing.xs,
   },
 
   activityDescription: {
     fontSize: fontSize.sm,
-    color: colors.gray600,
+    color: '#9ca3af',
     marginBottom: spacing.xs,
     lineHeight: 20,
   },
 
   activityTime: {
     fontSize: fontSize.xs,
-    color: colors.gray500,
+    color: '#6b7280',
     fontWeight: fontWeight.medium,
   },
 
   emptyStateCard: {
-    backgroundColor: '#fff',
-    borderRadius: borderRadius.xl,
-    padding: spacing.xxxl,
+    backgroundColor: '#1f2937',
+    borderRadius: borderRadius.lg,
+    padding: spacing.xxl,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#374151',
   },
 
   emptyStateIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#f0edff',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(142, 120, 251, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
 
   emptyStateText: {
     fontSize: fontSize.lg,
     fontWeight: fontWeight.semibold,
-    color: colors.gray900,
-    marginBottom: spacing.sm,
+    color: '#ffffff',
+    marginBottom: spacing.xs,
   },
 
   emptyStateSubtext: {
-    fontSize: fontSize.base,
-    color: colors.gray500,
+    fontSize: fontSize.sm,
+    color: '#6b7280',
     textAlign: 'center',
   },
 
@@ -565,11 +487,12 @@ export const enhancedStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.xl,
+    backgroundColor: '#111827',
   },
 
   emptyText: {
     fontSize: fontSize.base,
-    color: colors.gray500,
+    color: '#9ca3af',
     textAlign: 'center',
     marginTop: spacing.lg,
   },
@@ -580,11 +503,6 @@ export const enhancedStyles = StyleSheet.create({
     paddingHorizontal: spacing.xxl,
     borderRadius: borderRadius.lg,
     marginTop: spacing.lg,
-    shadowColor: '#8e78fb',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
   },
 
   buttonText: {

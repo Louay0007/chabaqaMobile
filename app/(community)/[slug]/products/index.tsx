@@ -69,7 +69,10 @@ export default function ProductsScreen() {
             name: creatorName,
             avatar: getAvatarUrl(creatorInfo.avatar || creatorInfo.profile_picture || creatorInfo.photo_profil),
           },
-          rating: 4.8,
+          // Use real rating data from backend
+          rating: Number(product.averageRating || product.rating || 0),
+          ratingCount: Number(product.ratingCount || product.reviews_count || 0),
+          sales: product.sales || 0,
           downloads: product.sales || 0,
           members: 0,
           category: product.category,
@@ -157,7 +160,8 @@ export default function ProductsScreen() {
       product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const isPurchased = userPurchases.some((p: any) => p.productId === product.id);
+    // Use accessMap as the source of truth for purchased status
+    const isPurchased = accessMap[String(product.id)]?.purchased || userPurchases.some((p: any) => p.productId === product.id);
 
     if (activeTab === 'purchased') {
       return matchesSearch && isPurchased;
@@ -171,9 +175,11 @@ export default function ProductsScreen() {
     return matchesSearch;
   });
 
-  // Calculate counts for tabs and header
+  // Calculate counts for tabs and header - use accessMap for accurate purchased count
   const totalProducts = allProducts.length;
-  const purchasedCount = userPurchases.length;
+  const purchasedCount = allProducts.filter((p: any) => 
+    accessMap[String(p.id)]?.purchased || userPurchases.some((up: any) => up.productId === p.id)
+  ).length;
   const freeCount = allProducts.filter((p: any) => p.price === 0).length;
   const premiumCount = allProducts.filter((p: any) => p.price > 0).length;
 
@@ -192,7 +198,7 @@ export default function ProductsScreen() {
 
   const handlePurchase = (product: any) => {
     router.push({
-      pathname: '/(communities)/manual-payment',
+      pathname: '/(communities)/payment',
       params: { contentType: 'product', productId: String(product.id) },
     } as any);
   };
