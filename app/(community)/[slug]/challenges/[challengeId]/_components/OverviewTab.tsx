@@ -117,10 +117,15 @@ export default function OverviewTab({
     ? Math.round((completedTasks / challengeTasks.length) * 100)
     : 0;
 
+  // Calculate total days from challenge duration or tasks
+  const totalDays = challengeTasks.length > 0 
+    ? Math.max(...challengeTasks.map(t => t.day || 0), challengeTasks.length)
+    : 0;
+
   return (
     <View style={styles.tabContent}>
       {/* Current Task */}
-      {currentTask && (
+      {currentTask && currentTask.day ? (
         <View style={styles.currentTaskCard}>
           <View style={styles.cardHeader}>
             <View style={styles.cardTitleContainer}>
@@ -128,7 +133,7 @@ export default function OverviewTab({
               <Text style={styles.cardTitle}>Day {currentTask.day} Challenge</Text>
             </View>
             <View style={styles.pointsBadge}>
-              <Text style={styles.pointsText}>{currentTask.points} pts</Text>
+              <Text style={styles.pointsText}>{currentTask.points || 0} pts</Text>
             </View>
           </View>
 
@@ -195,7 +200,21 @@ export default function OverviewTab({
             </View>
           </View>
         </View>
-      )}
+      ) : challengeTasks.length === 0 ? (
+        <View style={styles.currentTaskCard}>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardTitleContainer}>
+              <Target size={16} color="#f97316" />
+              <Text style={styles.cardTitle}>No Tasks Yet</Text>
+            </View>
+          </View>
+          <View style={styles.cardContent}>
+            <Text style={styles.taskCardDescription}>
+              This challenge doesn't have any tasks defined yet. Check back later or contact the creator.
+            </Text>
+          </View>
+        </View>
+      ) : null}
 
       {/* Progress Card */}
       <View style={styles.progressCard}>
@@ -213,7 +232,7 @@ export default function OverviewTab({
         </View>
         <View style={styles.progressDetails}>
           <Text style={styles.progressDetailText}>
-            {asText(completedTasks)} of {asText(challengeTasks.length)} days completed
+            {asText(completedTasks)} of {asText(totalDays || challengeTasks.length)} days completed
           </Text>
         </View>
       </View>

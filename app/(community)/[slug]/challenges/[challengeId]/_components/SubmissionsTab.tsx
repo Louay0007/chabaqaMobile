@@ -3,6 +3,8 @@ import { updateChallengeProgress } from '@/lib/challenge-api';
 import { 
   AlertCircle, 
   CheckCircle, 
+  ChevronDown,
+  ChevronUp,
   Circle, 
   Clock, 
   FileText, 
@@ -64,6 +66,15 @@ export default function SubmissionsTab({
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [userCompletedTasks, setUserCompletedTasks] = useState<string[]>([]);
+  const [expandedTasks, setExpandedTasks] = useState<string[]>([]);
+
+  const toggleTaskExpanded = (taskId: string) => {
+    setExpandedTasks(prev => 
+      prev.includes(taskId) 
+        ? prev.filter(id => id !== taskId)
+        : [...prev, taskId]
+    );
+  };
 
   useEffect(() => {
     getCurrentUser().then(user => {
@@ -299,13 +310,15 @@ export default function SubmissionsTab({
           </View>
         ) : (
           tasks.map((task, index) => {
-            const completed = isTaskCompleted(task.id);
-            const isSubmitting = submitting === task.id;
+            const taskId = task.id || `task-${index}`;
+            const completed = isTaskCompleted(taskId);
+            const isSubmitting = submitting === taskId;
             const isLast = index === tasks.length - 1;
+            const isExpanded = expandedTasks.includes(taskId);
 
             return (
               <View
-                key={task.id}
+                key={taskId}
                 style={{
                   padding: 16,
                   backgroundColor: completed ? '#ecfdf5' : '#ffffff',
@@ -333,6 +346,7 @@ export default function SubmissionsTab({
 
                   {/* Task Content */}
                   <View style={{ flex: 1 }}>
+                    {/* Header Row: Day + Points */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                       <View style={{
                         backgroundColor: completed ? '#d1fae5' : '#f3f4f6',
@@ -358,36 +372,148 @@ export default function SubmissionsTab({
                       }}>
                         <Star size={10} color="#f59e0b" fill="#f59e0b" />
                         <Text style={{ color: '#b45309', fontSize: 11, fontWeight: '700', marginLeft: 3 }}>
-                          {task.points}
+                          {task.points} pts
                         </Text>
                       </View>
                     </View>
 
+                    {/* Task Title */}
                     <Text style={{
                       color: '#111827',
-                      fontSize: 14,
+                      fontSize: 15,
                       fontWeight: '600',
-                      marginTop: 6,
-                    }} numberOfLines={1}>
+                      marginTop: 8,
+                    }}>
                       {task.title}
                     </Text>
 
-                    {task.deliverable && (
+                    {/* Description (always visible, truncated if not expanded) */}
+                    {task.description && (
                       <Text style={{
-                        color: '#6b7280',
-                        fontSize: 12,
-                        marginTop: 4,
-                      }} numberOfLines={2}>
-                        {task.deliverable}
+                        color: '#4b5563',
+                        fontSize: 13,
+                        marginTop: 6,
+                        lineHeight: 18,
+                      }} numberOfLines={isExpanded ? undefined : 2}>
+                        {task.description}
                       </Text>
                     )}
 
+                    {/* Expand/Collapse Button */}
+                    <TouchableOpacity
+                      onPress={() => toggleTaskExpanded(taskId)}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginTop: 8,
+                        paddingVertical: 4,
+                      }}
+                    >
+                      {isExpanded ? (
+                        <ChevronUp size={16} color="#6b7280" />
+                      ) : (
+                        <ChevronDown size={16} color="#6b7280" />
+                      )}
+                      <Text style={{ color: '#6b7280', fontSize: 12, marginLeft: 4 }}>
+                        {isExpanded ? 'Show less' : 'Show more details'}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Expanded Details */}
+                    {isExpanded && (
+                      <View style={{ marginTop: 12 }}>
+                        {/* Deliverable */}
+                        {task.deliverable && (
+                          <View style={{
+                            backgroundColor: '#f0fdf4',
+                            padding: 12,
+                            borderRadius: 8,
+                            marginBottom: 10,
+                            borderLeftWidth: 3,
+                            borderLeftColor: '#10b981',
+                          }}>
+                            <Text style={{ color: '#059669', fontSize: 12, fontWeight: '600', marginBottom: 4 }}>
+                              📦 Deliverable
+                            </Text>
+                            <Text style={{ color: '#374151', fontSize: 13, lineHeight: 18 }}>
+                              {task.deliverable}
+                            </Text>
+                          </View>
+                        )}
+
+                        {/* Instructions */}
+                        {task.instructions && (
+                          <View style={{
+                            backgroundColor: '#eff6ff',
+                            padding: 12,
+                            borderRadius: 8,
+                            marginBottom: 10,
+                            borderLeftWidth: 3,
+                            borderLeftColor: '#3b82f6',
+                          }}>
+                            <Text style={{ color: '#1d4ed8', fontSize: 12, fontWeight: '600', marginBottom: 4 }}>
+                              📋 Instructions
+                            </Text>
+                            <Text style={{ color: '#374151', fontSize: 13, lineHeight: 18 }}>
+                              {task.instructions}
+                            </Text>
+                          </View>
+                        )}
+
+                        {/* Notes */}
+                        {task.notes && (
+                          <View style={{
+                            backgroundColor: '#fefce8',
+                            padding: 12,
+                            borderRadius: 8,
+                            marginBottom: 10,
+                            borderLeftWidth: 3,
+                            borderLeftColor: '#eab308',
+                          }}>
+                            <Text style={{ color: '#a16207', fontSize: 12, fontWeight: '600', marginBottom: 4 }}>
+                              📝 Notes
+                            </Text>
+                            <Text style={{ color: '#374151', fontSize: 13, lineHeight: 18 }}>
+                              {task.notes}
+                            </Text>
+                          </View>
+                        )}
+
+                        {/* Resources */}
+                        {task.resources && task.resources.length > 0 && (
+                          <View style={{
+                            backgroundColor: '#f5f3ff',
+                            padding: 12,
+                            borderRadius: 8,
+                            borderLeftWidth: 3,
+                            borderLeftColor: '#8b5cf6',
+                          }}>
+                            <Text style={{ color: '#6d28d9', fontSize: 12, fontWeight: '600', marginBottom: 8 }}>
+                              🔗 Resources ({task.resources.length})
+                            </Text>
+                            {task.resources.map((resource: any, idx: number) => (
+                              <View key={resource.id || `resource-${idx}`} style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingVertical: 4,
+                              }}>
+                                <Text style={{ color: '#6b7280', fontSize: 12, marginRight: 6 }}>•</Text>
+                                <Text style={{ color: '#374151', fontSize: 13, flex: 1 }}>
+                                  {resource.title || resource.url}
+                                </Text>
+                              </View>
+                            ))}
+                          </View>
+                        )}
+                      </View>
+                    )}
+
                     {/* Action Button */}
-                    {isParticipant && (
+                    {isParticipant && task.id && (
                       <View style={{ marginTop: 12 }}>
                         {completed ? (
                           <TouchableOpacity
-                            onPress={() => handleUndoSubmission(task.id)}
+                            onPress={() => handleUndoSubmission(taskId)}
                             disabled={isSubmitting}
                             style={{
                               flexDirection: 'row',
@@ -412,7 +538,7 @@ export default function SubmissionsTab({
                           </TouchableOpacity>
                         ) : (
                           <TouchableOpacity
-                            onPress={() => handleSubmitTask(task.id)}
+                            onPress={() => handleSubmitTask(taskId)}
                             disabled={isSubmitting}
                             style={{
                               flexDirection: 'row',

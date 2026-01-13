@@ -12,8 +12,7 @@ import {
   Image,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Star, Send, User } from 'lucide-react-native';
+import { Star, Send, User } from 'lucide-react-native';
 import { useAuth } from '@/hooks/use-auth';
 import {
   getCommunityReviews,
@@ -24,11 +23,11 @@ import {
 } from '@/lib/communities-api';
 import { getImageUrl } from '@/lib/image-utils';
 import BottomNavigation from '../../_components/BottomNavigation';
+import CommunityHeader from '../../_components/Header';
 
 export default function ReviewsPage() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -167,15 +166,9 @@ export default function ReviewsPage() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <ArrowLeft size={24} color="#000000" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Reviews</Text>
-          <View style={{ width: 40 }} />
-        </View>
+      <View style={styles.container}>
+        {/* Use the same header as other community pages */}
+        <CommunityHeader showBack communitySlug={slug} />
 
         <ScrollView
           style={styles.content}
@@ -306,29 +299,6 @@ const styles = StyleSheet.create({
   centered: {
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-    backgroundColor: '#ffffff',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f3f4f6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
   },
   content: {
     flex: 1,
