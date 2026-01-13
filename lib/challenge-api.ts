@@ -695,3 +695,138 @@ export function calculateChallengeCompletion(
   if (totalTasks === 0) return 0;
   return Math.round((completedTasks / totalTasks) * 100);
 }
+
+/**
+ * Purchase challenge with wallet balance
+ * 
+ * @param challengeId - Challenge ID to purchase
+ * @param amount - Amount in DT
+ * @param creatorId - Creator ID
+ * @returns Promise with purchase result
+ */
+export async function purchaseChallengeWithWallet(
+  challengeId: string,
+  amount: number,
+  creatorId: string
+): Promise<{ success: boolean; newBalance: number; message?: string }> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      throw new Error('Authentication required. Please login to purchase.');
+    }
+
+    console.log('💳 [CHALLENGE-API] Purchasing challenge with wallet:', { challengeId, amount, creatorId });
+
+    const resp = await tryEndpoints<any>(
+      `/api/wallet/purchase`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        data: {
+          contentType: 'challenge',
+          contentId: challengeId,
+          amount,
+          creatorId,
+          description: `Challenge purchase`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    if (resp.status >= 200 && resp.status < 300) {
+      console.log('✅ [CHALLENGE-API] Challenge purchased successfully');
+      return {
+        success: true,
+        newBalance: resp.data.data?.newBalance || 0,
+        message: resp.data.message || 'Purchase successful',
+      };
+    }
+
+    throw new Error(resp.data?.message || 'Failed to purchase challenge');
+  } catch (error: any) {
+    console.error('💥 [CHALLENGE-API] Error purchasing challenge:', error);
+    throw new Error(error.message || 'Failed to purchase challenge');
+  }
+}
+
+/**
+ * Get user wallet balance
+ * 
+ * @returns Promise with wallet balance
+ */
+export async function getWalletBalance(): Promise<{ balance: number; currency: string }> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { balance: 0, currency: 'DT' };
+    }
+
+    const resp = await tryEndpoints<any>(
+      `/api/wallet/balance`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    if (resp.status >= 200 && resp.status < 300) {
+      return {
+        balance: resp.data.data?.balance || 0,
+        currency: resp.data.data?.currency || 'DT',
+      };
+    }
+
+    return { balance: 0, currency: 'DT' };
+  } catch (error: any) {
+    console.error('💥 [CHALLENGE-API] Error fetching wallet balance:', error);
+    return { balance: 0, currency: 'DT' };
+  }
+}
+
+/**
+ * Check if user is already a participant in a challenge
+ * 
+ * @param challenge - Challenge object
+ * @param userId - User ID to check
+ * @returns Boolean indicating if user is a participant
+ */
+export function isUserParticipant(challenge: Challenge, userId: string | null): boolean {
+  if (!userId || !challenge.participants) return false;
+  return challenge.participants.some(
+    p => p.userId === userId || p.userId === userId?.toString()
+  );
+}
+
+/**
+ * Get challenge price (participation fee)
+ * 
+ * @param challenge - Challenge object
+ * @returns Price in DT or 0 if free
+ */
+export function getChallengePrice(challenge: Challenge): number {
+  // Check pricing object first
+  if (challenge.participationFee !== undefined && challenge.participationFee > 0) {
+    return challenge.participationFee;
+  }
+  // Legacy: check depositAmount
+  if (challenge.depositAmount !== undefined && challenge.depositAmount > 0) {
+    return challenge.depositAmount;
+  }
+  return 0;
+}
+
+/**
+ * Check if challenge is free
+ * 
+ * @param challenge - Challenge object
+ * @returns Boolean indicating if challenge is free
+ */
+export function isChallengeFree(challenge: Challenge): boolean {
+  return challenge.isFree === true || getChallengePrice(challenge) === 0;
+}

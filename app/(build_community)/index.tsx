@@ -1,12 +1,10 @@
-﻿import AdaptiveBackground from '@/_components/AdaptiveBackground';
-import AdaptiveStatusBar from '@/_components/AdaptiveStatusBar';
+﻿import AdaptiveStatusBar from '@/_components/AdaptiveStatusBar';
 import BackButton from '@/_components/BackButton';
 import { createCommunityAction } from '@/lib/build-community-api';
-import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import StepOne from './_components/StepOne';
 import Stepper from './_components/Stepper';
 import StepThree from './_components/StepThree';
@@ -14,15 +12,32 @@ import StepTwo from './_components/StepTwo';
 import Success from './_components/Success';
 import styles from './styles';
 
-// Type definition for form data
+/**
+ * Pricing Configuration - Matches backend CommunityPricingDto
+ */
+type PricingConfig = {
+  price: number;
+  currency: 'USD' | 'TND' | 'EUR';
+  priceType: 'free' | 'one-time' | 'monthly' | 'yearly';
+  isRecurring: boolean;
+  recurringInterval?: 'month' | 'year' | 'week';
+  freeTrialDays: number;
+  paymentOptions: {
+    allowInstallments: boolean;
+    installmentCount: number;
+    earlyBirdDiscount: number;
+    groupDiscount: number;
+    memberDiscount: number;
+  };
+};
+
+/**
+ * Community Form Data - Matches backend CreateCommunityDto exactly
+ */
 type CommunityFormData = {
+  // REQUIRED FIELDS
   name: string;
-  bio: string;
-  longDescription?: string;
   country: string;
-  category?: string;
-  type?: string;
-  tags?: string[];
   status: 'public' | 'private';
   joinFee: 'free' | 'paid';
   feeAmount: string;
@@ -39,34 +54,69 @@ type CommunityFormData = {
     behance?: string;
     github?: string;
   };
-  coverImage?: string; // Add cover image field
+  
+  // OPTIONAL FIELDS
+  bio: string;
+  longDescription?: string;
+  category?: string;
+  type?: string;
+  tags?: string[];
+  coverImage?: string;
+  
+  // PRICING CONFIGURATION
+  pricing?: PricingConfig;
 };
 
 export default function BuildCommunityScreen() {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedCoverImage, setSelectedCoverImage] = useState<string | null>(null); // Add cover image state
+  const [selectedCoverImage, setSelectedCoverImage] = useState<string | null>(null);
   const [formData, setFormData] = useState<CommunityFormData>({
     name: '',
-    bio: '',
-    longDescription: '',
     country: '',
-    category: 'Technology',
-    type: 'community',
-    tags: [],
     status: 'public',
     joinFee: 'free',
     feeAmount: '0',
-    currency: 'USD',
-    socialLinks: { instagram: '', tiktok: '', facebook: '', youtube: '', linkedin: '', website: '', twitter: '', discord: '', behance: '', github: '' },
-    coverImage: '', // Initialize cover image
+    currency: 'TND',
+    socialLinks: { 
+      instagram: '', 
+      tiktok: '', 
+      facebook: '', 
+      youtube: '', 
+      linkedin: '', 
+      website: '', 
+      twitter: '', 
+      discord: '', 
+      behance: '', 
+      github: '' 
+    },
+    bio: '',
+    longDescription: '',
+    category: '',
+    type: 'community',
+    tags: [],
+    coverImage: '',
+    pricing: {
+      price: 0,
+      currency: 'TND',
+      priceType: 'free',
+      isRecurring: false,
+      freeTrialDays: 0,
+      paymentOptions: {
+        allowInstallments: false,
+        installmentCount: 3,
+        earlyBirdDiscount: 0,
+        groupDiscount: 0,
+        memberDiscount: 0,
+      },
+    },
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [socialLinkErrors, setSocialLinkErrors] = useState<Record<string, string>>({});
-  const [selectedCurrency, setSelectedCurrency] = useState<'USD' | 'TND' | 'EUR'>('USD');
+  const [selectedCurrency, setSelectedCurrency] = useState<'USD' | 'TND' | 'EUR'>('TND');
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const currencies: Array<{ code: 'USD' | 'TND' | 'EUR'; name: string; symbol: string }> = [
     { code: 'USD', name: 'United States Dollar', symbol: '$' },
@@ -74,7 +124,12 @@ export default function BuildCommunityScreen() {
     { code: 'EUR', name: 'Euro', symbol: '€' }
   ];
 
-  const updateFormData = (field: string, value: string) => {
+  const updateFormData = (field: string, value: string | PricingConfig) => {
+    if (field === 'pricing') {
+      setFormData(prev => ({ ...prev, pricing: value as PricingConfig }));
+      return;
+    }
+    
     if (field.includes('.')) {
       const [parent, child] = field.split('.');
       if (parent === 'socialLinks') {
@@ -82,16 +137,13 @@ export default function BuildCommunityScreen() {
           ...prev,
           socialLinks: {
             ...prev.socialLinks,
-            [child]: value
+            [child]: value as string
           }
         }));
-        validateAndSetSocialLink(child, value);
+        validateAndSetSocialLink(child, value as string);
       }
     } else if (field === 'tags') {
-      const tags = value
-        .split(',')
-        .map(t => t.trim())
-        .filter(Boolean);
+      const tags = (value as string).split(',').map(t => t.trim()).filter(Boolean);
       setFormData(prev => ({ ...prev, tags }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value } as CommunityFormData));
@@ -132,13 +184,17 @@ export default function BuildCommunityScreen() {
     switch (currentStep) {
       case 1: 
         return formData.name.trim() !== '' && formData.country.trim() !== '';
-      case 2: 
-        return formData.joinFee === 'paid' ? formData.feeAmount && parseFloat(formData.feeAmount) > 0 : true;
+      case 2: {
+        // For paid pricing types, require a price > 0
+        const pricing = formData.pricing;
+        if (pricing && pricing.priceType !== 'free') {
+          return pricing.price > 0;
+        }
+        return true;
+      }
       case 3: {
-        // Check if at least one social link is provided and no validation errors
         const hasAtLeastOneLink = Object.values(formData.socialLinks).some(link => link.trim() !== '');
         const hasNoErrors = Object.keys(socialLinkErrors).length === 0;
-        console.log('🔍 Step 3 validation:', { hasAtLeastOneLink, hasNoErrors, socialLinks: formData.socialLinks });
         return hasAtLeastOneLink && hasNoErrors;
       }
       default: 
@@ -150,61 +206,58 @@ export default function BuildCommunityScreen() {
   const prevStep = () => currentStep > 1 && setCurrentStep(currentStep - 1);
 
   useEffect(() => {
-    // Keep formData.currency in sync with the UI-selected currency
-    setFormData(prev => ({ ...prev, currency: selectedCurrency }));
+    setFormData(prev => ({ 
+      ...prev, 
+      currency: selectedCurrency,
+      pricing: prev.pricing ? { ...prev.pricing, currency: selectedCurrency } : prev.pricing
+    }));
   }, [selectedCurrency]);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setError('');
     try {
-      // Validate that at least one social link is provided
       const hasAtLeastOneLink = Object.values(formData.socialLinks).some(link => link.trim() !== '');
       if (!hasAtLeastOneLink) {
-        setError('Au moins un lien social est requis pour créer une communauté');
+        setError('At least one social link is required');
         setIsSubmitting(false);
         return;
       }
 
+      // Prepare data with pricing configuration
+      const pricing = formData.pricing;
       const dataToSubmit: CommunityFormData = { 
         ...formData, 
-        feeAmount: formData.joinFee === 'paid' ? formData.feeAmount : '0',
+        joinFee: pricing?.priceType === 'free' ? 'free' : 'paid',
+        feeAmount: pricing?.priceType === 'free' ? '0' : String(pricing?.price || 0),
         currency: selectedCurrency,
+        pricing: pricing,
       };
       
-      console.log('📤 Données à envoyer:', JSON.stringify(dataToSubmit, null, 2));
+      console.log('📤 Submitting community data:', JSON.stringify(dataToSubmit, null, 2));
       
       const result = await createCommunityAction(dataToSubmit, selectedImage || undefined, selectedCoverImage || undefined);
       
       if (result.success) {
-        console.log('✅ Communauté créée avec succès:', result);
         setSuccess(true);
-        // Navigate after a short delay to show success message
         setTimeout(() => {
           try {
             router.push('/(communities)');
           } catch (error) {
-            console.log('Navigation error:', error);
-            // Fallback navigation
             router.replace('/');
           }
         }, 2000);
       } else {
-        console.error('❌ Erreur lors de la création:', result.error);
-        setError(result.error || "Une erreur s'est produite");
+        setError(result.error || 'An error occurred');
       }
     } catch (error) {
-      console.error('💥 Exception lors de la création:', error);
-      setError('Erreur de connexion. Veuillez réessayer.');
+      setError('Connection error. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleImagePicker = (imageUri: string) => {
-    setSelectedImage(imageUri);
-  };
-
+  const handleImagePicker = (imageUri: string) => setSelectedImage(imageUri);
   const handleCoverImagePicker = (imageUri: string) => {
     setSelectedCoverImage(imageUri);
     updateFormData('coverImage', imageUri);
@@ -213,24 +266,59 @@ export default function BuildCommunityScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <AdaptiveStatusBar />
-      <AdaptiveBackground style={styles.background} resizeMode="cover">
+      <View style={styles.background}>
         <View style={styles.safeAreaTop} />
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.headerContainer}>
-            <BackButton 
-              onPress={() => router.back()} 
-              color="#1f2937" 
-              size={28} 
+            <BackButton onPress={() => router.back()} color="#ffffff" size={28} />
+            {/* Chabaqa Logo - Top Right */}
+            <Image
+              source={require('@/assets/images/logo_chabaqa.png')}
+              style={{ width: 72, height: 72, borderRadius: 16, position: 'absolute', right: 0, top: 0 }}
+              resizeMode="contain"
             />
           </View>
-          <BlurView intensity={20} style={styles.card}>
+          
+          <View style={styles.card}>
             {!success ? (
               <View style={styles.form}>
-                {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                {error ? (
+                  <View style={styles.errorMessage}>
+                    <Text style={styles.errorText}>{error}</Text>
+                  </View>
+                ) : null}
+                
                 <Stepper currentStep={currentStep} />
-                {currentStep === 1 && <StepOne formData={formData} updateFormData={updateFormData} selectedImage={selectedImage} handleImagePicker={handleImagePicker} selectedCoverImage={selectedCoverImage} handleCoverImagePicker={handleCoverImagePicker} />}
-                {currentStep === 2 && <StepTwo formData={formData} updateFormData={updateFormData} selectedCurrency={selectedCurrency} setSelectedCurrency={setSelectedCurrency} showCurrencyModal={showCurrencyModal} setShowCurrencyModal={setShowCurrencyModal} currencies={currencies} />}
-                {currentStep === 3 && <StepThree formData={formData} updateFormData={updateFormData} socialLinkErrors={socialLinkErrors} />}
+                
+                {currentStep === 1 && (
+                  <StepOne 
+                    formData={formData} 
+                    updateFormData={updateFormData} 
+                    selectedImage={selectedImage} 
+                    handleImagePicker={handleImagePicker} 
+                    selectedCoverImage={selectedCoverImage} 
+                    handleCoverImagePicker={handleCoverImagePicker} 
+                  />
+                )}
+                {currentStep === 2 && (
+                  <StepTwo 
+                    formData={formData} 
+                    updateFormData={updateFormData} 
+                    selectedCurrency={selectedCurrency} 
+                    setSelectedCurrency={setSelectedCurrency} 
+                    showCurrencyModal={showCurrencyModal} 
+                    setShowCurrencyModal={setShowCurrencyModal} 
+                    currencies={currencies} 
+                  />
+                )}
+                {currentStep === 3 && (
+                  <StepThree 
+                    formData={formData} 
+                    updateFormData={updateFormData} 
+                    socialLinkErrors={socialLinkErrors} 
+                  />
+                )}
+                
                 <View style={styles.navigation}>
                   {currentStep > 1 && (
                     <TouchableOpacity 
@@ -239,16 +327,28 @@ export default function BuildCommunityScreen() {
                       disabled={isSubmitting}
                       activeOpacity={0.8}
                     >
-                      <Text style={styles.secondaryButtonText}>← Back</Text>
+                      <Text style={styles.secondaryButtonText}>Back</Text>
                     </TouchableOpacity>
                   )}
                   <TouchableOpacity 
                     onPress={currentStep === 3 ? handleSubmit : nextStep} 
                     disabled={!canContinue() || isSubmitting}
                     activeOpacity={0.8}
+                    style={{ flex: currentStep === 1 ? 1 : undefined }}
                   >
-                    <LinearGradient colors={['#8e78fb', '#47c7ea']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.primaryButton, (!canContinue() || isSubmitting) && styles.disabledButton]}>
-                      {isSubmitting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.primaryButtonText}>{currentStep === 3 ? 'Create Community' : 'Continue →'}</Text>}
+                    <LinearGradient 
+                      colors={['#8e78fb', '#47c7ea']} 
+                      start={{ x: 0, y: 0 }} 
+                      end={{ x: 1, y: 0 }} 
+                      style={[styles.primaryButton, (!canContinue() || isSubmitting) && styles.disabledButton]}
+                    >
+                      {isSubmitting ? (
+                        <ActivityIndicator color="#FFFFFF" />
+                      ) : (
+                        <Text style={styles.primaryButtonText}>
+                          {currentStep === 3 ? 'Create Community' : 'Continue'}
+                        </Text>
+                      )}
                     </LinearGradient>
                   </TouchableOpacity>
                 </View>
@@ -259,23 +359,23 @@ export default function BuildCommunityScreen() {
                 communityImage={selectedImage}
                 communityCoverImage={selectedCoverImage}
                 onGoToCommunities={() => {
-                  // Use setTimeout to ensure navigation happens after component is fully mounted
                   setTimeout(() => {
                     try {
                       router.push('/(communities)');
                     } catch (error) {
-                      console.log('Navigation error:', error);
-                      // Fallback navigation
                       router.replace('/');
                     }
                   }, 100);
                 }}
               />
             )}
-          </BlurView>
-          <View style={styles.footer}><Text style={styles.footerText}>© 2024 Chabaqa. Build the future of communities.</Text></View>
+          </View>
+          
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>© 2024 Chabaqa. Build the future of communities.</Text>
+          </View>
         </ScrollView>
-      </AdaptiveBackground>
+      </View>
     </KeyboardAvoidingView>
   );
 }

@@ -343,6 +343,7 @@ export async function checkBalance(amount: number): Promise<{
 
 /**
  * Purchase content with wallet
+ * Automatically converts price to TND based on the content's currency
  */
 export async function purchaseWithWallet(
   contentType: 'community' | 'course' | 'challenge' | 'event' | 'product' | 'session',
@@ -350,13 +351,43 @@ export async function purchaseWithWallet(
   amount: number,
   creatorId: string,
   description?: string,
+  currency?: string,
 ): Promise<{ success: boolean; transaction: WalletTransaction; newBalance: number }> {
   const token = await getAccessToken();
   if (!token) {
     throw new Error('Authentication required');
   }
 
-  console.log('📤 [WALLET] Purchase request:', { contentType, contentId, amount, creatorId, description });
+  // Convert amount to TND if currency is specified and not TND
+  let amountInTND = amount;
+  const contentCurrency = currency?.toUpperCase() || 'TND';
+  
+  if (contentCurrency !== 'TND' && contentCurrency !== 'DT' && amount > 0) {
+    try {
+      const rates = await getExchangeRates();
+      // rates.USD = how many TND per 1 USD (e.g., 3.1)
+      // rates.EUR = how many TND per 1 EUR (e.g., 3.4)
+      const rate = rates[contentCurrency as keyof ExchangeRates] || 1;
+      amountInTND = Math.round(amount * rate * 100) / 100; // Round to 2 decimals
+      console.log(`💱 [WALLET] Converting ${amount} ${contentCurrency} to ${amountInTND} TND (rate: ${rate})`);
+    } catch (error) {
+      console.error('Failed to get exchange rates, using fallback:', error);
+      // Fallback rates
+      const fallbackRates: Record<string, number> = { USD: 3.1, EUR: 3.4, TND: 1, DT: 1 };
+      const rate = fallbackRates[contentCurrency] || 1;
+      amountInTND = Math.round(amount * rate * 100) / 100;
+    }
+  }
+
+  console.log('📤 [WALLET] Purchase request:', { 
+    contentType, 
+    contentId, 
+    originalAmount: amount,
+    originalCurrency: contentCurrency,
+    amountInTND, 
+    creatorId, 
+    description 
+  });
 
   const resp = await tryEndpoints<{
     success: boolean;
@@ -373,9 +404,9 @@ export async function purchaseWithWallet(
     data: {
       contentType,
       contentId,
-      amount,
+      amount: amountInTND, // Send converted amount in TND
       creatorId,
-      description,
+      description: description || `Purchase ${contentType} (${amount} ${contentCurrency})`,
     },
     timeout: 30000,
   });

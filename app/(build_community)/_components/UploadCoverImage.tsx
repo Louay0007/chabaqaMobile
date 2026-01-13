@@ -2,9 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { Image, Text, TouchableOpacity, View, Modal, StyleSheet, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera, ImagePlus, X } from 'lucide-react-native';
-import styles from '../styles';
-import CameraIcon from './icons/CameraIcon';
+import { Camera, ImagePlus, Image as ImageIcon, Pencil } from 'lucide-react-native';
 
 interface UploadCoverImageProps {
   selectedImage: string | null;
@@ -29,7 +27,7 @@ const UploadCoverImage: React.FC<UploadCoverImageProps> = ({
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [16, 9], // Cover image aspect ratio
+      aspect: [16, 9],
       quality: 0.8,
     });
 
@@ -49,7 +47,7 @@ const UploadCoverImage: React.FC<UploadCoverImageProps> = ({
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [16, 9], // Cover image aspect ratio
+      aspect: [16, 9],
       quality: 0.8,
     });
 
@@ -62,11 +60,14 @@ const UploadCoverImage: React.FC<UploadCoverImageProps> = ({
   return (
     <>
       <View style={coverStyles.coverUploadContainer}>
-        <Text style={coverStyles.coverUploadLabel}>{title}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <ImageIcon size={16} color="#9ca3af" />
+          <Text style={coverStyles.coverUploadLabel}>{title}</Text>
+        </View>
         <TouchableOpacity 
           style={[
             coverStyles.coverUploadButton,
-            selectedImage && { borderColor: '#8e78fb', borderStyle: 'solid' }
+            selectedImage && coverStyles.coverUploadButtonSelected
           ]} 
           onPress={() => setShowImagePicker(true)}
           activeOpacity={0.8}
@@ -78,20 +79,8 @@ const UploadCoverImage: React.FC<UploadCoverImageProps> = ({
                 style={coverStyles.selectedCoverImage}
                 resizeMode="cover"
               />
-              {/* Edit overlay */}
-              <View style={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                borderRadius: 16,
-                padding: 6,
-                width: 28,
-                height: 28,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <Text style={{ color: 'white', fontSize: 12 }}>✏️</Text>
+              <View style={coverStyles.editOverlay}>
+                <Pencil size={14} color="#ffffff" />
               </View>
             </View>
           ) : (
@@ -101,14 +90,14 @@ const UploadCoverImage: React.FC<UploadCoverImageProps> = ({
               end={{ x: 1, y: 0 }} 
               style={coverStyles.coverUploadGradient}
             >
-              <CameraIcon />
+              <ImageIcon size={24} color="#ffffff" />
               <Text style={coverStyles.coverUploadText}>Tap to add cover image</Text>
             </LinearGradient>
           )}
         </TouchableOpacity>
       </View>
 
-      {/* Image Picker Modal */}
+      {/* Image Picker Modal - Dark Theme */}
       <Modal
         visible={showImagePicker}
         transparent={true}
@@ -127,7 +116,9 @@ const UploadCoverImage: React.FC<UploadCoverImageProps> = ({
               style={modalStyles.bottomOptionButton}
               onPress={handleTakePhoto}
             >
-              <Camera size={24} color="#374151" />
+              <View style={modalStyles.iconContainer}>
+                <Camera size={22} color="#ffffff" />
+              </View>
               <Text style={modalStyles.bottomOptionText}>Take a photo</Text>
             </TouchableOpacity>
             
@@ -135,7 +126,9 @@ const UploadCoverImage: React.FC<UploadCoverImageProps> = ({
               style={modalStyles.bottomOptionButton}
               onPress={handleChooseFromLibrary}
             >
-              <ImagePlus size={24} color="#374151" />
+              <View style={modalStyles.iconContainer}>
+                <ImagePlus size={22} color="#ffffff" />
+              </View>
               <Text style={modalStyles.bottomOptionText}>Choose from library</Text>
             </TouchableOpacity>
           </View>
@@ -151,9 +144,8 @@ const coverStyles = StyleSheet.create({
   },
   coverUploadLabel: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
+    fontWeight: '500',
+    color: '#9ca3af',
   },
   coverUploadButton: {
     width: '100%',
@@ -161,9 +153,13 @@ const coverStyles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: 'rgba(142, 120, 251, 0.2)',
+    borderColor: '#374151',
     borderStyle: 'dashed',
-    backgroundColor: 'rgba(142, 120, 251, 0.05)',
+    backgroundColor: '#1f2937',
+  },
+  coverUploadButtonSelected: {
+    borderColor: '#8e78fb',
+    borderStyle: 'solid',
   },
   coverUploadGradient: {
     width: '100%',
@@ -177,30 +173,45 @@ const coverStyles = StyleSheet.create({
     height: '100%',
   },
   coverUploadText: {
-    fontSize: 12,
-    color: 'white',
+    fontSize: 13,
+    color: '#ffffff',
     fontWeight: '500',
     textAlign: 'center',
+  },
+  editOverlay: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 16,
+    padding: 6,
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 
 const modalStyles = StyleSheet.create({
   bottomModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'flex-end',
   },
   bottomModalContent: {
-    backgroundColor: 'white',
+    backgroundColor: '#1f2937',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingBottom: 40,
     paddingTop: 8,
+    borderWidth: 1,
+    borderColor: '#374151',
+    borderBottomWidth: 0,
   },
   modalHandle: {
     width: 40,
     height: 4,
-    backgroundColor: '#d1d5db',
+    backgroundColor: '#4b5563',
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 20,
@@ -208,14 +219,22 @@ const modalStyles = StyleSheet.create({
   bottomOptionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 18,
+    paddingVertical: 16,
     paddingHorizontal: 24,
     gap: 16,
   },
+  iconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#374151',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   bottomOptionText: {
-    fontSize: 17,
-    color: '#111827',
-    fontWeight: '400',
+    fontSize: 16,
+    color: '#ffffff',
+    fontWeight: '500',
   },
 });
 

@@ -17,9 +17,12 @@ interface CommunityCardProps {
     description: string;
     category: string;
     members: number;
-    rating: number;
+    rating?: number;
+    averageRating?: number;
+    ratingCount?: number;
     price: number;
     priceType: string;
+    currency?: string;
     image: number | string; // Images locales ou URL distantes
     tags: string[];
     featured: boolean;
@@ -72,9 +75,30 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
     return count.toString();
   };
 
-  const formatPrice = (price: number, type: string) => {
+  const formatPrice = (price: number, type: string, currency?: string) => {
     if (type === "free" || price === 0) return "Free";
-    return `$${price}/${type === "monthly" ? "mo" : type}`;
+    
+    // Currency symbol mapping
+    const currencySymbols: { [key: string]: string } = {
+      'TND': 'DT',
+      'DT': 'DT',
+      'USD': '$',
+      'EUR': '€',
+    };
+    
+    const normalizedCurrency = (currency || 'TND').toUpperCase();
+    const symbol = currencySymbols[normalizedCurrency] || normalizedCurrency;
+    
+    // Map priceType to display suffix
+    const suffixMap: { [key: string]: string } = {
+      'monthly': '/mo',
+      'yearly': '/yr',
+      'one-time': '',
+      'paid': '',
+    };
+    
+    const suffix = suffixMap[type] || '';
+    return `${price} ${symbol}${suffix}`;
   };
 
   // Get type-specific styling and CTA text (same as web version)
@@ -144,6 +168,10 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
 
   const ctaConfig = getCTAConfig();
 
+  // Get the rating to display (prefer averageRating, fallback to rating)
+  const displayRating = community.averageRating ?? community.rating ?? 0;
+  const reviewCount = community.ratingCount ?? 0;
+
   if (viewMode === "list") {
     return (
       <Card style={communityStyles.listCard}>
@@ -181,7 +209,7 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
                   { backgroundColor: community.price === 0 ? '#10b981' : '#8e78fb' }
                 ]}>
                   <Text style={communityStyles.priceBadgeText}>
-                    {formatPrice(community.price, community.priceType)}
+                    {formatPrice(community.price, community.priceType, community.currency)}
                   </Text>
                 </View>
               </View>
@@ -241,8 +269,10 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
                     <Text style={communityStyles.communityCardStatText}>{formatMembers(community.members)}</Text>
                   </View>
                   <View style={communityStyles.communityCardStatItem}>
-                    <Ionicons name="star" size={12} color="#f59e0b" />
-                    <Text style={communityStyles.communityCardStatText}>{community.rating}</Text>
+                    <Ionicons name="star" size={12} color="#fbbf24" />
+                    <Text style={communityStyles.communityCardStatText}>
+                      {displayRating.toFixed(1)}{reviewCount > 0 ? ` (${reviewCount})` : ''}
+                    </Text>
                   </View>
                   <View style={[
                     communityStyles.typeBadge,
@@ -341,8 +371,10 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
               <Text style={communityStyles.communityCardStatText}>{formatMembers(community.members)}</Text>
             </View>
             <View style={communityStyles.communityCardStatItem}>
-              <Ionicons name="star" size={12} color="#f59e0b" />
-              <Text style={communityStyles.communityCardStatText}>{community.rating}</Text>
+              <Ionicons name="star" size={12} color="#fbbf24" />
+              <Text style={communityStyles.communityCardStatText}>
+                {displayRating.toFixed(1)}{reviewCount > 0 ? ` (${reviewCount})` : ''}
+              </Text>
             </View>
             <View style={[
               communityStyles.typeBadge,

@@ -110,9 +110,9 @@ export interface Community {
   currency?: string;
   membersCount?: number;
   members?: number | any[]; // Can be count or array
-  averageRating?: number;
-  rating?: number; // Alternative rating field
-  ratingCount?: number;
+  averageRating?: number; // New: average rating from reviews
+  ratingCount?: number; // New: total number of reviews
+  rating?: number; // Alternative rating field (legacy)
   tags: string[];
   featured: boolean;
   isVerified?: boolean;
@@ -802,6 +802,187 @@ export const getActiveMembersByCommunity = async (
   }
 };
 
+/**
+ * Delete a community (only creator can delete)
+ * @param communityId - ID of the community to delete
+ * @returns Promise with delete result
+ */
+export const deleteCommunity = async (
+  communityId: string
+): Promise<{
+  success: boolean;
+  message: string;
+}> => {
+  try {
+    console.log('🗑️ [COMMUNITIES] Deleting community:', communityId);
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      throw new Error('Not authenticated');
+    }
+
+    const resp = await tryEndpoints<{
+      success: boolean;
+      message: string;
+    }>(`/api/community-aff-crea-join/${communityId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      timeout: 30000,
+    });
+
+    console.log('✅ [COMMUNITIES] Community deleted successfully');
+    return resp.data;
+  } catch (error: any) {
+    console.error('💥 [COMMUNITIES] Error deleting community:', error);
+    throw new Error(error.message || 'Failed to delete community');
+  }
+};
+
+// ==================== REVIEWS API ====================
+
+export interface CommunityReview {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+export interface ReviewsResponse {
+  success: boolean;
+  reviews: CommunityReview[];
+  averageRating: number;
+  totalReviews: number;
+  ratingDistribution: { [key: number]: number };
+}
+
+export interface MyReviewResponse {
+  success: boolean;
+  review: {
+    rating: number;
+    comment: string;
+    createdAt: string;
+  } | null;
+}
+
+export interface SubmitReviewResponse {
+  success: boolean;
+  message: string;
+  review: { rating: number; comment: string };
+  averageRating: number;
+  totalReviews: number;
+}
+
+/**
+ * Get all reviews for a community
+ * @param communityId - ID of the community
+ * @returns Promise with reviews list and stats
+ */
+export const getCommunityReviews = async (
+  communityId: string
+): Promise<ReviewsResponse> => {
+  try {
+    console.log('⭐ [REVIEWS-API] Fetching reviews for community:', communityId);
+
+    const resp = await tryEndpoints<ReviewsResponse>(
+      `/api/community-aff-crea-join/${communityId}/reviews`,
+      {
+        method: 'GET',
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ [REVIEWS-API] Reviews fetched:', resp.data.totalReviews);
+    return resp.data;
+  } catch (error: any) {
+    console.error('💥 [REVIEWS-API] Error fetching reviews:', error);
+    throw new Error(error.message || 'Failed to fetch reviews');
+  }
+};
+
+/**
+ * Get current user's review for a community
+ * @param communityId - ID of the community
+ * @returns Promise with user's review or null
+ */
+export const getMyCommunityReview = async (
+  communityId: string
+): Promise<MyReviewResponse> => {
+  try {
+    console.log('⭐ [REVIEWS-API] Fetching my review for community:', communityId);
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      return { success: false, review: null };
+    }
+
+    const resp = await tryEndpoints<MyReviewResponse>(
+      `/api/community-aff-crea-join/${communityId}/reviews/me`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ [REVIEWS-API] My review fetched:', resp.data.review ? 'exists' : 'none');
+    return resp.data;
+  } catch (error: any) {
+    console.error('💥 [REVIEWS-API] Error fetching my review:', error);
+    return { success: false, review: null };
+  }
+};
+
+/**
+ * Submit or update a review for a community
+ * @param communityId - ID of the community
+ * @param rating - Rating (1-5)
+ * @param comment - Optional comment
+ * @returns Promise with submit result
+ */
+export const submitCommunityReview = async (
+  communityId: string,
+  rating: number,
+  comment?: string
+): Promise<SubmitReviewResponse> => {
+  try {
+    console.log('⭐ [REVIEWS-API] Submitting review:', { communityId, rating });
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      throw new Error('Not authenticated');
+    }
+
+    const resp = await tryEndpoints<SubmitReviewResponse>(
+      `/api/community-aff-crea-join/${communityId}/reviews`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        data: {
+          rating,
+          comment: comment || '',
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ [REVIEWS-API] Review submitted successfully');
+    return resp.data;
+  } catch (error: any) {
+    console.error('💥 [REVIEWS-API] Error submitting review:', error);
+    throw new Error(error.message || 'Failed to submit review');
+  }
+};
+
 export default {
   getCommunities,
   getCommunityBySlug,
@@ -813,6 +994,10 @@ export default {
   getCommunityRanking,
   joinCommunity,
   getActiveMembersByCommunity,
+  deleteCommunity,
+  getCommunityReviews,
+  getMyCommunityReview,
+  submitCommunityReview,
   formatPrice,
   formatMemberCount,
   formatRating,

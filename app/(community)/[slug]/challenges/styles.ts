@@ -288,6 +288,8 @@ export const styles = StyleSheet.create({
   actionButton: {
     padding: spacing.md,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
     borderTopWidth: 1,
     borderTopColor: colors.postBorder,
   },

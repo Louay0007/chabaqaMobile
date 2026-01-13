@@ -632,3 +632,59 @@ export function formatFileSize(bytes: number): string {
   
   return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 }
+
+/**
+ * Purchase product with wallet balance
+ * 
+ * @param productId - Product ID to purchase
+ * @param amount - Amount in DT
+ * @param creatorId - Creator ID
+ * @returns Promise with purchase result
+ */
+export async function purchaseProductWithWallet(
+  productId: string,
+  amount: number,
+  creatorId: string
+): Promise<{ success: boolean; newBalance: number; message?: string }> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      throw new Error('Authentication required. Please login to purchase.');
+    }
+
+    console.log('💳 [PRODUCT-API] Purchasing product with wallet:', { productId, amount, creatorId });
+
+    const resp = await tryEndpoints<any>(
+      `/api/wallet/purchase`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        data: {
+          contentType: 'product',
+          contentId: productId,
+          amount,
+          creatorId,
+          description: `Product purchase`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    if (resp.status >= 200 && resp.status < 300) {
+      console.log('✅ [PRODUCT-API] Product purchased successfully');
+      return {
+        success: true,
+        newBalance: resp.data.data?.newBalance || 0,
+        message: resp.data.message || 'Purchase successful',
+      };
+    }
+
+    throw new Error(resp.data?.message || 'Failed to purchase product');
+  } catch (error: any) {
+    console.error('💥 [PRODUCT-API] Error purchasing product:', error);
+    throw new Error(error.message || 'Failed to purchase product');
+  }
+}

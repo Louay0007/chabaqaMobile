@@ -3,11 +3,11 @@ import { getChallengesByCommunity as getMockChallenges } from '@/lib/challenge-u
 import {
   Challenge as MockChallenge,
   getCommunityBySlug as getMockCommunity,
-  getCurrentUser,
   getUserChallengeParticipation
 } from '@/lib/mock-data';
 import { getChallengesByCommunity, getUserParticipations, Challenge as ApiChallenge } from '@/lib/challenge-api';
 import { getCommunityBySlug } from '@/lib/communities-api';
+import { getCurrentUser } from '@/lib/user-api';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Text } from 'react-native';
@@ -31,9 +31,16 @@ export default function ChallengesScreen() {
   const [community, setCommunity] = useState<any>(null);
   const [allChallenges, setAllChallenges] = useState<any[]>([]);
   const [userParticipations, setUserParticipations] = useState<any[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  const currentUser = getCurrentUser();
-  const currentUserId = currentUser?.id || '';
+  // Fetch current user on mount
+  useEffect(() => {
+    getCurrentUser().then(user => {
+      const userId = user?._id || user?.id || user?.sub || null;
+      setCurrentUserId(userId);
+      console.log('👤 [CHALLENGES] Current user ID:', userId);
+    }).catch(() => {});
+  }, []);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -64,7 +71,7 @@ export default function ChallengesScreen() {
       const challengesResponse = await getChallengesByCommunity(slug as string, {
         page: 1,
         limit: 50,
-        isActive: true
+        // Remove isActive filter to get all challenges (active, upcoming, completed)
       });
 
       console.log('📦 [CHALLENGES] Full Response:', JSON.stringify(challengesResponse, null, 2));
@@ -94,14 +101,44 @@ export default function ChallengesScreen() {
           maxParticipants: challenge.maxParticipants || challenge.max_participants,
           tasks: challenge.tasks || [],
           prize: challenge.completionReward || challenge.prize,
+          completionReward: challenge.completionReward || 0,
           tags: challenge.tags || [],
           createdAt: new Date(challenge.createdAt || challenge.created_at || Date.now()),
           updatedAt: new Date(challenge.updatedAt || challenge.updated_at || Date.now()),
+          // Pricing fields
+          participationFee: challenge.participationFee || challenge.finalPrice || challenge.depositAmount || 0,
+          finalPrice: challenge.finalPrice || challenge.participationFee || challenge.depositAmount || 0,
+          depositAmount: challenge.depositAmount || 0,
+          isFree: challenge.isFree === true || (challenge.participationFee || challenge.finalPrice || challenge.depositAmount || 0) === 0,
         };
       });
 
       console.log('✅ [CHALLENGES] Transformed challenges:', transformedChallenges.length);
-      setAllChallenges(transformedChallenges);
+      
+      // Sort challenges: active first, then upcoming, then completed
+      const sortedChallenges = transformedChallenges.sort((a: any, b: any) => {
+        const now = new Date();
+        const getStatus = (c: any) => {
+          if (c.startDate > now) return 'upcoming';
+          if (c.endDate < now) return 'completed';
+          return 'active';
+        };
+        const statusOrder: Record<string, number> = { active: 0, upcoming: 1, completed: 2 };
+        const statusA = getStatus(a);
+        const statusB = getStatus(b);
+        
+        // First sort by status
+        if (statusOrder[statusA] !== statusOrder[statusB]) {
+          return statusOrder[statusA] - statusOrder[statusB];
+        }
+        // Then sort by start date (most recent first for active/upcoming)
+        if (statusA === 'completed') {
+          return new Date(b.endDate).getTime() - new Date(a.endDate).getTime();
+        }
+        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+      });
+      
+      setAllChallenges(sortedChallenges);
 
       // Fetch user's challenge participations
       console.log('📊 [CHALLENGES] Fetching user participations for community:', slug);
@@ -145,6 +182,23 @@ export default function ChallengesScreen() {
     }
   };
 
+  // Helper function to check if user is participating in a challenge
+  const isUserParticipating = (challengeId: string, challenge?: any) => {
+    // Check user participations first
+    const inParticipations = userParticipations.some(p => p.challengeId === challengeId);
+    if (inParticipations) return true;
+    
+    // Also check challenge's participants array directly
+    if (currentUserId && challenge?.participants) {
+      return challenge.participants.some((p: any) => 
+        p.userId === currentUserId || 
+        p.userId?.toString() === currentUserId ||
+        p.userId === currentUserId?.toString()
+      );
+    }
+    return false;
+  };
+
   // Filtrer les challenges
   const filteredChallenges = allChallenges.filter((challenge: any) => {
     const matchesSearch =
@@ -152,7 +206,7 @@ export default function ChallengesScreen() {
       challenge.description.toLowerCase().includes(searchQuery.toLowerCase());
 
     const now = new Date();
-    const isParticipating = userParticipations.some(p => p.challengeId === challenge.id);
+    const isParticipating = isUserParticipating(challenge.id, challenge);
 
     if (activeTab === 'active') {
       return matchesSearch && challenge.startDate <= now && challenge.endDate >= now;
@@ -196,7 +250,7 @@ export default function ChallengesScreen() {
   const activeCount = allChallenges.filter((c: any) => getChallengeStatus(c) === 'active').length;
   const upcomingCount = allChallenges.filter((c: any) => getChallengeStatus(c) === 'upcoming').length;
   const completedCount = allChallenges.filter((c: any) => getChallengeStatus(c) === 'completed').length;
-  const joinedCount = userParticipations.length;
+  const joinedCount = allChallenges.filter((c: any) => isUserParticipating(c.id, c)).length;
   const totalParticipants = allChallenges.reduce((total: number, challenge: any) => total + (challenge.participantsCount || 0), 0);
 
   // Configuration des onglets
@@ -272,7 +326,10 @@ export default function ChallengesScreen() {
         onJoinChallenge={handleJoinChallenge}
         formatDate={formatDate}
         getChallengeStatus={getChallengeStatus}
-        getUserParticipation={(challengeId: string) => userParticipations.some(p => p.challengeId === challengeId)}
+        getUserParticipation={(challengeId: string) => {
+          const challenge = allChallenges.find(c => c.id === challengeId);
+          return isUserParticipating(challengeId, challenge);
+        }}
       />
 
       {/* Bottom Navigation */}

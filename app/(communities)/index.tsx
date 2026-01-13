@@ -87,9 +87,10 @@ export default function CommunitiesScreen() {
             return categoryImages[category] || require('@/assets/images/email-marketing.png');
           };
 
-          const rawImageUrl = community.image || community.logo;
+          // Priority: coverImage > photo_de_couverture > image > logo
+          const rawImageUrl = community.coverImage || community.photo_de_couverture || community.image || community.logo;
           let finalImageUrl: string | number;
-          const isPlaceholderUrl = (url: string) => url.includes('placeholder.com') || url.includes('placehold.co');
+          const isPlaceholderUrl = (url: string) => url.includes('placeholder.com') || url.includes('placehold.co') || url.includes('via.placeholder');
 
           if (rawImageUrl && rawImageUrl.trim() && !isPlaceholderUrl(rawImageUrl)) {
             finalImageUrl = getImageUrl(rawImageUrl);
@@ -109,6 +110,7 @@ export default function CommunitiesScreen() {
             rating: community.rating || community.averageRating || 0,
             price: community.price || community.fees_of_join || 0,
             priceType: community.priceType || 'free',
+            currency: community.currency || community.pricing?.currency || 'TND',
             image: finalImageUrl,
             imageUrl: typeof finalImageUrl === 'string' ? finalImageUrl : '',
             tags: community.tags || [],

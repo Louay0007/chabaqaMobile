@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import {
     SafeAreaView,
     ActivityIndicator,
+    Alert,
     ScrollView,
     StatusBar,
     Text,
@@ -18,9 +19,12 @@ import {
   getProductReviews,
   ProductReview,
   upsertProductReview,
+  purchaseProductWithWallet,
 } from '../../../../../lib/product-api';
+import { getWalletBalance } from '../../../../../lib/challenge-api';
 import { getAvatarUrl, getImageUrl } from '../../../../../lib/image-utils';
 import BottomNavigation from '../../../_components/BottomNavigation';
+import PaymentScreen from '../../../../_components/PaymentScreen';
 import { styles } from '../styles';
 import { FilesTab } from './_components/FilesTab';
 import { LicenseTab } from './_components/LicenseTab';
@@ -40,6 +44,10 @@ export default function ProductDetailScreen() {
   const [averageRating, setAverageRating] = useState(0);
   const [ratingCount, setRatingCount] = useState(0);
   const [myReview, setMyReview] = useState<{ rating: number; message: string } | null>(null);
+  
+  // Payment state
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -50,6 +58,14 @@ export default function ProductDetailScreen() {
         setProduct(p);
         const purchased = (Number(p?.price || 0) === 0) ? true : (await checkProductAccess(pid).then(r => r.purchased).catch(() => false));
         setHasAccess(purchased);
+
+        // Fetch wallet balance
+        try {
+          const { balance } = await getWalletBalance();
+          setWalletBalance(balance);
+        } catch (e) {
+          console.log('⚠️ [PRODUCT] Failed to fetch wallet balance:', e);
+        }
 
         try {
           const [reviewsRes, my] = await Promise.all([
@@ -174,6 +190,25 @@ export default function ProductDetailScreen() {
     } as any);
   };
 
+  // Handle wallet payment
+  const handleWalletPayment = async () => {
+    try {
+      setProcessing(true);
+      const pid = String((product as any)?.id || (product as any)?._id || productId || '');
+      const creatorId = String(creatorFromApi?._id || creatorFromApi?.id || '');
+      const price = Number(product?.price || 0);
+      
+      const result = await purchaseProductWithWallet(pid, price, creatorId);
+      setWalletBalance(result.newBalance);
+      setHasAccess(true);
+      Alert.alert('Success', 'Payment successful! You now have access to this product.');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to process payment');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleSubmitReview = async (rating: number, message: string) => {
     const pid = String(productId || '');
     const result = await upsertProductReview(pid, rating, message);
@@ -218,6 +253,31 @@ export default function ProductDetailScreen() {
         return <OverviewTab product={transformedProduct} />;
     }
   };
+
+  // Check if user needs to pay (hasn't purchased and product is not free)
+  const productPrice = Number(product?.price || 0);
+  const needsPayment = !hasAccess && productPrice > 0;
+
+  // If user needs to pay, show payment screen
+  if (needsPayment) {
+    return (
+      <PaymentScreen
+        contentType="product"
+        title={transformedProduct.title}
+        description={transformedProduct.description}
+        thumbnail={transformedProduct.image}
+        creatorName={transformedProduct.creator.name}
+        creatorAvatar={transformedProduct.creator.avatar}
+        price={productPrice}
+        currency="DT"
+        walletBalance={walletBalance}
+        onBack={() => router.back()}
+        onPay={handleWalletPayment}
+        onTopUp={() => router.push('/(profile)/wallet')}
+        processing={processing}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>

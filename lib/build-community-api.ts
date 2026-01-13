@@ -8,14 +8,52 @@ export const unstable_settings = {
   isNotARoute: true,
 };
 
+/**
+ * Pricing Configuration - Matches backend CommunityPricingDto
+ */
+interface PricingConfig {
+  price: number;
+  currency: 'USD' | 'TND' | 'EUR';
+  priceType: 'free' | 'one-time' | 'monthly' | 'yearly';
+  isRecurring: boolean;
+  recurringInterval?: 'month' | 'year' | 'week';
+  freeTrialDays: number;
+  paymentOptions: {
+    allowInstallments: boolean;
+    installmentCount: number;
+    earlyBirdDiscount: number;
+    groupDiscount: number;
+    memberDiscount: number;
+  };
+}
+
+/**
+ * Community Form Data - Matches backend CreateCommunityDto exactly
+ * 
+ * REQUIRED FIELDS:
+ * - name: Community name (2-100 chars)
+ * - country: Country/location
+ * - status: 'public' | 'private'
+ * - joinFee: 'free' | 'paid'
+ * - feeAmount: string (numeric, '0' if free)
+ * - currency: 'USD' | 'TND' | 'EUR'
+ * - socialLinks: At least one link required
+ * 
+ * OPTIONAL FIELDS:
+ * - bio: Short description (max 500 chars)
+ * - logo: Logo URL (uploaded separately)
+ * - category: Community category
+ * - type: Content type (default: 'community')
+ * - tags: Array of tags
+ * - longDescription: Detailed description
+ * - coverImage: Cover image URL (uploaded separately)
+ * - image: Main image URL
+ * - pricing: Full pricing configuration
+ */
 interface CommunityFormData {
+  // REQUIRED FIELDS
   name: string;
-  bio: string;
-  longDescription?: string;
   country: string;
-  category?: string;
-  type?: string;
-  tags?: string[];
   status: 'public' | 'private';
   joinFee: 'free' | 'paid';
   feeAmount: string;
@@ -32,7 +70,19 @@ interface CommunityFormData {
     behance?: string;
     github?: string;
   };
+  
+  // OPTIONAL FIELDS
+  bio?: string;
+  longDescription?: string;
+  category?: string;
+  type?: string;
+  tags?: string[];
   coverImage?: string;
+  logo?: string;
+  image?: string;
+  
+  // PRICING CONFIGURATION
+  pricing?: PricingConfig;
 }
 
 interface ApiResponse {
@@ -76,9 +126,14 @@ export async function createCommunityAction(formData: CommunityFormData, logoUri
     // Prepare data with uploaded image URLs
     const dataToSend = {
       ...formData,
-      logo: logoUrl,
-      coverImage: coverImageUrl,
+      logo: logoUrl || formData.logo || '',
+      coverImage: coverImageUrl || formData.coverImage || '',
     };
+    
+    console.log('📤 Data to send with images:', {
+      logo: dataToSend.logo,
+      coverImage: dataToSend.coverImage,
+    });
     
     // Use the proper API URL with /api prefix
     const apiUrl = `${PlatformUtils.getApiUrl()}/api/community-aff-crea-join/create`;

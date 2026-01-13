@@ -29,8 +29,34 @@ export function getImageUrl(url: string | undefined | null, addCacheBuster: bool
 
   let result = baseUrl;
 
+  // List of patterns that should be replaced with API_BASE_URL
+  const localPatterns = [
+    'localhost',
+    '127.0.0.1',
+    '192.168.',
+    '10.0.',
+    '172.16.',
+    '172.17.',
+    '172.18.',
+    '172.19.',
+    '172.20.',
+    '172.21.',
+    '172.22.',
+    '172.23.',
+    '172.24.',
+    '172.25.',
+    '172.26.',
+    '172.27.',
+    '172.28.',
+    '172.29.',
+    '172.30.',
+    '172.31.',
+  ];
+
+  const isLocalUrl = localPatterns.some(pattern => baseUrl.includes(pattern));
+
   // CRITICAL: If any URL contains '/uploads/', we MUST force it to use our current API_BASE_URL
-  // This handles cases where the DB has 'localhost', '127.0.0.1', or stale IPs like '51.254.132.77' or '192.168.1.16'
+  // This handles cases where the DB has 'localhost', '127.0.0.1', or stale IPs
   if (baseUrl.includes('/uploads/')) {
     const pathAfterUploads = baseUrl.split('/uploads/')[1];
     result = `${API_BASE_URL}/uploads/${pathAfterUploads}`;
@@ -45,19 +71,23 @@ export function getImageUrl(url: string | undefined | null, addCacheBuster: bool
     result = `${API_BASE_URL}/${baseUrl}`;
     console.log('🔗 [IMAGE-UTILS] Relative uploads path transformed:', result);
   }
+  // Handle any localhost or local IP URLs
+  else if (isLocalUrl && baseUrl.startsWith('http')) {
+    // Extract the path from the URL
+    const urlParts = baseUrl.split('://');
+    if (urlParts.length > 1) {
+      const pathParts = urlParts[1].split('/');
+      const path = pathParts.slice(1).join('/');
+      if (path) {
+        result = `${API_BASE_URL}/${path}`;
+        console.log('🔗 [IMAGE-UTILS] Local URL transformed:', { input: baseUrl, output: result });
+      }
+    }
+  }
   // If it's already a full URL (external like ui-avatars, google, etc.) 
   else if (baseUrl.startsWith('http')) {
-    // If it's our own API but maybe missing a slash or something, keep it but ensure it's correct
-    if (baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) {
-      // Should have been caught by the /uploads/ check above, but as a fallback:
-      const parts = baseUrl.split('://')[1].split('/');
-      const path = parts.slice(1).join('/');
-      result = `${API_BASE_URL}/${path}`;
-      console.log('🔗 [IMAGE-UTILS] Localhost URL fallback transform:', result);
-    } else {
-      console.log('🔗 [IMAGE-UTILS] External URL unchanged:', baseUrl);
-      result = baseUrl;
-    }
+    console.log('🔗 [IMAGE-UTILS] External URL unchanged:', baseUrl);
+    result = baseUrl;
   }
   // Default: assume it's a relative path if it's not empty
   else if (baseUrl.trim().length > 0) {

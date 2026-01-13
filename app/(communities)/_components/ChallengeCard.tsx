@@ -5,6 +5,7 @@ import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { communityStyles } from '../_styles';
 import Avatar from './Avatar';
 import { Challenge, getCreatorInfo, getItemImage, getItemTitle } from '@/lib/explore-api';
+import { getChallengeStatus } from '@/lib/challenge-api';
 
 interface ChallengeCardProps {
     challenge: Challenge;
@@ -18,6 +19,14 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
     const { name: creatorName, avatar: creatorAvatar } = getCreatorInfo(challenge);
     const image = getItemImage(challenge);
     const title = getItemTitle(challenge);
+
+    // Check if challenge is completed
+    const challengeStatus = getChallengeStatus({
+        ...challenge,
+        startDate: challenge.startDate || challenge.start_date || new Date().toISOString(),
+        endDate: challenge.endDate || challenge.end_date || new Date().toISOString(),
+    } as any);
+    const isChallengeCompleted = challengeStatus === 'completed';
 
     const difficultyColor =
         challenge.difficulty === 'Easy' ? '#10b981' :
@@ -52,6 +61,24 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
                         {challenge.difficulty || 'CHALLENGE'}
                     </Text>
                 </View>
+
+                {/* Completed Badge */}
+                {isChallengeCompleted && (
+                    <View style={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        backgroundColor: '#6b7280',
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 4,
+                        zIndex: 10
+                    }}>
+                        <Text style={{ color: 'white', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' }}>
+                            ENDED
+                        </Text>
+                    </View>
+                )}
 
                 <View style={communityStyles.gridImageOverlay} />
 
@@ -91,9 +118,22 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
                     </Text>
                 </View>
 
-                <TouchableOpacity style={[communityStyles.joinButton, { marginTop: 12, backgroundColor: '#f97316' }]}>
-                    <Text style={communityStyles.joinButtonText}>Join Challenge</Text>
-                </TouchableOpacity>
+                {/* Show different button based on challenge status */}
+                {isChallengeCompleted ? (
+                    <View style={[communityStyles.joinButton, { 
+                        marginTop: 12, 
+                        backgroundColor: '#9ca3af',
+                        opacity: 0.7,
+                    }]}>
+                        <Text style={[communityStyles.joinButtonText, { color: '#ffffff' }]}>
+                            Challenge Ended
+                        </Text>
+                    </View>
+                ) : (
+                    <TouchableOpacity style={[communityStyles.joinButton, { marginTop: 12, backgroundColor: '#f97316' }]}>
+                        <Text style={communityStyles.joinButtonText}>Join Challenge</Text>
+                    </TouchableOpacity>
+                )}
             </View>
         </TouchableOpacity>
     );
