@@ -67,39 +67,36 @@ export default function ChallengesScreen() {
         isActive: true
       });
 
-      console.log('📦 [CHALLENGES] Response:', {
-        total: challengesResponse.total,
-        count: challengesResponse.challenges?.length,
-        page: challengesResponse.page,
-        limit: challengesResponse.limit
-      });
+      console.log('📦 [CHALLENGES] Full Response:', JSON.stringify(challengesResponse, null, 2));
 
-      // Transform backend challenges to match frontend interface
-      console.log('🔄 [CHALLENGES] Transforming', challengesResponse.challenges.length, 'challenges');
-      const transformedChallenges = (challengesResponse.challenges || []).map((challenge: ApiChallenge) => {
-        console.log('   → Challenge:', challenge.title);
+      // Handle different response structures
+      const challengesData = challengesResponse.challenges || (challengesResponse as any).data?.challenges || (challengesResponse as any).challenges || [];
+      console.log('🔄 [CHALLENGES] Transforming', challengesData.length, 'challenges');
+
+      const transformedChallenges = (challengesData || []).map((challenge: any, index: number) => {
+        console.log('   → Challenge[' + index + ']:', challenge.title, '| id:', challenge.id, '| _id:', challenge._id);
         return {
-          id: challenge._id,
-          title: challenge.title,
-          description: challenge.description,
-          shortDescription: challenge.short_description || challenge.description,
+          id: challenge.id || challenge._id || `temp-${index}`,
+          title: challenge.title || 'Untitled',
+          description: challenge.description || '',
+          shortDescription: challenge.description || '',
           thumbnail: challenge.thumbnail || challenge.cover_image || 'https://via.placeholder.com/400x300',
           communityId: communityData.id,
-          creatorId: challenge.created_by?._id || challenge.created_by,
-          creator: challenge.created_by,
-          startDate: new Date(challenge.start_date),
-          endDate: new Date(challenge.end_date),
-          isActive: challenge.is_active,
-          difficulty: challenge.difficulty,
+          creatorId: challenge.creatorId || challenge.created_by?._id || challenge.created_by || '',
+          creator: { name: challenge.creatorName || challenge.created_by?.name || 'Unknown', profile_picture: challenge.creatorAvatar || challenge.created_by?.profile_picture },
+          startDate: new Date(challenge.startDate || challenge.start_date || Date.now()),
+          endDate: new Date(challenge.endDate || challenge.end_date || Date.now()),
+          isActive: challenge.isActive !== undefined ? challenge.isActive : (challenge.is_active !== undefined ? challenge.is_active : true),
+          difficulty: challenge.difficulty || 'beginner',
           category: challenge.category,
-          participants: [], // Will be populated from backend data
-          participantsCount: challenge.participants_count || 0,
-          maxParticipants: challenge.max_participants,
+          participants: challenge.participants || [],
+          participantsCount: challenge.participantCount || challenge.participants_count || 0,
+          maxParticipants: challenge.maxParticipants || challenge.max_participants,
           tasks: challenge.tasks || [],
-          prize: challenge.prize,
+          prize: challenge.completionReward || challenge.prize,
           tags: challenge.tags || [],
-          createdAt: new Date(challenge.created_at),
-          updatedAt: new Date(challenge.updated_at),
+          createdAt: new Date(challenge.createdAt || challenge.created_at || Date.now()),
+          updatedAt: new Date(challenge.updatedAt || challenge.updated_at || Date.now()),
         };
       });
 
