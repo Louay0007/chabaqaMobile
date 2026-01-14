@@ -49,6 +49,25 @@ jobs:
       - name: Run Expo prebuild
         run: npx expo prebuild --platform android --clean
       
+      - name: Create network security config for HTTP
+        run: |
+          mkdir -p android/app/src/main/res/xml
+          cat > android/app/src/main/res/xml/network_security_config.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <network-security-config>
+              <domain-config cleartextTrafficPermitted="true">
+                  <domain includeSubdomains="true">51.254.132.77</domain>
+              </domain-config>
+          </network-security-config>
+          EOF
+          echo "Network security config created"
+      
+      - name: Update AndroidManifest to allow HTTP
+        run: |
+          sed -i 's/<application/<application\n        android:networkSecurityConfig="@xml\/network_security_config"\n        android:usesCleartextTraffic="true"/' android/app/src/main/AndroidManifest.xml
+          echo "AndroidManifest updated"
+          cat android/app/src/main/AndroidManifest.xml | grep -A 5 "<application"
+      
       - name: Build Android APK
         working-directory: android
         run: |
