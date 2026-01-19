@@ -9,6 +9,7 @@
 
 import { tryEndpoints } from './http';
 import { getAccessToken } from './auth';
+import { getImageUrl } from './image-utils';
 
 // ============================================================================
 // TypeScript Interfaces
@@ -801,14 +802,14 @@ export function convertSessionForUI(apiSession: any): any {
     category: apiSession.category || 'General',
     tags: apiSession.tags || [],
     mentor: {
-      id: creatorId,
-      name: creatorName,
-      avatar: creatorAvatar,
-      title: apiSession.creatorTitle || 'Mentor',
-      role: apiSession.creatorRole || 'Mentor',
-      rating: apiSession.average_rating || apiSession.rating || 4.5,
-      reviews: apiSession.rating_count || apiSession.reviews || 0,
-      bio: apiSession.creatorBio || apiSession.description || '',
+      id: apiSession.creator._id,
+      name: apiSession.creator.name,
+      avatar: getImageUrl(apiSession.creator.avatar),
+      title: apiSession.creator.title || 'Mentor',
+      role: apiSession.creator.role || 'Mentor',
+      rating: apiSession.creator.rating || apiSession.average_rating || 0,
+      reviews: apiSession.creator.reviews || apiSession.rating_count || 0,
+      bio: apiSession.creator.bio || apiSession.description,
     },
     isActive: apiSession.isActive !== false,
     bookingsCount: apiSession.bookings_count || apiSession.bookings?.length || 0,

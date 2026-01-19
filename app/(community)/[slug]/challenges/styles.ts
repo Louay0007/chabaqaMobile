@@ -41,6 +41,22 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  headerTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: spacing.lg,
+  },
+  headerTitleBlock: {
+    flex: 1,
+    minWidth: 0,
+  },
+  headerChallengeTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
+    color: colors.white,
+    marginTop: spacing.xs,
+  },
   titleSection: {
     flex: 0.6,
     marginRight: spacing.lg,
@@ -62,6 +78,36 @@ export const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     color: colors.challengesPrimaryLight,
     lineHeight: spacing.lg,
+  },
+  priceBadgeCompact: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: 999,
+  },
+  headerMetaGrid: {
+    marginTop: spacing.sm,
+    gap: spacing.xs,
+  },
+  statsCard: {
+    width: 150,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: borderRadius.lg,
+    padding: spacing.sm,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: spacing.sm,
+    columnGap: spacing.sm,
+  },
+  statCell: {
+    width: 62,
+    height: 62,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xs,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -242,6 +288,8 @@ export const styles = StyleSheet.create({
   actionButton: {
     padding: spacing.md,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
     borderTopWidth: 1,
     borderTopColor: colors.postBorder,
   },
@@ -296,6 +344,17 @@ export const styles = StyleSheet.create({
   tabContent: {
     paddingHorizontal: spacing.lg,
     paddingBottom: 24,
+  },
+  timelineCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   currentTaskCard: {
     backgroundColor: colors.white,
@@ -455,11 +514,9 @@ export const styles = StyleSheet.create({
     elevation: 2,
   },
   infoItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
+    gap: 4,
     paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.actionButtonBackground,
   },
   infoLabel: {
     fontSize: fontSize.sm,
@@ -469,6 +526,18 @@ export const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     fontWeight: fontWeight.medium,
     color: colors.gray800,
+  },
+  infoGridItem: {
+    width: '48%',
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.actionButtonBackground,
+  },
+  infoValueEmphasis: {
+    fontWeight: fontWeight.semibold,
   },
   notesContainer: {
     marginTop: spacing.md,
@@ -483,7 +552,14 @@ export const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.gray600,
     lineHeight: 20,
+    marginBottom: spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
+
   resourcesCard: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
@@ -498,25 +574,34 @@ export const styles = StyleSheet.create({
   resourceItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.actionButtonBackground,
   },
+  resourceRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  resourceIconContainer: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: colors.gray50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   resourceText: {
     fontSize: fontSize.sm,
-    color: colors.gray600,
-    marginLeft: spacing.md,
+    fontWeight: fontWeight.semibold,
+    color: colors.gray800,
   },
-  timelineCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+  resourceUrlText: {
+    fontSize: fontSize.xs,
+    color: colors.gray500,
   },
   cardSubtitle: {
     fontSize: fontSize.sm,
@@ -790,6 +875,60 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingVertical: spacing.md,
+    marginTop: spacing.sm,
+    backgroundColor: colors.gray50,
+    borderRadius: borderRadius.md,
+  },
+
+  // Enhanced leaderboard styles
+  leaderboardStatsHeader: {
+    backgroundColor: colors.gray50,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  leaderboardStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  leaderboardStatItem: {
+    alignItems: 'center',
+  },
+  leaderboardStatNumber: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.bold,
+    color: colors.challengesPrimary,
+    marginBottom: 2,
+  },
+  leaderboardStatLabel: {
+    fontSize: fontSize.xs,
+    color: colors.gray500,
+  },
+  currentUserPosition: {
+    backgroundColor: 'rgba(142, 120, 251, 0.1)',
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(142, 120, 251, 0.3)',
+  },
+  refreshButton: {
+    backgroundColor: colors.gray50,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.md,
+  },
+  refreshButtonText: {
+    marginLeft: spacing.xs,
+    color: colors.gray600,
+    fontWeight: fontWeight.semibold,
+  },
+  refreshButtonDisabled: {
+    opacity: 0.6,
   },
 
   // Styles pour les textes de différentes tailles
@@ -819,5 +958,218 @@ export const styles = StyleSheet.create({
     marginTop: spacing.md,
     fontSize: fontSize.sm,
     color: colors.gray500,
+  },
+
+  // Challenge Header enhanced styles
+  description: {
+    fontSize: fontSize.xs,
+    color: colors.challengesPrimaryLight,
+    lineHeight: spacing.md,
+    marginTop: spacing.xs,
+  },
+  badgesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+  },
+  creatorInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  creatorAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: spacing.xs,
+  },
+  creatorAvatarPlaceholder: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.xs,
+  },
+  creatorName: {
+    fontSize: fontSize.xs,
+    color: colors.challengesPrimaryLight,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+    marginTop: spacing.sm,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  metaText: {
+    fontSize: fontSize.xs,
+    color: colors.challengesPrimaryLight,
+  },
+  datesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  datesText: {
+    fontSize: fontSize.xs,
+    color: colors.challengesPrimaryLight,
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  bottomStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  bottomStatText: {
+    fontSize: fontSize.xs,
+    color: colors.challengesPrimaryLight,
+  },
+  priceBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+  },
+  priceText: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
+    color: colors.white,
+  },
+
+  // OverviewTab enhanced styles
+  deliverableContainer: {
+    backgroundColor: 'rgba(142, 120, 251, 0.1)',
+    padding: spacing.sm,
+    borderRadius: borderRadius.sm,
+    marginTop: spacing.sm,
+  },
+  deliverableTitle: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
+    color: colors.challengesPrimary,
+    marginBottom: spacing.xs,
+  },
+  deliverableText: {
+    fontSize: fontSize.sm,
+    color: colors.gray700,
+  },
+  resourcesSectionTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.gray700,
+    marginBottom: spacing.sm,
+  },
+  progressDetails: {
+    marginTop: spacing.sm,
+    alignItems: 'center',
+  },
+  progressDetailText: {
+    fontSize: fontSize.xs,
+    color: colors.gray500,
+  },
+  infoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  pricingSection: {
+    backgroundColor: colors.gray50,
+    padding: spacing.md,
+    borderRadius: borderRadius.sm,
+    marginTop: spacing.md,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  priceLabel: {
+    fontSize: fontSize.sm,
+    color: colors.gray600,
+  },
+  priceValue: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.gray800,
+  },
+  premiumFeaturesContainer: {
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    padding: spacing.md,
+    borderRadius: borderRadius.sm,
+    marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+  },
+  premiumTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: '#f59e0b',
+    marginBottom: spacing.sm,
+  },
+  premiumFeaturesList: {
+    gap: spacing.xs,
+  },
+  premiumFeature: {
+    fontSize: fontSize.sm,
+    color: colors.gray700,
+  },
+  resourceContent: {
+    flex: 1,
+    marginLeft: spacing.sm,
+  },
+  participantsCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    marginHorizontal: spacing.lg,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  participantsList: {
+    gap: spacing.sm,
+  },
+  participantItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray100,
+  },
+  participantRank: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
+    color: colors.challengesPrimary,
+    width: 30,
+  },
+  participantName: {
+    flex: 1,
+    fontSize: fontSize.sm,
+    color: colors.gray700,
+  },
+  participantPoints: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.gray600,
   },
 });

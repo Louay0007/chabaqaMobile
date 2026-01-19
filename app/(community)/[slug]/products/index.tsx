@@ -1,12 +1,15 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import CommunityHeader from '../../_components/Header';
 import { ThemedText } from '../../../../_components/ThemedText';
 import { ThemedView } from '../../../../_components/ThemedView';
 import { getCommunityBySlug as getMockCommunity, getUserPurchases, Product as MockProduct, Purchase } from '../../../../lib/mock-data';
 import { getCommunityBySlug } from '../../../../lib/communities-api';
-import { getProductsByCommunity as getBackendProducts, getMyPurchasedProducts, Product as BackendProduct } from '../../../../lib/product-api';
+import { checkProductAccess, getProductsByCommunity as getBackendProducts, getMyPurchasedProducts, Product as BackendProduct } from '../../../../lib/product-api';
+import { getAvatarUrl } from '../../../../lib/image-utils';
+import { getSecureItem, removeSecureItem } from '../../../../lib/secure-storage';
 import BottomNavigation from '../../_components/BottomNavigation';
 import { ProductsHeader } from './_components/ProductsHeader';
 import { ProductsList } from './_components/ProductsList';
@@ -24,13 +27,9 @@ export default function ProductsScreen() {
   const [community, setCommunity] = useState<any>(null);
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [userPurchases, setUserPurchases] = useState<any[]>([]);
+  const [accessMap, setAccessMap] = useState<Record<string, { purchased: boolean; pending: boolean }>>({});
 
-  // Fetch community and products data
-  useEffect(() => {
-    fetchData();
-  }, [slug]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -43,47 +42,44 @@ export default function ProductsScreen() {
       }
 
       const communityData = {
-        id: communityResponse.data._id || communityResponse.data.id,
+        _id: communityResponse.data._id,
+        id: communityResponse.data.id,
         name: communityResponse.data.name,
-        slug: communityResponse.data.slug,
       };
       setCommunity(communityData);
 
-      // Fetch products for this community
-      console.log('🛍️ [PRODUCTS] Fetching products for community ID:', communityData.id);
-      const productsResponse = await getBackendProducts(communityData.id, {
-        page: 1,
-        limit: 50,
-      });
+      // Fetch products from backend
+      const productsResponse = await getBackendProducts(communityData._id || communityData.id);
+      console.log('✅ [PRODUCTS] Backend products response:', productsResponse?.products?.length || 0);
+      const backendProducts = productsResponse?.products || [];
 
-      console.log('📦 [PRODUCTS] Response:', {
-        total: productsResponse.total,
-        count: productsResponse.products?.length,
-        page: productsResponse.page,
-        limit: productsResponse.limit
-      });
+      // Transform backend products to match UI component expectations
+      const transformedProducts = backendProducts.map((product: any) => {
+        const creatorInfo = product.creator || product.creatorId || {};
+        const creatorName = creatorInfo.name || 'Unknown Creator';
 
-      // Transform backend products to match frontend interface
-      console.log('🔄 [PRODUCTS] Transforming', productsResponse.products.length, 'products');
-      const transformedProducts = (productsResponse.products || []).map((product: BackendProduct) => {
-        console.log('   → Product:', product.title);
         return {
-          id: product._id,
+          id: product.id || product._id,
+          _id: product._id,
           title: product.title,
           description: product.description,
-          shortDescription: product.short_description || product.description,
-          price: product.price,
-          currency: product.currency,
+          price: product.price || 0,
+          images: product.images || [],
+          creator: {
+            name: creatorName,
+            avatar: getAvatarUrl(creatorInfo.avatar || creatorInfo.profile_picture || creatorInfo.photo_profil),
+          },
+          // Use real rating data from backend
+          rating: Number(product.averageRating || product.rating || 0),
+          ratingCount: Number(product.ratingCount || product.reviews_count || 0),
+          sales: product.sales || 0,
+          downloads: product.sales || 0,
+          members: 0,
           category: product.category,
           type: product.type,
-          images: product.images || [],
-          thumbnail: product.thumbnail || product.images?.[0] || 'https://via.placeholder.com/400x300',
-          creator: product.created_by,
-          communityId: communityData.id,
-          isPublished: product.is_published,
-          stockQuantity: product.stock_quantity,
-          rating: product.rating || 0,
-          tags: product.tags || [],
+          isPublished: product.isPublished,
+          inventory: product.inventory,
+          currency: product.currency,
           variants: product.variants || [],
           files: product.files || [],
           createdAt: product.created_at,
@@ -93,6 +89,23 @@ export default function ProductsScreen() {
 
       console.log('✅ [PRODUCTS] Transformed products:', transformedProducts.length);
       setAllProducts(transformedProducts);
+
+      // Compute access map (backend source of truth) + pending map (stored locally after proof submission)
+      const accessEntries = await Promise.all(
+        transformedProducts.map(async (p: any) => {
+          const productId = String(p.id);
+          const pendingOrderId = await getSecureItem(`pending_product_order_${productId}`);
+          const pending = !!pendingOrderId;
+          const purchased = p.price === 0 ? true : (await checkProductAccess(productId).then(r => r.purchased).catch(() => false));
+
+          if (purchased && pendingOrderId) {
+            await removeSecureItem(`pending_product_order_${productId}`);
+          }
+
+          return [productId, { purchased, pending: pending && !purchased }] as const;
+        })
+      );
+      setAccessMap(Object.fromEntries(accessEntries));
 
       // Fetch user's purchased products
       console.log('📊 [PRODUCTS] Fetching user purchases');
@@ -104,25 +117,16 @@ export default function ProductsScreen() {
           id: Date.now().toString() + Math.random(),
           userId: 'current-user',
           productId: product._id,
-          product: product,
-          purchasedAt: new Date(),
-          downloadCount: 0,
-          amount: product.price,
-          currency: product.currency,
+          purchasedAt: new Date().toISOString(),
         }));
-
-        console.log('✅ [PRODUCTS] Transformed purchases:', transformedPurchases.length);
         setUserPurchases(transformedPurchases);
-      } catch (purchaseError: any) {
-        console.warn('⚠️ [PRODUCTS] Could not fetch purchases:', purchaseError.message);
-        setUserPurchases([]);
+      } catch (purchaseError) {
+        console.log('⚠️ [PRODUCTS] Failed to fetch purchases, using mock purchases');
+        setUserPurchases(getUserPurchases('current-user'));
       }
-
-      console.log('✅ [PRODUCTS] Products loaded:', transformedProducts.length);
     } catch (err: any) {
-      console.error('❌ [PRODUCTS] Error fetching products:', err);
+      console.error('💥 [PRODUCTS] Error fetching data:', err);
       setError(err.message || 'Failed to load products');
-
       // Fallback to mock data
       console.log('⚠️ [PRODUCTS] Falling back to mock data');
       const mockCommunity = getMockCommunity(slug || '');
@@ -135,7 +139,20 @@ export default function ProductsScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
+
+  // Initial load
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Refresh on screen focus (e.g. after returning from manual payment)
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+      return () => {};
+    }, [fetchData])
+  );
 
   // Filter products based on search and active tab
   const filteredProducts = allProducts.filter((product: any) => {
@@ -143,7 +160,8 @@ export default function ProductsScreen() {
       product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const isPurchased = userPurchases.some((p: any) => p.productId === product.id);
+    // Use accessMap as the source of truth for purchased status
+    const isPurchased = accessMap[String(product.id)]?.purchased || userPurchases.some((p: any) => p.productId === product.id);
 
     if (activeTab === 'purchased') {
       return matchesSearch && isPurchased;
@@ -157,9 +175,11 @@ export default function ProductsScreen() {
     return matchesSearch;
   });
 
-  // Calculate counts for tabs and header
+  // Calculate counts for tabs and header - use accessMap for accurate purchased count
   const totalProducts = allProducts.length;
-  const purchasedCount = userPurchases.length;
+  const purchasedCount = allProducts.filter((p: any) => 
+    accessMap[String(p.id)]?.purchased || userPurchases.some((up: any) => up.productId === p.id)
+  ).length;
   const freeCount = allProducts.filter((p: any) => p.price === 0).length;
   const premiumCount = allProducts.filter((p: any) => p.price > 0).length;
 
@@ -177,15 +197,14 @@ export default function ProductsScreen() {
   };
 
   const handlePurchase = (product: any) => {
-    console.log('Purchase product:', product.id);
-    // TODO: Implement real purchase logic with backend API
-    // This will call the purchase API endpoint
+    router.push({
+      pathname: '/(communities)/payment',
+      params: { contentType: 'product', productId: String(product.id) },
+    } as any);
   };
 
   const handleDownload = (product: any) => {
-    console.log('Download product:', product.id);
-    // TODO: Implement real download logic with backend API
-    // This will call the download API endpoint
+    navigateToProductDetails(String(product.id));
   };
 
   if (loading) {
@@ -248,6 +267,7 @@ export default function ProductsScreen() {
         onProductPress={navigateToProductDetails}
         onPurchase={handlePurchase}
         onDownload={handleDownload}
+        accessMap={accessMap}
       />
 
       <BottomNavigation slug={slug as string} currentTab="products" />

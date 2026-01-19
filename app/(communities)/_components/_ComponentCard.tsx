@@ -1,9 +1,11 @@
 import { Card } from '@/_components/ui/card';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { communityStyles } from '../_styles';
+import Avatar from './Avatar';
+import { checkCommunityMembership } from '@/lib/communities-api';
 
 interface CommunityCardProps {
   community: {
@@ -15,9 +17,12 @@ interface CommunityCardProps {
     description: string;
     category: string;
     members: number;
-    rating: number;
+    rating?: number;
+    averageRating?: number;
+    ratingCount?: number;
     price: number;
     priceType: string;
+    currency?: string;
     image: number | string; // Images locales ou URL distantes
     tags: string[];
     featured: boolean;
@@ -28,8 +33,39 @@ interface CommunityCardProps {
 }
 
 export default function CommunityCard({ community, viewMode = 'list' }: CommunityCardProps) {
+  const [isMember, setIsMember] = useState(false);
+  const [checkingMembership, setCheckingMembership] = useState(true);
+
+  useEffect(() => {
+    checkMembershipStatus();
+  }, [community.id]);
+
+  const checkMembershipStatus = async () => {
+    try {
+      setCheckingMembership(true);
+      const result = await checkCommunityMembership(community.id);
+      setIsMember(result.isMember);
+    } catch (error) {
+      console.error('Error checking membership:', error);
+      setIsMember(false);
+    } finally {
+      setCheckingMembership(false);
+    }
+  };
+
   const handlePress = () => {
-    router.push(`/(communities)/${community.slug}`);
+    if (isMember) {
+      // Member: navigate to community home
+      router.push(`/(community)/${community.slug}/home`);
+    } else {
+      // Non-member: navigate to wallet payment page
+      router.push(`/(communities)/payment?communityId=${community.id}`);
+    }
+  };
+
+  const handleJoinPress = () => {
+    // Navigate to wallet payment page
+    router.push(`/(communities)/payment?communityId=${community.id}`);
   };
 
   const formatMembers = (count: number) => {
@@ -39,9 +75,30 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
     return count.toString();
   };
 
-  const formatPrice = (price: number, type: string) => {
+  const formatPrice = (price: number, type: string, currency?: string) => {
     if (type === "free" || price === 0) return "Free";
-    return `$${price}/${type === "monthly" ? "mo" : type}`;
+    
+    // Currency symbol mapping
+    const currencySymbols: { [key: string]: string } = {
+      'TND': 'DT',
+      'DT': 'DT',
+      'USD': '$',
+      'EUR': '€',
+    };
+    
+    const normalizedCurrency = (currency || 'TND').toUpperCase();
+    const symbol = currencySymbols[normalizedCurrency] || normalizedCurrency;
+    
+    // Map priceType to display suffix
+    const suffixMap: { [key: string]: string } = {
+      'monthly': '/mo',
+      'yearly': '/yr',
+      'one-time': '',
+      'paid': '',
+    };
+    
+    const suffix = suffixMap[type] || '';
+    return `${price} ${symbol}${suffix}`;
   };
 
   // Get type-specific styling and CTA text (same as web version)
@@ -98,6 +155,23 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
 
   const typeConfig = getTypeConfig(community.type);
 
+  // Determine CTA text and color based on membership status
+  const getCTAConfig = () => {
+    if (checkingMembership) {
+      return { text: 'Checking...', color: '#9ca3af', disabled: true };
+    }
+    if (isMember) {
+      return { text: 'Explore', color: '#10b981', disabled: false };
+    }
+    return { text: 'Join', color: '#8e78fb', disabled: false };
+  };
+
+  const ctaConfig = getCTAConfig();
+
+  // Get the rating to display (prefer averageRating, fallback to rating)
+  const displayRating = community.averageRating ?? community.rating ?? 0;
+  const reviewCount = community.ratingCount ?? 0;
+
   if (viewMode === "list") {
     return (
       <Card style={communityStyles.listCard}>
@@ -124,20 +198,6 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
                   console.log('   Error:', error.nativeEvent.error);
                 }}
               />
-              {/* DEBUG BADGE - Remove before production */}
-              <View style={{
-                position: 'absolute',
-                top: 5,
-                left: 5,
-                backgroundColor: typeof community.image === 'string' ? 'rgba(0, 255, 0, 0.7)' : 'rgba(255, 165, 0, 0.7)',
-                padding: 4,
-                borderRadius: 4,
-                zIndex: 10
-              }}>
-                <Text style={{ fontSize: 10, color: 'white', fontWeight: 'bold' }}>
-                  {typeof community.image === 'string' ? 'REMOTE' : 'LOCAL'}
-                </Text>
-              </View>
 
               {/* Overlay Gradient */}
               <View style={communityStyles.imageOverlay} />
@@ -149,7 +209,7 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
                   { backgroundColor: community.price === 0 ? '#10b981' : '#8e78fb' }
                 ]}>
                   <Text style={communityStyles.priceBadgeText}>
-                    {formatPrice(community.price, community.priceType)}
+                    {formatPrice(community.price, community.priceType, community.currency)}
                   </Text>
                 </View>
               </View>
@@ -174,9 +234,11 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
 
                 {/* Creator */}
                 <View style={communityStyles.creatorRow}>
-                  <Image
-                    source={{ uri: community.creatorAvatar }}
-                    style={communityStyles.communityCardCreatorAvatar}
+                  <Avatar
+                    uri={community.creatorAvatar}
+                    name={community.creator}
+                    size={24}
+                    style={{ marginRight: 8 }}
                   />
                   <Text style={communityStyles.creatorText}>
                     by <Text style={communityStyles.communityCardCreatorName}>{community.creator}</Text>
@@ -207,8 +269,10 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
                     <Text style={communityStyles.communityCardStatText}>{formatMembers(community.members)}</Text>
                   </View>
                   <View style={communityStyles.communityCardStatItem}>
-                    <Ionicons name="star" size={12} color="#f59e0b" />
-                    <Text style={communityStyles.communityCardStatText}>{community.rating}</Text>
+                    <Ionicons name="star" size={12} color="#fbbf24" />
+                    <Text style={communityStyles.communityCardStatText}>
+                      {displayRating.toFixed(1)}{reviewCount > 0 ? ` (${reviewCount})` : ''}
+                    </Text>
                   </View>
                   <View style={[
                     communityStyles.typeBadge,
@@ -225,10 +289,11 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
 
                 {/* CTA Button */}
                 <TouchableOpacity
-                  style={[communityStyles.communityCardCtaButton, { backgroundColor: '#8e78fb' }]}
+                  style={[communityStyles.communityCardCtaButton, { backgroundColor: ctaConfig.color }]}
                   onPress={handlePress}
+                  disabled={ctaConfig.disabled}
                 >
-                  <Text style={communityStyles.communityCardCtaButtonText}>{typeConfig.ctaText}</Text>
+                  <Text style={communityStyles.communityCardCtaButtonText}>{ctaConfig.text}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -263,20 +328,6 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
               console.log('   Error:', error.nativeEvent.error);
             }}
           />
-          {/* DEBUG BADGE - Remove before production */}
-          <View style={{
-            position: 'absolute',
-            top: 5,
-            left: 5,
-            backgroundColor: typeof community.image === 'string' ? 'rgba(0, 255, 0, 0.7)' : 'rgba(255, 165, 0, 0.7)',
-            padding: 4,
-            borderRadius: 4,
-            zIndex: 10
-          }}>
-            <Text style={{ fontSize: 10, color: 'white', fontWeight: 'bold' }}>
-              {typeof community.image === 'string' ? 'REMOTE' : 'LOCAL'}
-            </Text>
-          </View>
 
           {/* Overlay */}
           <View style={communityStyles.gridImageOverlay} />
@@ -302,9 +353,11 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
 
           {/* Creator */}
           <View style={communityStyles.gridCreatorRow}>
-            <Image
-              source={{ uri: community.creatorAvatar }}
-              style={communityStyles.gridCreatorAvatar}
+            <Avatar
+              uri={community.creatorAvatar}
+              name={community.creator}
+              size={20}
+              style={{ marginRight: 6 }}
             />
             <Text style={communityStyles.gridCreatorText}>
               by <Text style={communityStyles.communityCardCreatorName}>{community.creator}</Text>
@@ -318,8 +371,10 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
               <Text style={communityStyles.communityCardStatText}>{formatMembers(community.members)}</Text>
             </View>
             <View style={communityStyles.communityCardStatItem}>
-              <Ionicons name="star" size={12} color="#f59e0b" />
-              <Text style={communityStyles.communityCardStatText}>{community.rating}</Text>
+              <Ionicons name="star" size={12} color="#fbbf24" />
+              <Text style={communityStyles.communityCardStatText}>
+                {displayRating.toFixed(1)}{reviewCount > 0 ? ` (${reviewCount})` : ''}
+              </Text>
             </View>
             <View style={[
               communityStyles.typeBadge,
@@ -336,10 +391,11 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
 
           {/* CTA */}
           <TouchableOpacity
-            style={[communityStyles.communityCardGridCtaButton, { backgroundColor: '#8e78fb' }]}
+            style={[communityStyles.communityCardGridCtaButton, { backgroundColor: ctaConfig.color }]}
             onPress={handlePress}
+            disabled={ctaConfig.disabled}
           >
-            <Text style={communityStyles.communityCardCtaButtonText}>{typeConfig.ctaText}</Text>
+            <Text style={communityStyles.communityCardCtaButtonText}>{ctaConfig.text}</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>

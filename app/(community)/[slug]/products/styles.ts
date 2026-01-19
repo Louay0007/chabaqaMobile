@@ -496,6 +496,130 @@ export const styles = StyleSheet.create({
     color: '#666',
     fontWeight: fontWeight.medium,
   },
+
+  fileCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  fileCardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  fileMainInfo: {
+    flex: 1,
+    marginRight: spacing.md,
+  },
+  fileMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    flexWrap: 'wrap',
+  },
+  fileMetaBadge: {
+    backgroundColor: colors.productsPrimary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.md,
+    marginRight: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  fileMetaText: {
+    color: colors.white,
+    fontSize: 10,
+    fontWeight: fontWeight.semibold,
+  },
+  fileMetaBadgeMuted: {
+    backgroundColor: colors.gray100,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.md,
+    marginRight: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  fileMetaTextMuted: {
+    color: colors.gray600,
+    fontSize: 10,
+    fontWeight: fontWeight.semibold,
+  },
+  fileRightColumn: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  fileCardBottomRow: {
+    marginTop: spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+
+  filePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  filePillLocked: {
+    backgroundColor: colors.gray100,
+    borderColor: colors.gray200,
+  },
+  filePillPaid: {
+    backgroundColor: 'rgba(142, 120, 251, 0.12)',
+    borderColor: 'rgba(142, 120, 251, 0.25)',
+  },
+  filePillFree: {
+    backgroundColor: 'rgba(34, 197, 94, 0.12)',
+    borderColor: 'rgba(34, 197, 94, 0.25)',
+  },
+  filePillText: {
+    marginLeft: spacing.xs,
+    fontSize: 11,
+    color: colors.gray700,
+    fontWeight: fontWeight.semibold,
+  },
+
+  fileActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 10,
+    borderRadius: borderRadius.md,
+    minWidth: 120,
+  },
+  fileActionButtonPrimary: {
+    backgroundColor: colors.productsPrimary,
+  },
+  fileActionButtonSuccess: {
+    backgroundColor: colors.success,
+  },
+  fileActionButtonDisabled: {
+    backgroundColor: colors.gray100,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+  },
+  fileActionButtonText: {
+    color: colors.white,
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
+    marginLeft: spacing.xs,
+  },
+  fileActionButtonTextDisabled: {
+    color: colors.gray600,
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
+    marginLeft: spacing.xs,
+  },
+
   fileItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -572,6 +696,118 @@ export const styles = StyleSheet.create({
   progressFill: {
     height: '100%',
     backgroundColor: colors.productsPrimary,
+  },
+
+  reviewComposer: {
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray200,
+  },
+  reviewComposerTitle: {
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.semibold,
+    color: colors.gray800,
+    marginBottom: spacing.sm,
+  },
+  reviewStarsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  reviewStarButton: {
+    paddingRight: 8,
+    paddingVertical: 4,
+  },
+  reviewInput: {
+    minHeight: 90,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    color: colors.gray800,
+    backgroundColor: colors.gray50,
+    textAlignVertical: 'top',
+  },
+  reviewSubmitButton: {
+    marginTop: spacing.md,
+    backgroundColor: colors.productsPrimary,
+    borderRadius: borderRadius.md,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reviewSubmitButtonDisabled: {
+    backgroundColor: colors.gray100,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+  },
+  reviewSubmitText: {
+    color: colors.white,
+    fontWeight: fontWeight.semibold,
+    fontSize: fontSize.sm,
+  },
+  reviewSubmitTextDisabled: {
+    color: colors.gray600,
+  },
+
+  reviewItem: {
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray100,
+  },
+  reviewHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  reviewAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.gray100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+    overflow: 'hidden',
+  },
+  reviewAvatarInitial: {
+    fontSize: 12,
+    fontWeight: fontWeight.bold,
+    color: colors.productsPrimary,
+  },
+  reviewHeaderInfo: {
+    flex: 1,
+  },
+  reviewUserName: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.gray800,
+  },
+  reviewMetaRow: {
+    marginTop: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  reviewRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  reviewRatingText: {
+    marginLeft: 6,
+    fontSize: fontSize.xs,
+    color: colors.gray600,
+    fontWeight: fontWeight.semibold,
+  },
+  reviewDateText: {
+    fontSize: fontSize.xs,
+    color: colors.gray500,
+  },
+  reviewMessageText: {
+    marginTop: spacing.sm,
+    fontSize: fontSize.sm,
+    color: colors.gray700,
+    lineHeight: 20,
   },
   licenseText: {
     fontSize: fontSize.sm,

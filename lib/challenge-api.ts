@@ -1,97 +1,202 @@
 /**
  * Challenge API Integration
- * 
+ *
  * Provides functions to interact with the challenge endpoints for regular users.
  * Handles challenge browsing, joining, progress tracking, and leaderboards.
- * 
+ *
  * @module challenge-api
+ *
+ * NOTE: Types are aligned with backend ChallengeResponseDto and related DTOs
  */
 
 import { tryEndpoints } from './http';
 import { getAccessToken } from './auth';
 
 // ============================================================================
-// TypeScript Interfaces
+// TypeScript Interfaces - Matching Backend DTOs
 // ============================================================================
 
 /**
- * Challenge creator information
+ * Challenge resource (matches ChallengeResourceResponseDto)
  */
-export interface ChallengeCreator {
-  _id: string;
-  name: string;
-  email: string;
-  avatar?: string;
+export interface ChallengeResource {
+  id: string;
+  title: string;
+  type: 'video' | 'article' | 'code' | 'tool' | 'pdf' | 'link';
+  url: string;
+  description: string;
+  order: number;
 }
 
 /**
- * Challenge task
+ * Challenge task resource (matches ChallengeTaskResourceResponseDto)
+ */
+export interface ChallengeTaskResource {
+  id: string;
+  title: string;
+  type: 'video' | 'article' | 'code' | 'tool';
+  url: string;
+  description: string;
+}
+
+/**
+ * Challenge task (matches ChallengeTaskResponseDto)
  */
 export interface ChallengeTask {
-  _id: string;
+  id: string;
+  day: number;
   title: string;
   description: string;
+  deliverable: string;
+  isCompleted: boolean;
+  isActive: boolean;
   points: number;
-  order: number;
-  is_completed?: boolean;
+  instructions: string;
+  notes?: string;
+  resources: ChallengeTaskResource[];
+  createdAt: string;
 }
 
 /**
- * Challenge participant
+ * Challenge participant (matches ChallengeParticipantResponseDto)
  */
 export interface ChallengeParticipant {
-  user_id: string;
-  user_name: string;
-  user_avatar?: string;
-  joined_at: string;
-  completed_tasks: number;
-  total_points: number;
-  rank?: number;
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  joinedAt: string;
+  isActive: boolean;
+  progress: number;
+  totalPoints: number;
+  completedTasks: string[];
+  lastActivityAt: string;
 }
 
 /**
- * Main challenge interface
+ * Challenge comment (matches ChallengeCommentResponseDto)
+ */
+export interface ChallengeComment {
+  id: string;
+  content: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Challenge post (matches ChallengePostResponseDto)
+ */
+export interface ChallengePost {
+  id: string;
+  content: string;
+  images: string[];
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  likes: number;
+  comments: ChallengeComment[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Premium features (matches premiumFeatures in ChallengeResponseDto)
+ */
+export interface ChallengePremiumFeatures {
+  personalMentoring: boolean;
+  exclusiveResources: boolean;
+  priorityFeedback: boolean;
+  certificate: boolean;
+  liveSessions: boolean;
+  communityAccess: boolean;
+}
+
+/**
+ * Payment options (matches paymentOptions in ChallengeResponseDto)
+ */
+export interface ChallengePaymentOptions {
+  allowInstallments: boolean;
+  installmentCount?: number;
+  earlyBirdDiscount?: number;
+  groupDiscount?: number;
+  memberDiscount?: number;
+}
+
+/**
+ * Main challenge interface (matches ChallengeResponseDto)
  */
 export interface Challenge {
-  _id: string;
+  id: string;
   title: string;
   description: string;
-  short_description?: string;
-  thumbnail?: string;
-  cover_image?: string;
+  communityId: string;
+  communitySlug: string;
+  creatorId: string;
+  creatorName: string;
+  creatorAvatar?: string;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  participants: ChallengeParticipant[];
+  posts: ChallengePost[];
+  createdAt: string;
+  updatedAt: string;
+  depositAmount?: number;
+  maxParticipants?: number;
+  completionReward?: number;
+  topPerformerBonus?: number;
+  streakBonus?: number;
   category?: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  start_date: string;
-  end_date: string;
-  is_active: boolean;
-  created_by: ChallengeCreator;
-  community_id?: {
-    _id: string;
-    name: string;
-    slug: string;
-  };
+  difficulty?: string;
+  duration?: string;
+  thumbnail?: string;
+  notes?: string;
+  resources: ChallengeResource[];
   tasks: ChallengeTask[];
-  participants_count: number;
-  max_participants?: number;
-  prize?: string;
-  tags?: string[];
-  created_at: string;
-  updated_at: string;
+  participantCount: number;
+  isOngoing: boolean;
+  isCompleted: boolean;
+  // Pricing fields
+  participationFee?: number;
+  currency?: string;
+  depositRequired?: boolean;
+  isPremium?: boolean;
+  premiumFeatures?: ChallengePremiumFeatures;
+  paymentOptions?: ChallengePaymentOptions;
+  freeTrialDays?: number;
+  trialFeatures?: string[];
+  isFree: boolean;
+  finalPrice?: number;
 }
 
 /**
- * User challenge participation
+ * User challenge participation (matches backend participation structure)
  */
 export interface ChallengeParticipation {
-  _id: string;
-  user_id: string;
-  challenge_id: string;
-  joined_at: string;
-  completed_tasks: string[]; // Array of task IDs
-  total_points: number;
-  is_completed: boolean;
-  completed_at?: string;
-  rank?: number;
+  challengeId: string;
+  challenge: {
+    id: string;
+    title: string;
+    description: string;
+    thumbnail?: string;
+    category?: string;
+    difficulty?: string;
+    startDate: string;
+    endDate: string;
+    communityId: string;
+    depositAmount?: number;
+    completionReward?: number;
+    creator: any;
+  };
+  joinedAt: string;
+  progress: number;
+  completedTasks: number;
+  totalTasks: number;
+  isActive: boolean;
+  lastActivityAt: string;
 }
 
 /**
@@ -99,12 +204,25 @@ export interface ChallengeParticipation {
  */
 export interface LeaderboardEntry {
   rank: number;
-  user_id: string;
-  user_name: string;
-  user_avatar?: string;
-  total_points: number;
-  completed_tasks: number;
-  completion_percentage: number;
+  userId: string;
+  userName: string;
+  userAvatar?: string | null;
+  totalPoints: number;
+  completedTasks: number;
+  progress: number;
+  joinedAt: string;
+  lastActivityAt: string;
+}
+
+/**
+ * Leaderboard response from API
+ */
+export interface LeaderboardResponse {
+  leaderboard: LeaderboardEntry[];
+  totalParticipants: number;
+  activeParticipants: number;
+  challengeId: string;
+  challengeTitle: string;
 }
 
 /**
@@ -152,7 +270,6 @@ export async function getChallenges(filters: ChallengeFilters = {}): Promise<Cha
     if (filters.category) params.append('category', filters.category);
     if (filters.difficulty) params.append('difficulty', filters.difficulty);
     if (filters.isActive !== undefined) params.append('isActive', filters.isActive.toString());
-    if (filters.search) params.append('search', filters.search);
 
     const resp = await tryEndpoints<any>(
       `/api/challenges?${params.toString()}`,
@@ -173,7 +290,7 @@ export async function getChallenges(filters: ChallengeFilters = {}): Promise<Cha
       };
     }
 
-    throw new Error(resp.data.message || 'Failed to fetch challenges');
+    throw new Error(resp.data?.message || 'Failed to fetch challenges');
   } catch (error: any) {
     console.error('💥 [CHALLENGE-API] Error fetching challenges:', error);
     throw new Error(error.message || 'Failed to fetch challenges');
@@ -203,7 +320,7 @@ export async function getChallengeById(challengeId: string): Promise<Challenge> 
       return resp.data;
     }
 
-    throw new Error(resp.data.message || 'Failed to fetch challenge');
+    throw new Error(resp.data?.message || 'Failed to fetch challenge');
   } catch (error: any) {
     console.error('💥 [CHALLENGE-API] Error fetching challenge:', error);
     throw new Error(error.message || 'Failed to fetch challenge details');
@@ -216,7 +333,7 @@ export async function getChallengeById(challengeId: string): Promise<Challenge> 
  * @param challengeId - Challenge ID to join
  * @returns Promise with participation data
  */
-export async function joinChallenge(challengeId: string): Promise<ChallengeParticipation> {
+export async function joinChallenge(challengeId: string): Promise<Challenge> {
   try {
     const token = await getAccessToken();
     if (!token) {
@@ -226,23 +343,24 @@ export async function joinChallenge(challengeId: string): Promise<ChallengeParti
     console.log('✍️ [CHALLENGE-API] Joining challenge:', challengeId);
 
     const resp = await tryEndpoints<any>(
-      `/api/challenges/${challengeId}/join`,
+      `/api/challenges/join`,
       {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        data: { challengeId },
         timeout: 30000,
       }
     );
 
     if (resp.status >= 200 && resp.status < 300) {
       console.log('✅ [CHALLENGE-API] Joined challenge successfully');
-      return resp.data.participation || resp.data;
+      return resp.data;
     }
 
-    throw new Error(resp.data.message || 'Failed to join challenge');
+    throw new Error(resp.data?.message || 'Failed to join challenge');
   } catch (error: any) {
     console.error('💥 [CHALLENGE-API] Error joining challenge:', error);
     throw new Error(error.message || 'Failed to join challenge');
@@ -255,7 +373,7 @@ export async function joinChallenge(challengeId: string): Promise<ChallengeParti
  * @param challengeId - Challenge ID to leave
  * @returns Promise with success status
  */
-export async function leaveChallenge(challengeId: string): Promise<{ success: boolean; message: string }> {
+export async function leaveChallenge(challengeId: string): Promise<Challenge> {
   try {
     const token = await getAccessToken();
     if (!token) {
@@ -265,23 +383,24 @@ export async function leaveChallenge(challengeId: string): Promise<{ success: bo
     console.log('👋 [CHALLENGE-API] Leaving challenge:', challengeId);
 
     const resp = await tryEndpoints<any>(
-      `/api/challenges/${challengeId}/leave`,
+      `/api/challenges/leave`,
       {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        data: { challengeId },
         timeout: 30000,
       }
     );
 
     if (resp.status >= 200 && resp.status < 300) {
       console.log('✅ [CHALLENGE-API] Left challenge successfully');
-      return { success: true, message: 'Successfully left challenge' };
+      return resp.data;
     }
 
-    throw new Error(resp.data.message || 'Failed to leave challenge');
+    throw new Error(resp.data?.message || 'Failed to leave challenge');
   } catch (error: any) {
     console.error('💥 [CHALLENGE-API] Error leaving challenge:', error);
     throw new Error(error.message || 'Failed to leave challenge');
@@ -297,27 +416,29 @@ export async function leaveChallenge(challengeId: string): Promise<{ success: bo
  */
 export async function updateChallengeProgress(
   challengeId: string,
-  taskId: string
-): Promise<ChallengeParticipation> {
+  taskId: string,
+  status: 'completed' | 'in_progress' | 'not_started' = 'completed'
+): Promise<Challenge> {
   try {
     const token = await getAccessToken();
     if (!token) {
       throw new Error('Authentication required');
     }
 
-    console.log('📝 [CHALLENGE-API] Updating challenge progress:', { challengeId, taskId });
+    console.log('📝 [CHALLENGE-API] Updating challenge progress:', { challengeId, taskId, status });
 
     const resp = await tryEndpoints<any>(
-      `/api/challenges/${challengeId}/progress`,
+      `/api/challenges/progress`,
       {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         data: {
-          task_id: taskId,
-          completed: true,
+          challengeId,
+          taskId,
+          status,
         },
         timeout: 30000,
       }
@@ -325,10 +446,10 @@ export async function updateChallengeProgress(
 
     if (resp.status >= 200 && resp.status < 300) {
       console.log('✅ [CHALLENGE-API] Progress updated successfully');
-      return resp.data.participation || resp.data;
+      return resp.data;
     }
 
-    throw new Error(resp.data.message || 'Failed to update progress');
+    throw new Error(resp.data?.message || 'Failed to update progress');
   } catch (error: any) {
     console.error('💥 [CHALLENGE-API] Error updating progress:', error);
     throw new Error(error.message || 'Failed to update challenge progress');
@@ -349,9 +470,8 @@ export async function getMyChallengeParticipation(challengeId: string): Promise<
     }
 
     console.log('📊 [CHALLENGE-API] Fetching participation for challenge:', challengeId);
-
     const resp = await tryEndpoints<any>(
-      `/api/challenges/${challengeId}/my-participation`,
+      '/api/challenges/user/my-participations',
       {
         method: 'GET',
         headers: {
@@ -361,12 +481,12 @@ export async function getMyChallengeParticipation(challengeId: string): Promise<
       }
     );
 
-    if (resp.status >= 200 && resp.status < 300) {
-      console.log('✅ [CHALLENGE-API] Participation data fetched');
-      return resp.data.participation || resp.data;
-    }
+    const participations: ChallengeParticipation[] = resp.data?.data?.participations || [];
+    const participation = participations.find(
+      (entry) => entry.challenge?.id === challengeId || entry.challengeId === challengeId
+    );
 
-    return null;
+    return participation || null;
   } catch (error: any) {
     console.error('💥 [CHALLENGE-API] Error fetching participation:', error);
     return null;
@@ -382,8 +502,8 @@ export async function getMyChallengeParticipation(challengeId: string): Promise<
  */
 export async function getChallengeLeaderboard(
   challengeId: string,
-  limit: number = 50
-): Promise<LeaderboardEntry[]> {
+  limit: number = 500
+): Promise<LeaderboardResponse> {
   try {
     console.log('🏅 [CHALLENGE-API] Fetching leaderboard for challenge:', challengeId);
 
@@ -396,14 +516,38 @@ export async function getChallengeLeaderboard(
     );
 
     if (resp.status >= 200 && resp.status < 300) {
-      console.log('✅ [CHALLENGE-API] Leaderboard fetched:', resp.data.leaderboard?.length || 0);
-      return resp.data.leaderboard || [];
+      console.log('✅ [CHALLENGE-API] Leaderboard fetched:', resp.data.data?.leaderboard?.length || 0);
+      return {
+        leaderboard: resp.data.data?.leaderboard || [],
+        totalParticipants: resp.data.data?.totalParticipants || 0,
+        activeParticipants: resp.data.data?.activeParticipants || 0,
+        challengeId: resp.data.data?.challengeId || challengeId,
+        challengeTitle: resp.data.data?.challengeTitle || '',
+      };
     }
 
-    throw new Error(resp.data.message || 'Failed to fetch leaderboard');
+    // Handle 404 - challenge not found or no participants
+    if (resp.status === 404) {
+      console.log('⚠️ [CHALLENGE-API] Challenge not found or no participants');
+      return {
+        leaderboard: [],
+        totalParticipants: 0,
+        activeParticipants: 0,
+        challengeId,
+        challengeTitle: '',
+      };
+    }
+
+    throw new Error(resp.data?.message || 'Failed to fetch leaderboard');
   } catch (error: any) {
     console.error('💥 [CHALLENGE-API] Error fetching leaderboard:', error);
-    return [];
+    return {
+      leaderboard: [],
+      totalParticipants: 0,
+      activeParticipants: 0,
+      challengeId,
+      challengeTitle: '',
+    };
   }
 }
 
@@ -432,8 +576,8 @@ export async function getChallengesByCommunity(
  */
 export async function isParticipatingInChallenge(challengeId: string): Promise<boolean> {
   try {
-    const participation = await getMyChallengeParticipation(challengeId);
-    return !!participation;
+    const participations = await getUserParticipations();
+    return participations.some(p => p.challenge?.id === challengeId || p.challengeId === challengeId);
   } catch (error) {
     return false;
   }
@@ -447,8 +591,8 @@ export async function isParticipatingInChallenge(challengeId: string): Promise<b
  */
 export function getChallengeStatus(challenge: Challenge): 'upcoming' | 'active' | 'completed' {
   const now = new Date();
-  const startDate = new Date(challenge.start_date);
-  const endDate = new Date(challenge.end_date);
+  const startDate = new Date(challenge.startDate);
+  const endDate = new Date(challenge.endDate);
 
   if (startDate > now) return 'upcoming';
   if (endDate < now) return 'completed';
@@ -548,4 +692,139 @@ export function calculateChallengeCompletion(
 ): number {
   if (totalTasks === 0) return 0;
   return Math.round((completedTasks / totalTasks) * 100);
+}
+
+/**
+ * Purchase challenge with wallet balance
+ * 
+ * @param challengeId - Challenge ID to purchase
+ * @param amount - Amount in DT
+ * @param creatorId - Creator ID
+ * @returns Promise with purchase result
+ */
+export async function purchaseChallengeWithWallet(
+  challengeId: string,
+  amount: number,
+  creatorId: string
+): Promise<{ success: boolean; newBalance: number; message?: string }> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      throw new Error('Authentication required. Please login to purchase.');
+    }
+
+    console.log('💳 [CHALLENGE-API] Purchasing challenge with wallet:', { challengeId, amount, creatorId });
+
+    const resp = await tryEndpoints<any>(
+      `/api/wallet/purchase`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        data: {
+          contentType: 'challenge',
+          contentId: challengeId,
+          amount,
+          creatorId,
+          description: `Challenge purchase`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    if (resp.status >= 200 && resp.status < 300) {
+      console.log('✅ [CHALLENGE-API] Challenge purchased successfully');
+      return {
+        success: true,
+        newBalance: resp.data.data?.newBalance || 0,
+        message: resp.data.message || 'Purchase successful',
+      };
+    }
+
+    throw new Error(resp.data?.message || 'Failed to purchase challenge');
+  } catch (error: any) {
+    console.error('💥 [CHALLENGE-API] Error purchasing challenge:', error);
+    throw new Error(error.message || 'Failed to purchase challenge');
+  }
+}
+
+/**
+ * Get user wallet balance
+ * 
+ * @returns Promise with wallet balance
+ */
+export async function getWalletBalance(): Promise<{ balance: number; currency: string }> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      return { balance: 0, currency: 'DT' };
+    }
+
+    const resp = await tryEndpoints<any>(
+      `/api/wallet/balance`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    if (resp.status >= 200 && resp.status < 300) {
+      return {
+        balance: resp.data.data?.balance || 0,
+        currency: resp.data.data?.currency || 'DT',
+      };
+    }
+
+    return { balance: 0, currency: 'DT' };
+  } catch (error: any) {
+    console.error('💥 [CHALLENGE-API] Error fetching wallet balance:', error);
+    return { balance: 0, currency: 'DT' };
+  }
+}
+
+/**
+ * Check if user is already a participant in a challenge
+ * 
+ * @param challenge - Challenge object
+ * @param userId - User ID to check
+ * @returns Boolean indicating if user is a participant
+ */
+export function isUserParticipant(challenge: Challenge, userId: string | null): boolean {
+  if (!userId || !challenge.participants) return false;
+  return challenge.participants.some(
+    p => p.userId === userId || p.userId === userId?.toString()
+  );
+}
+
+/**
+ * Get challenge price (participation fee)
+ * 
+ * @param challenge - Challenge object
+ * @returns Price in DT or 0 if free
+ */
+export function getChallengePrice(challenge: Challenge): number {
+  // Check pricing object first
+  if (challenge.participationFee !== undefined && challenge.participationFee > 0) {
+    return challenge.participationFee;
+  }
+  // Legacy: check depositAmount
+  if (challenge.depositAmount !== undefined && challenge.depositAmount > 0) {
+    return challenge.depositAmount;
+  }
+  return 0;
+}
+
+/**
+ * Check if challenge is free
+ * 
+ * @param challenge - Challenge object
+ * @returns Boolean indicating if challenge is free
+ */
+export function isChallengeFree(challenge: Challenge): boolean {
+  return challenge.isFree === true || getChallengePrice(challenge) === 0;
 }

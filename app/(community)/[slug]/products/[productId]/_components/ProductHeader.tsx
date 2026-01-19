@@ -1,6 +1,6 @@
-import { MessageCircle, Star } from 'lucide-react-native';
+import { Star } from 'lucide-react-native';
 import React from 'react';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
 import { styles } from '../../styles';
 
 interface ProductHeaderProps {
@@ -44,21 +44,17 @@ export const ProductHeader: React.FC<ProductHeaderProps> = ({ product }) => {
             )}
           </View>
           <View style={styles.creatorDetails}>
-            <Text style={styles.productTitle}>{title}</Text>
+            <Text style={styles.productTitle}>{title || 'Untitled'}</Text>
             <Text style={styles.creatorText}>By {creator?.name || 'Anonymous Creator'}</Text>
-            {rating && (
+            {rating !== undefined && rating !== null && (
               <View style={styles.ratingContainer}>
-                <Star size={12} color="#fbbf24" fill="#fbbf24" />
+                <Star size={12} color="#fbbf24" fill={rating > 0 ? "#fbbf24" : "transparent"} />
                 <Text style={styles.rating}>
-                  {rating.toFixed(1)} ({reviewCount || 0} reviews)
+                  {Number(rating || 0).toFixed(1)} ({reviewCount || 0} reviews)
                 </Text>
               </View>
             )}
           </View>
-          <TouchableOpacity style={styles.messageButton}>
-            <MessageCircle size={16} color="#6366f1" />
-            <Text style={styles.messageText}>Message</Text>
-          </TouchableOpacity>
         </View>
       </View>
     </>

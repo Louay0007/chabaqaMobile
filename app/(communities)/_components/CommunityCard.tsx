@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { communityStyles } from '../_styles';
+import Avatar from './Avatar';
 
 interface CommunityCardProps {
   community: {
@@ -46,7 +47,7 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
   // Get type-specific styling and CTA text (same as web version)
   const getTypeConfig = (type?: string) => {
     const itemType = type || "community";
-    
+
     const typeConfigs = {
       community: {
         badgeColor: "#8e78fb",
@@ -56,7 +57,7 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
         gradientColors: ["#8e78fb", "#8e78fb"],
       },
       course: {
-        badgeColor: "#3b82f6", 
+        badgeColor: "#3b82f6",
         backgroundColor: "#3b82f610",
         borderColor: "#3b82f650",
         ctaText: "Join",
@@ -64,7 +65,7 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
       },
       challenge: {
         badgeColor: "#f97316",
-        backgroundColor: "#f9731610", 
+        backgroundColor: "#f9731610",
         borderColor: "#f9731650",
         ctaText: "Join",
         gradientColors: ["#f97316", "#f97316"],
@@ -72,7 +73,7 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
       product: {
         badgeColor: "#6366f1",
         backgroundColor: "#6366f110",
-        borderColor: "#6366f150", 
+        borderColor: "#6366f150",
         ctaText: "Buy",
         gradientColors: ["#6366f1", "#6366f1"],
       },
@@ -80,7 +81,7 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
         badgeColor: "#F7567C",
         backgroundColor: "#F7567C10",
         borderColor: "#F7567C50",
-        ctaText: "Book", 
+        ctaText: "Book",
         gradientColors: ["#F7567C", "#F7567C"],
       },
       event: {
@@ -100,23 +101,23 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
   if (viewMode === "list") {
     return (
       <Card style={communityStyles.listCard}>
-        <TouchableOpacity 
-          onPress={handlePress} 
+        <TouchableOpacity
+          onPress={handlePress}
           style={communityStyles.cardTouchable}
           activeOpacity={0.95}
         >
           <View style={communityStyles.listContainer}>
             {/* Image Section */}
             <View style={communityStyles.listImageContainer}>
-              <Image 
-                source={community.image} 
+              <Image
+                source={community.image}
                 style={communityStyles.listImage}
                 resizeMode="cover"
                 onError={(error) => {
                   console.log('Image loading error:', error.nativeEvent.error);
                 }}
               />
-              
+
               {/* Overlay Gradient */}
               <View style={communityStyles.imageOverlay} />
 
@@ -152,9 +153,11 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
 
                 {/* Creator */}
                 <View style={communityStyles.creatorRow}>
-                  <Image
-                    source={{ uri: community.creatorAvatar }}
-                    style={communityStyles.communityCardCreatorAvatar}
+                  <Avatar
+                    uri={community.creatorAvatar}
+                    name={community.creator}
+                    size={24}
+                    style={{ marginRight: 8 }}
                   />
                   <Text style={communityStyles.creatorText}>
                     by <Text style={communityStyles.communityCardCreatorName}>{community.creator}</Text>
@@ -189,10 +192,10 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
                     <Text style={communityStyles.communityCardStatText}>{community.rating}</Text>
                   </View>
                   <View style={[
-                    communityStyles.typeBadge, 
-                    { 
+                    communityStyles.typeBadge,
+                    {
                       borderColor: typeConfig.borderColor,
-                      backgroundColor: typeConfig.backgroundColor 
+                      backgroundColor: typeConfig.backgroundColor
                     }
                   ]}>
                     <Text style={[communityStyles.typeBadgeText, { color: typeConfig.badgeColor }]}>
@@ -202,7 +205,7 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
                 </View>
 
                 {/* CTA Button */}
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[communityStyles.communityCardCtaButton, { backgroundColor: '#8e78fb' }]}
                   onPress={handlePress}
                 >
@@ -219,22 +222,22 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
   // Grid View (simplified version matching web design)
   return (
     <Card style={communityStyles.communityCardGridCard}>
-      <TouchableOpacity 
-        onPress={handlePress} 
+      <TouchableOpacity
+        onPress={handlePress}
         style={communityStyles.cardTouchable}
         activeOpacity={0.95}
       >
         {/* Image Section */}
         <View style={communityStyles.gridImageContainer}>
-          <Image 
-            source={community.image} 
+          <Image
+            source={community.image}
             style={communityStyles.communityCardGridImage}
             resizeMode="cover"
             onError={(error) => {
               console.log('Image loading error:', error.nativeEvent.error);
             }}
           />
-          
+
           {/* Overlay */}
           <View style={communityStyles.gridImageOverlay} />
 
@@ -259,9 +262,11 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
 
           {/* Creator */}
           <View style={communityStyles.gridCreatorRow}>
-            <Image
-              source={{ uri: community.creatorAvatar }}
-              style={communityStyles.gridCreatorAvatar}
+            <Avatar
+              uri={community.creatorAvatar}
+              name={community.creator}
+              size={20}
+              style={{ marginRight: 6 }}
             />
             <Text style={communityStyles.gridCreatorText}>
               by <Text style={communityStyles.communityCardCreatorName}>{community.creator}</Text>
@@ -279,10 +284,10 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
               <Text style={communityStyles.communityCardStatText}>{community.rating}</Text>
             </View>
             <View style={[
-              communityStyles.typeBadge, 
-              { 
+              communityStyles.typeBadge,
+              {
                 borderColor: typeConfig.borderColor,
-                backgroundColor: typeConfig.backgroundColor 
+                backgroundColor: typeConfig.backgroundColor
               }
             ]}>
               <Text style={[communityStyles.typeBadgeText, { color: typeConfig.badgeColor }]}>
@@ -292,7 +297,7 @@ export default function CommunityCard({ community, viewMode = 'list' }: Communit
           </View>
 
           {/* CTA */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[communityStyles.communityCardGridCtaButton, { backgroundColor: '#8e78fb' }]}
             onPress={handlePress}
           >

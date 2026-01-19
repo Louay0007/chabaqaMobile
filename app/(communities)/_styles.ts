@@ -6,7 +6,7 @@ export const communityStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.gray50,
   },
-  
+
   // Header styles
   header: {
     paddingHorizontal: spacing.xl,
@@ -14,7 +14,7 @@ export const communityStyles = StyleSheet.create({
     backgroundColor: colors.white,
     alignItems: 'center',
   },
-  
+
   headerTitle: {
     fontSize: fontSize.xxl + 4, // 28px
     fontWeight: fontWeight.bold,
@@ -22,21 +22,21 @@ export const communityStyles = StyleSheet.create({
     marginBottom: spacing.sm,
     textAlign: 'center',
   },
-  
+
   headerSubtitle: {
     fontSize: fontSize.base,
     color: colors.gray500,
     lineHeight: 24,
     textAlign: 'center',
   },
-  
+
   // Search styles
   searchContainer: {
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
     backgroundColor: colors.white,
   },
-  
+
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -47,11 +47,11 @@ export const communityStyles = StyleSheet.create({
     marginBottom: spacing.md,
     height: 44,
   },
-  
+
   searchIcon: {
     marginRight: spacing.md,
   },
-  
+
   searchInput: {
     flex: 1,
     fontSize: fontSize.base,
@@ -59,13 +59,13 @@ export const communityStyles = StyleSheet.create({
     paddingVertical: 0,
     minHeight: 20,
   },
-  
+
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: spacing.md,
   },
-  
+
   filterButton: {
     flex: 1,
     flexDirection: 'row',
@@ -76,18 +76,18 @@ export const communityStyles = StyleSheet.create({
     paddingVertical: spacing.md - 2, // 10px
     paddingHorizontal: spacing.md,
   },
-  
+
   filterButtonActive: {
     backgroundColor: colors.primary,
   },
-  
+
   filterButtonText: {
     fontSize: fontSize.sm,
     color: colors.gray500,
     marginLeft: spacing.sm,
     fontWeight: fontWeight.medium,
   },
-  
+
   filterButtonTextActive: {
     color: colors.white,
   },
@@ -126,14 +126,14 @@ export const communityStyles = StyleSheet.create({
   categoryPillTextActive: {
     color: colors.white,
   },
-  
+
   // Community list styles
   communitiesList: {
     flexGrow: 1,
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xl,
   },
-  
+
   communityCard: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
@@ -145,87 +145,87 @@ export const communityStyles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
   },
-  
+
   communityImage: {
     width: '100%',
     height: 200,
   },
-  
+
   communityContent: {
     padding: spacing.lg,
   },
-  
+
   communityHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: spacing.md,
   },
-  
+
   communityInfo: {
     flex: 1,
     marginRight: spacing.md,
   },
-  
+
   communityName: {
     fontSize: fontSize.lg,
     fontWeight: fontWeight.bold,
     color: colors.gray900,
     marginBottom: spacing.xs,
   },
-  
+
   communityCreator: {
     fontSize: fontSize.sm,
     color: colors.gray500,
     marginBottom: spacing.sm,
   },
-  
+
   communityDescription: {
     fontSize: fontSize.sm,
     color: colors.gray600,
     lineHeight: 20,
     marginBottom: spacing.md,
   },
-  
+
   communityMeta: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: spacing.md,
   },
-  
+
   communityStats: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.lg,
   },
-  
+
   statItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
   },
-  
+
   statText: {
     fontSize: fontSize.xs,
     color: colors.gray500,
   },
-  
+
   priceContainer: {
     alignItems: 'flex-end',
   },
-  
+
   price: {
     fontSize: fontSize.lg,
     fontWeight: fontWeight.bold,
     color: colors.primary,
   },
-  
+
   priceType: {
     fontSize: fontSize.xs,
     color: colors.gray500,
   },
-  
+
   freeLabel: {
     backgroundColor: colors.success,
     color: colors.white,
@@ -235,7 +235,7 @@ export const communityStyles = StyleSheet.create({
     fontSize: fontSize.xs,
     fontWeight: fontWeight.semibold,
   },
-  
+
   // Tags styles
   tagsContainer: {
     flexDirection: 'row',
@@ -243,20 +243,20 @@ export const communityStyles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.sm,
   },
-  
+
   tag: {
     backgroundColor: colors.gray200,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.sm,
   },
-  
+
   tagText: {
     fontSize: fontSize.xs,
     color: colors.gray500,
     fontWeight: fontWeight.medium,
   },
-  
+
   // Badge styles
   verifiedBadge: {
     position: 'absolute',
@@ -266,7 +266,7 @@ export const communityStyles = StyleSheet.create({
     borderRadius: 12,
     padding: 6,
   },
-  
+
   featuredBadge: {
     position: 'absolute',
     top: 12,
@@ -276,13 +276,13 @@ export const communityStyles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
   },
-  
+
   featuredText: {
     color: '#ffffff',
     fontSize: 12,
     fontWeight: '600',
   },
-  
+
   // Empty state
   emptyState: {
     flex: 1,
@@ -290,78 +290,78 @@ export const communityStyles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 40,
   },
-  
+
   emptyStateText: {
     fontSize: 16,
     color: '#64748b',
     textAlign: 'center',
     marginTop: 16,
   },
-  
+
   // Loading state
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
+
   // Community detail page styles
   detailContainer: {
     flex: 1,
     backgroundColor: '#ffffff',
   },
-  
+
   detailImage: {
     width: '100%',
     height: 250,
   },
-  
+
   detailContent: {
     padding: 20,
   },
-  
+
   detailTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#1a202c',
     marginBottom: 8,
   },
-  
+
   detailCreator: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
   },
-  
+
   creatorAvatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
     marginRight: 12,
   },
-  
+
   creatorInfo: {
     flex: 1,
   },
-  
+
   creatorName: {
     fontSize: 16,
     fontWeight: '600',
     color: '#1a202c',
   },
-  
+
   creatorRole: {
     fontSize: 14,
     color: '#64748b',
   },
-  
+
   detailDescription: {
     fontSize: 16,
     color: '#4a5568',
     lineHeight: 24,
     marginBottom: 20,
   },
-  
+
   detailStats: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -370,23 +370,23 @@ export const communityStyles = StyleSheet.create({
     paddingVertical: 16,
     marginBottom: 20,
   },
-  
+
   detailStatItem: {
     alignItems: 'center',
   },
-  
+
   detailStatValue: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1a202c',
   },
-  
+
   detailStatLabel: {
     fontSize: 12,
     color: '#64748b',
     marginTop: 4,
   },
-  
+
   joinButton: {
     backgroundColor: '#8b5cf6',
     borderRadius: 12,
@@ -394,18 +394,18 @@ export const communityStyles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
   },
-  
+
   joinButtonText: {
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
   },
-  
+
   // Grid view styles
   gridContainer: {
     paddingHorizontal: 10,
   },
-  
+
   gridItem: {
     flex: 1,
     margin: 10,
@@ -418,33 +418,104 @@ export const communityStyles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
   },
-  
+
   gridImage: {
     width: '100%',
     height: 120,
   },
-  
+
   gridContent: {
     padding: 12,
   },
-  
+
   gridName: {
     fontSize: 14,
     fontWeight: 'bold',
     color: '#1a202c',
     marginBottom: 4,
   },
-  
+
   gridCreator: {
     fontSize: 12,
     color: '#64748b',
     marginBottom: 8,
   },
-  
+
   gridPrice: {
     fontSize: 14,
     fontWeight: 'bold',
     color: '#8b5cf6',
+  },
+
+  // New Grid Card Styles for Discover Feed
+  gridCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+
+  gridImageContainer: {
+    height: 160,
+    width: '100%',
+    position: 'relative',
+    backgroundColor: colors.gray100,
+  },
+
+  gridImageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    zIndex: 1,
+  },
+
+  gridStatsRow: {
+    flexDirection: 'row',
+    position: 'absolute',
+    bottom: 8,
+    left: 8,
+    zIndex: 2,
+    gap: 8,
+  },
+
+  gridStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+
+  gridStatText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+
+  gridTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 6,
+    lineHeight: 22,
+  },
+
+  gridCreatorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+
+  gridCreatorText: {
+    fontSize: 12,
+    color: '#6b7280',
+    flex: 1,
   },
 
   // Top Navigation Bar styles
@@ -632,6 +703,7 @@ export const communityStyles = StyleSheet.create({
     marginRight: spacing.sm,
     borderWidth: 1,
     borderColor: colors.primaryBorder,
+    backgroundColor: colors.gray100, // Fallback background
   },
 
   creatorText: {
@@ -834,27 +906,11 @@ export const communityStyles = StyleSheet.create({
     overflow: 'hidden',
   },
 
-  gridImageContainer: {
-    position: 'relative',
-    aspectRatio: 16/9,
-  },
-
   communityCardGridImage: {
     width: '100%',
     height: '100%',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-  },
-
-  gridImageOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.05)',
   },
 
   gridPriceBadgeContainer: {
@@ -875,11 +931,6 @@ export const communityStyles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  gridCreatorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
   gridCreatorAvatar: {
     width: 20,
     height: 20,
@@ -887,11 +938,7 @@ export const communityStyles = StyleSheet.create({
     marginRight: 6,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-  },
-
-  gridCreatorText: {
-    fontSize: 10,
-    color: '#64748b',
+    backgroundColor: colors.gray100, // Fallback background
   },
 
   gridStatsContainer: {

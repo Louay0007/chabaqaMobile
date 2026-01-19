@@ -2,6 +2,7 @@
 
 import { tryEndpoints } from './http';
 import PlatformUtils from './platform-utils';
+import { getImageUrl } from './image-utils';
 import { getSecureItem, removeSecureItem, setSecureItem } from './secure-storage';
 
 // Interface pour l'utilisateur (full profile from database + JWT fields)
@@ -25,6 +26,8 @@ export interface User {
   adresse?: string;
   bio?: string;
   avatar?: string;
+  photo_profil?: string;
+  profile_picture?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -84,9 +87,27 @@ export const getRefreshToken = async (): Promise<string | null> => {
   }
 };
 
+/**
+ * Transform user object to fix image URLs before storing
+ */
+const transformUserImages = (user: User): User => {
+  // Get the best available avatar URL
+  const avatarUrl = user.avatar || user.photo_profil || user.profile_picture;
+  const transformedAvatar = getImageUrl(avatarUrl);
+  
+  return {
+    ...user,
+    avatar: transformedAvatar || avatarUrl,
+    photo_profil: transformedAvatar || user.photo_profil,
+    profile_picture: transformedAvatar || user.profile_picture,
+  };
+};
+
 export const storeUser = async (user: User): Promise<void> => {
   try {
-    await setSecureItem(USER_KEY, JSON.stringify(user));
+    // Transform image URLs before storing
+    const transformedUser = transformUserImages(user);
+    await setSecureItem(USER_KEY, JSON.stringify(transformedUser));
   } catch (error) {
     console.error('Error storing user:', error);
   }
@@ -187,16 +208,16 @@ export const getProfile = async (): Promise<User | null> => {
 
     if (resp.status >= 200 && resp.status < 300) {
       const payload = resp.data;
-      console.log('✅ [AUTH] Profil récupéré:', payload);
+      console.log('✅ [AUTH] Profil récupéré (raw):', JSON.stringify(payload, null, 2));
       // Handle both response formats: { data: user } or { user: user }
       const user = payload.data || payload.user;
       if (user) {
-        // Normaliser _id vers id pour cohérence avec le reste de l'app
-        if (user._id && !user.id) {
-          user.id = user._id;
-        }
-        await storeUser(user);
-        return user;
+        console.log('📸 [AUTH] Raw avatar URL:', user.avatar || user.photo_profil);
+        // Transform image URLs and store
+        const transformedUser = transformUserImages(user);
+        console.log('📸 [AUTH] Transformed avatar URL:', transformedUser.avatar);
+        await storeUser(transformedUser);
+        return transformedUser;
       }
     } else if (resp.status === 401) {
       // Token expiré, essayer de le rafraîchir
@@ -253,14 +274,15 @@ export const login = async (email: string, password: string, rememberMe: boolean
       // Connexion directe sans 2FA (cas Google OAuth)
       console.log('✅ [AUTH] Connexion réussie sans 2FA');
       await storeTokens(result.access_token, result.refresh_token);
-      if (result.user) {
-        await storeUser(result.user);
+      const transformedUser = result.user ? transformUserImages(result.user) : undefined;
+      if (transformedUser) {
+        await storeUser(transformedUser);
       }
 
       return {
         access_token: result.access_token,
         refresh_token: result.refresh_token,
-        user: result.user
+        user: transformedUser
       };
     } else {
       console.log('❌ [AUTH] Échec de connexion:', result.message);
@@ -296,14 +318,15 @@ export const verifyTwoFactor = async (email: string, verificationCode: string): 
       console.log('✅ [AUTH] 2FA vérifié avec succès');
       // Stocker les tokens
       await storeTokens(result.access_token, result.refresh_token);
-      if (result.user) {
-        await storeUser(result.user);
+      const transformedUser = result.user ? transformUserImages(result.user) : undefined;
+      if (transformedUser) {
+        await storeUser(transformedUser);
       }
 
       return {
         access_token: result.access_token,
         refresh_token: result.refresh_token,
-        user: result.user,
+        user: transformedUser,
         message: result.message
       };
     } else {

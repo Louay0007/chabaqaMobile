@@ -2,11 +2,13 @@ import { Download, Star, Users } from 'lucide-react-native';
 import React from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { Product } from '../../../../../lib/mock-data';
+import { getAvatarUrl, getImageUrl } from '../../../../../lib/image-utils';
 import { styles } from '../styles';
 
 interface ProductCardProps {
   product: Product;
   isPurchased: boolean;
+  isPending: boolean;
   onPress: () => void;
   onPurchase: () => void;
   onDownload: () => void;
@@ -15,10 +17,15 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   isPurchased,
+  isPending,
   onPress,
   onPurchase,
   onDownload,
 }) => {
+  const creatorName = product?.creator?.name || 'Unknown';
+  const creatorInitial = (creatorName || 'U').trim().charAt(0).toUpperCase();
+  const creatorAvatar = getAvatarUrl((product as any)?.creator?.avatar);
+
   const renderBadge = () => {
     if (isPurchased) {
       return (
@@ -49,7 +56,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           onPress={onDownload}
         >
           <Download size={16} color="#fff" />
-          <Text style={styles.downloadButtonText}>Download</Text>
+          <Text style={styles.downloadButtonText}>Explore</Text>
+        </TouchableOpacity>
+      );
+    } else if (isPending) {
+      return (
+        <TouchableOpacity
+          style={[styles.actionButton, styles.purchaseButton]}
+          onPress={onPurchase}
+          disabled
+        >
+          <Text style={styles.purchaseButtonText}>
+            Pending
+          </Text>
         </TouchableOpacity>
       );
     } else {
@@ -59,7 +78,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           onPress={onPurchase}
         >
           <Text style={styles.purchaseButtonText}>
-            {product.price === 0 ? 'Get Free' : `Buy - $${product.price}`}
+            {product.price === 0 ? 'Explore' : 'Join'}
           </Text>
         </TouchableOpacity>
       );
@@ -74,7 +93,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     >
       <View style={styles.productImageContainer}>
         <Image
-          source={{ uri: product.images[0] || 'https://picsum.photos/300/200' }}
+          source={{ uri: getImageUrl(product?.images?.[0]) || 'https://picsum.photos/300/200' }}
           style={styles.productImage}
         />
         <View style={styles.badgeContainer}>
@@ -88,9 +107,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {product.title}
           </Text>
           <View style={styles.ratingContainer}>
-            <Star size={14} color="#f59e0b" />
+            <Star size={14} color="#f59e0b" fill={Number((product as any).rating || 0) > 0 ? "#f59e0b" : "transparent"} />
             <Text style={styles.ratingText}>
-              {product.rating || '4.8'} ({product.sales})
+              {Number((product as any).rating || 0).toFixed(1)} ({(product as any).ratingCount || 0})
             </Text>
           </View>
         </View>
@@ -105,17 +124,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </View>
           <View style={styles.downloadCount}>
             <Users size={14} color="#6b7280" />
-            <Text style={styles.downloadCountText}>{product.sales} downloads</Text>
+            <Text style={styles.downloadCountText}>{(product as any).sales || 0} downloads</Text>
           </View>
         </View>
 
         <View style={styles.creatorInfo}>
           <View style={styles.creatorAvatar}>
-            <Text style={styles.creatorInitial}>
-              {product.creator.name.charAt(0)}
-            </Text>
+            {creatorAvatar ? (
+              <Image
+                source={{ uri: creatorAvatar }}
+                style={[styles.creatorAvatar, { position: 'absolute', top: 0, left: 0 } as any]}
+              />
+            ) : (
+              <Text style={styles.creatorInitial}>
+                {creatorInitial}
+              </Text>
+            )}
           </View>
-          <Text style={styles.creatorName}>{product.creator.name}</Text>
+          <Text style={styles.creatorName}>{creatorName}</Text>
         </View>
 
         <View style={styles.productActions}>

@@ -1,10 +1,81 @@
 import { tryEndpoints } from './http';
 import { getAccessToken } from './auth';
+import { getImageUrl } from './image-utils';
 
 /**
  * 🏘️ Communities API Client
  * Handles all community-related API calls for discovery and exploration
  */
+
+/**
+ * Transform community object to fix image URLs
+ */
+function transformCommunityImages(community: any): any {
+  if (!community) return community;
+
+  // Helper to check if URL is a placeholder
+  const isPlaceholderUrl = (url: string | null | undefined): boolean => {
+    if (!url || typeof url !== 'string') return true;
+    return url.includes('placeholder') || url.includes('placehold.co') || url.includes('placehold.it') || url.includes('via.placeholder');
+  };
+
+  // Helper to extract creator avatar from various field names
+  const getCreatorAvatarUrl = (creatorObj: any, source: string): string | null => {
+    if (!creatorObj || typeof creatorObj !== 'object') {
+      return null;
+    }
+
+    // Try all possible field names for profile picture
+    const rawUrl = creatorObj.avatar || creatorObj.profile_picture || creatorObj.photo_profil;
+
+    // Skip placeholder URLs - return null so Avatar component shows fallback
+    if (isPlaceholderUrl(rawUrl)) {
+      return null;
+    }
+
+    const transformed = getImageUrl(rawUrl);
+    console.log(`👤 [TRANSFORM] ${source}: Transformed URL:`, transformed);
+    return transformed;
+  };
+
+  // Get the creator avatar from the populated creator/createur object or direct field
+  console.log(`\n🔍 [TRANSFORM] Processing community: ${community.name || community.slug}`);
+
+  const creatorAvatarFromCreator = getCreatorAvatarUrl(community.creator, 'creator');
+  const creatorAvatarFromCreateur = getCreatorAvatarUrl(community.createur, 'createur');
+
+  // Check direct creatorAvatar field
+  let directCreatorAvatar: string | null = null;
+  if (community.creatorAvatar && !isPlaceholderUrl(community.creatorAvatar)) {
+    directCreatorAvatar = getImageUrl(community.creatorAvatar);
+    console.log(`👤 [TRANSFORM] direct creatorAvatar:`, directCreatorAvatar);
+  } else {
+    console.log(`👤 [TRANSFORM] direct creatorAvatar: null or placeholder`);
+  }
+
+  // Use the first available avatar with proper fallback chain
+  const finalCreatorAvatar = creatorAvatarFromCreator || creatorAvatarFromCreateur || directCreatorAvatar;
+  console.log(`👤 [TRANSFORM] Final avatar:`, finalCreatorAvatar || '(empty - will use fallback)');
+
+  return {
+    ...community,
+    logo: getImageUrl(community.logo),
+    coverImage: getImageUrl(community.coverImage),
+    image: getImageUrl(community.image),
+    photo_de_couverture: getImageUrl(community.photo_de_couverture),
+    creatorAvatar: finalCreatorAvatar,
+    creator: community.creator && typeof community.creator === 'object' ? {
+      ...community.creator,
+      avatar: creatorAvatarFromCreator,
+      profile_picture: creatorAvatarFromCreator,
+    } : community.creator,
+    createur: community.createur && typeof community.createur === 'object' ? {
+      ...community.createur,
+      avatar: creatorAvatarFromCreateur,
+      profile_picture: creatorAvatarFromCreateur,
+    } : community.createur,
+  };
+}
 
 // ==================== INTERFACES ====================
 
@@ -39,9 +110,9 @@ export interface Community {
   currency?: string;
   membersCount?: number;
   members?: number | any[]; // Can be count or array
-  averageRating?: number;
-  rating?: number; // Alternative rating field
-  ratingCount?: number;
+  averageRating?: number; // New: average rating from reviews
+  ratingCount?: number; // New: total number of reviews
+  rating?: number; // Alternative rating field (legacy)
   tags: string[];
   featured: boolean;
   isVerified?: boolean;
@@ -81,7 +152,7 @@ export interface Pagination {
 export interface CommunitiesResponse {
   success: boolean;
   message: string;
-  data: Community[]; // Backend returns array directly
+  data: Community[] | { communities: Community[]; pagination?: Pagination }; // Supports both shapes
   pagination?: Pagination; // Optional for now
 }
 
@@ -205,7 +276,7 @@ export const getCommunities = async (
     }
 
     const resp = await tryEndpoints<CommunitiesResponse>(
-      `/api/community-aff-crea-join/all-communities${queryString ? `?${queryString}` : ''}`,
+      `/api/communities${queryString ? `?${queryString}` : ''}`,
       {
         method: 'GET',
         headers,
@@ -213,12 +284,23 @@ export const getCommunities = async (
       }
     );
 
+    const dataPayload = resp.data.data as any;
+    const communities = Array.isArray(dataPayload)
+      ? dataPayload
+      : dataPayload?.communities || [];
+    const pagination = dataPayload?.pagination || resp.data.pagination;
+
     console.log('✅ [COMMUNITIES-API] Communities fetched successfully:', {
-      count: resp.data.data?.length || 0,
-      total: resp.data.pagination?.total || resp.data.data?.length || 0,
+      count: communities.length,
+      total: pagination?.total || communities.length,
     });
 
-    return resp.data;
+    // Transform image URLs in the response
+    return {
+      ...resp.data,
+      data: communities.map(transformCommunityImages),
+      pagination,
+    };
   } catch (error: any) {
     console.error('💥 [COMMUNITIES-API] Error fetching communities:', error);
     throw new Error(error.message || 'Failed to fetch communities');
@@ -234,8 +316,24 @@ export const getCommunityBySlug = async (slug: string): Promise<CommunityRespons
   try {
     console.log('🔍 [COMMUNITIES-API] Fetching community by slug/id:', slug);
 
-    // Backend uses ID not slug, but we'll try with the slug parameter (which might be an ID)
-    const resp = await tryEndpoints<CommunityResponse>(
+    // Prefer discovery endpoint (slug-based), fallback to community-aff-crea-join (id/slug)
+    const primaryResp = await tryEndpoints<CommunityResponse>(
+      `/api/communities/${slug}`,
+      {
+        method: 'GET',
+        timeout: 30000,
+      }
+    );
+
+    if (primaryResp.status !== 404 && primaryResp.data?.data) {
+      console.log('✅ [COMMUNITIES-API] Community fetched successfully:', primaryResp.data.data?.name || 'Community');
+      return {
+        ...primaryResp.data,
+        data: transformCommunityImages(primaryResp.data.data),
+      };
+    }
+
+    const fallbackResp = await tryEndpoints<CommunityResponse>(
       `/api/community-aff-crea-join/${slug}`,
       {
         method: 'GET',
@@ -243,9 +341,11 @@ export const getCommunityBySlug = async (slug: string): Promise<CommunityRespons
       }
     );
 
-    console.log('✅ [COMMUNITIES-API] Community fetched successfully:', resp.data.data?.name || 'Community');
-
-    return resp.data;
+    console.log('✅ [COMMUNITIES-API] Community fetched successfully (fallback):', fallbackResp.data.data?.name || 'Community');
+    return {
+      ...fallbackResp.data,
+      data: transformCommunityImages(fallbackResp.data.data),
+    };
   } catch (error: any) {
     console.error('💥 [COMMUNITIES-API] Error fetching community:', error);
     if (error.message?.includes('404')) {
@@ -325,7 +425,7 @@ export const getGlobalStats = async (): Promise<StatsResponse> => {
   try {
     console.log('🔍 [COMMUNITIES-API] Fetching global stats');
 
-    const resp = await tryEndpoints<StatsResponse>(
+    const resp = await tryEndpoints<any>(
       '/api/communities/stats/global',
       {
         method: 'GET',
@@ -335,7 +435,15 @@ export const getGlobalStats = async (): Promise<StatsResponse> => {
 
     console.log('✅ [COMMUNITIES-API] Global stats fetched successfully');
 
-    return resp.data;
+    if (resp.data?.data) {
+      return resp.data as StatsResponse;
+    }
+
+    return {
+      success: true,
+      message: 'Global stats retrieved successfully',
+      data: resp.data as GlobalStats,
+    };
   } catch (error: any) {
     console.error('💥 [COMMUNITIES-API] Error fetching stats:', error);
     throw new Error(error.message || 'Failed to fetch global stats');
@@ -359,7 +467,7 @@ export const getSearchSuggestions = async (
     params.append('q', query);
     params.append('limit', String(limit));
 
-    const resp = await tryEndpoints<SuggestionsResponse>(
+    const resp = await tryEndpoints<any>(
       `/api/communities/search/suggestions?${params.toString()}`,
       {
         method: 'GET',
@@ -367,9 +475,14 @@ export const getSearchSuggestions = async (
       }
     );
 
-    console.log('✅ [COMMUNITIES-API] Suggestions fetched:', resp.data.data.suggestions.length);
+    const suggestions = resp.data?.data?.suggestions || resp.data?.suggestions || [];
+    console.log('✅ [COMMUNITIES-API] Suggestions fetched:', suggestions.length);
 
-    return resp.data;
+    return {
+      success: true,
+      message: resp.data?.message || 'Suggestions retrieved successfully',
+      data: { suggestions },
+    };
   } catch (error: any) {
     console.error('💥 [COMMUNITIES-API] Error fetching suggestions:', error);
     // Don't throw for suggestions, just return empty
@@ -512,7 +625,11 @@ export const getMyJoinedCommunities = async (): Promise<{
     }
 
     console.log('✅ [COMMUNITIES] Joined communities:', resp.data.data.length);
-    return resp.data;
+    // Transform image URLs in the response
+    return {
+      ...resp.data,
+      data: resp.data.data?.map(transformCommunityImages) || [],
+    };
   } catch (error: any) {
     console.error('💥 [COMMUNITIES] Error fetching joined communities:', error);
     // Return empty array instead of throwing
@@ -600,6 +717,67 @@ export const joinCommunity = async (
 };
 
 /**
+ * Check if user is a member of a community
+ * @param communityId - Community ID
+ * @returns Promise with membership status
+ */
+export const checkCommunityMembership = async (
+  communityId: string
+): Promise<{
+  success: boolean;
+  message: string;
+  isMember: boolean;
+}> => {
+  try {
+    console.log('🔍 [COMMUNITIES] Checking membership for community:', communityId);
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      return { success: true, message: 'Not authenticated', isMember: false };
+    }
+
+    const resp = await tryEndpoints<{
+      success: boolean;
+      message: string;
+      data?: any;
+    }>(`/api/community-aff-crea-join/${communityId}/check-membership`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      timeout: 30000,
+    });
+
+    // If endpoint doesn't exist, fallback to checking joined communities
+    if (resp.status === 404) {
+      console.log('⚠️ [COMMUNITIES] Membership check endpoint not found, using fallback');
+      const joinedResp = await getMyJoinedCommunities();
+      const isMember = joinedResp.data?.some((c: any) => 
+        c._id === communityId || c.id === communityId
+      );
+      return { success: true, message: 'Membership checked', isMember };
+    }
+
+    return {
+      success: resp.data.success,
+      message: resp.data.message || 'Membership checked',
+      isMember: resp.data.data?.isMember || false,
+    };
+  } catch (error: any) {
+    console.error('💥 [COMMUNITIES] Error checking membership:', error);
+    // Fallback to checking joined communities on error
+    try {
+      const joinedResp = await getMyJoinedCommunities();
+      const isMember = joinedResp.data?.some((c: any) => 
+        c._id === communityId || c.id === communityId
+      );
+      return { success: true, message: 'Membership checked (fallback)', isMember };
+    } catch {
+      return { success: false, message: 'Failed to check membership', isMember: false };
+    }
+  }
+};
+
+/**
  * Get active/online members of a community by slug
  */
 export const getActiveMembersByCommunity = async (
@@ -658,6 +836,187 @@ export const getActiveMembersByCommunity = async (
   }
 };
 
+/**
+ * Delete a community (only creator can delete)
+ * @param communityId - ID of the community to delete
+ * @returns Promise with delete result
+ */
+export const deleteCommunity = async (
+  communityId: string
+): Promise<{
+  success: boolean;
+  message: string;
+}> => {
+  try {
+    console.log('🗑️ [COMMUNITIES] Deleting community:', communityId);
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      throw new Error('Not authenticated');
+    }
+
+    const resp = await tryEndpoints<{
+      success: boolean;
+      message: string;
+    }>(`/api/community-aff-crea-join/${communityId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      timeout: 30000,
+    });
+
+    console.log('✅ [COMMUNITIES] Community deleted successfully');
+    return resp.data;
+  } catch (error: any) {
+    console.error('💥 [COMMUNITIES] Error deleting community:', error);
+    throw new Error(error.message || 'Failed to delete community');
+  }
+};
+
+// ==================== REVIEWS API ====================
+
+export interface CommunityReview {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+export interface ReviewsResponse {
+  success: boolean;
+  reviews: CommunityReview[];
+  averageRating: number;
+  totalReviews: number;
+  ratingDistribution: { [key: number]: number };
+}
+
+export interface MyReviewResponse {
+  success: boolean;
+  review: {
+    rating: number;
+    comment: string;
+    createdAt: string;
+  } | null;
+}
+
+export interface SubmitReviewResponse {
+  success: boolean;
+  message: string;
+  review: { rating: number; comment: string };
+  averageRating: number;
+  totalReviews: number;
+}
+
+/**
+ * Get all reviews for a community
+ * @param communityId - ID of the community
+ * @returns Promise with reviews list and stats
+ */
+export const getCommunityReviews = async (
+  communityId: string
+): Promise<ReviewsResponse> => {
+  try {
+    console.log('⭐ [REVIEWS-API] Fetching reviews for community:', communityId);
+
+    const resp = await tryEndpoints<ReviewsResponse>(
+      `/api/community-aff-crea-join/${communityId}/reviews`,
+      {
+        method: 'GET',
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ [REVIEWS-API] Reviews fetched:', resp.data.totalReviews);
+    return resp.data;
+  } catch (error: any) {
+    console.error('💥 [REVIEWS-API] Error fetching reviews:', error);
+    throw new Error(error.message || 'Failed to fetch reviews');
+  }
+};
+
+/**
+ * Get current user's review for a community
+ * @param communityId - ID of the community
+ * @returns Promise with user's review or null
+ */
+export const getMyCommunityReview = async (
+  communityId: string
+): Promise<MyReviewResponse> => {
+  try {
+    console.log('⭐ [REVIEWS-API] Fetching my review for community:', communityId);
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      return { success: false, review: null };
+    }
+
+    const resp = await tryEndpoints<MyReviewResponse>(
+      `/api/community-aff-crea-join/${communityId}/reviews/me`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ [REVIEWS-API] My review fetched:', resp.data.review ? 'exists' : 'none');
+    return resp.data;
+  } catch (error: any) {
+    console.error('💥 [REVIEWS-API] Error fetching my review:', error);
+    return { success: false, review: null };
+  }
+};
+
+/**
+ * Submit or update a review for a community
+ * @param communityId - ID of the community
+ * @param rating - Rating (1-5)
+ * @param comment - Optional comment
+ * @returns Promise with submit result
+ */
+export const submitCommunityReview = async (
+  communityId: string,
+  rating: number,
+  comment?: string
+): Promise<SubmitReviewResponse> => {
+  try {
+    console.log('⭐ [REVIEWS-API] Submitting review:', { communityId, rating });
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      throw new Error('Not authenticated');
+    }
+
+    const resp = await tryEndpoints<SubmitReviewResponse>(
+      `/api/community-aff-crea-join/${communityId}/reviews`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        data: {
+          rating,
+          comment: comment || '',
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ [REVIEWS-API] Review submitted successfully');
+    return resp.data;
+  } catch (error: any) {
+    console.error('💥 [REVIEWS-API] Error submitting review:', error);
+    throw new Error(error.message || 'Failed to submit review');
+  }
+};
+
 export default {
   getCommunities,
   getCommunityBySlug,
@@ -669,6 +1028,10 @@ export default {
   getCommunityRanking,
   joinCommunity,
   getActiveMembersByCommunity,
+  deleteCommunity,
+  getCommunityReviews,
+  getMyCommunityReview,
+  submitCommunityReview,
   formatPrice,
   formatMemberCount,
   formatRating,

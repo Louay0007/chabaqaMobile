@@ -1,5 +1,7 @@
-import { Platform } from 'react-native';
 import PlatformUtils from './platform-utils';
+
+// React Native global __DEV__ declaration
+declare const __DEV__: boolean;
 
 /**
  * 🚀 Platform-Aware HTTP Client using Native Fetch

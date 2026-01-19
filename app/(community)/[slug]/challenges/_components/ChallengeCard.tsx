@@ -1,11 +1,16 @@
 import { Challenge } from '@/lib/mock-data';
-import { Calendar, Trophy, Users } from 'lucide-react-native';
+import { Calendar, Trophy, Users, ArrowRight, CheckCircle } from 'lucide-react-native';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { styles } from '../styles';
 
 interface ChallengeCardProps {
-  challenge: Challenge;
+  challenge: Challenge & { 
+    participationFee?: number;
+    finalPrice?: number;
+    depositAmount?: number;
+    isFree?: boolean;
+  };
   isParticipating: boolean;
   onPress: () => void;
   onJoinPress: () => void;
@@ -22,6 +27,25 @@ export default function ChallengeCard({
   getChallengeStatus,
 }: ChallengeCardProps) {
   const status = getChallengeStatus(challenge);
+  const isCompleted = status === 'completed';
+
+  // Get badge color based on status
+  const getStatusBadgeColor = () => {
+    switch (status) {
+      case 'active':
+        return '#10b981'; // green
+      case 'upcoming':
+        return '#3b82f6'; // blue
+      case 'completed':
+        return '#8b5cf6'; // purple
+      default:
+        return 'rgba(0,0,0,0.1)';
+    }
+  };
+
+  // Calculate price
+  const price = challenge.participationFee || challenge.finalPrice || challenge.depositAmount || 0;
+  const isFree = challenge.isFree === true || price === 0;
 
   return (
     <TouchableOpacity 
@@ -30,7 +54,7 @@ export default function ChallengeCard({
     >
       {/* Header gradient */}
       <View style={styles.cardHeader}>
-        <View style={styles.listStatusBadge}>
+        <View style={[styles.listStatusBadge, { backgroundColor: getStatusBadgeColor() }]}>
           <Text style={styles.statusText}>{status}</Text>
         </View>
         <Text style={styles.cardTitle}>{challenge.title}</Text>
@@ -67,17 +91,32 @@ export default function ChallengeCard({
       </View>
 
       {/* Action button */}
-      <TouchableOpacity 
-        style={[
-          styles.actionButton,
-          isParticipating ? styles.continueButton : styles.joinButton,
-        ]}
-        onPress={onJoinPress}
-      >
-        <Text style={styles.actionButtonText}>
-          {isParticipating ? 'Continue' : 'Join Challenge'}
-        </Text>
-      </TouchableOpacity>
+      {isCompleted ? (
+        // Challenge is completed - show "Completed" button (disabled)
+        <View 
+          style={[styles.actionButton, { backgroundColor: '#6b7280', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}
+        >
+          <CheckCircle size={18} color="#ffffff" style={{ marginRight: 6 }} />
+          <Text style={[styles.actionButtonText, { color: '#ffffff' }]}>Completed</Text>
+        </View>
+      ) : isParticipating ? (
+        <TouchableOpacity 
+          style={[styles.actionButton, { backgroundColor: '#ffffff' }]}
+          onPress={onPress}
+        >
+          <ArrowRight size={18} color="#111827" style={{ marginRight: 6 }} />
+          <Text style={[styles.actionButtonText, { color: '#111827' }]}>Explore</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity 
+          style={[styles.actionButton, { backgroundColor: '#f59e0b' }]}
+          onPress={onJoinPress}
+        >
+          <Text style={[styles.actionButtonText, { color: '#ffffff' }]}>
+            {isFree ? 'Join Challenge' : `Join - ${price} DT`}
+          </Text>
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 }
