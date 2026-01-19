@@ -1,42 +1,38 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import {
-  View,
-  SectionList,
+  ArrowLeft,
+  Bell,
+  CheckCheck,
+  Settings
+} from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
   ActivityIndicator,
+  Alert,
+  ImageBackground,
+  RefreshControl,
+  SectionList,
   Text,
   TouchableOpacity,
-  RefreshControl,
-  ImageBackground,
-  Alert,
+  View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  Bell, 
-  Settings, 
-  Check, 
-  CheckCheck,
-  Filter,
-  BellOff
-} from 'lucide-react-native';
 
 import { ThemedView } from '../../_components/ThemedView';
 import { useAuth } from '../../hooks/use-auth';
-import GlobalBottomNavigation from '../_components/GlobalBottomNavigation';
+import { colors, fontSize, fontWeight, spacing } from '../../lib/design-tokens';
 import {
   Notification,
   getNotifications,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
-  groupNotificationsByDate,
   getUnreadCount,
+  groupNotificationsByDate,
+  markNotificationAsRead,
 } from '../../lib/notification-api';
-import { colors, spacing, borderRadius, fontSize, fontWeight } from '../../lib/design-tokens';
-import NotificationItem from './_components/NotificationItem';
 import EmptyNotificationsState from './_components/EmptyNotificationsState';
 import NotificationFilters from './_components/NotificationFilters';
+import NotificationItem from './_components/NotificationItem';
 
 type FilterType = 'all' | 'unread' | 'read';
 
@@ -229,9 +225,21 @@ export default function NotificationsScreen() {
       setMarkingAllRead(true);
       console.log('👁️ [NOTIFICATIONS] Marking all as read');
 
-      const result = await markAllNotificationsAsRead();
+      // Get all unread notifications
+      const unreadNotifications = notifications.filter(n => !n.isRead);
       
-      if (result.success) {
+      // Mark each unread notification as read
+      let successCount = 0;
+      for (const notification of unreadNotifications) {
+        try {
+          await markNotificationAsRead(notification._id);
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to mark notification ${notification._id} as read:`, error);
+        }
+      }
+      
+      if (successCount > 0) {
         // Update local state
         setNotifications(prev => prev.map(n => ({ 
           ...n, 
@@ -247,7 +255,7 @@ export default function NotificationsScreen() {
         })));
         setGroupedNotifications(grouped);
         
-        console.log('✅ [NOTIFICATIONS] All notifications marked as read');
+        console.log(`✅ [NOTIFICATIONS] ${successCount}/${unreadNotifications.length} notifications marked as read`);
       }
     } catch (error: any) {
       console.error('💥 [NOTIFICATIONS] Error marking all as read:', error);
@@ -271,19 +279,14 @@ export default function NotificationsScreen() {
         >
           <SafeAreaView style={styles.headerContent}>
             <BlurView intensity={20} style={styles.headerBlur}>
-              {/* Title and Actions */}
+              {/* Top Bar with Back and Actions */}
               <View style={styles.headerTop}>
-                <View style={styles.titleContainer}>
-                  <Bell size={28} color={colors.white} />
-                  <Text style={styles.headerTitle}>Notifications</Text>
-                  {unreadCount > 0 && (
-                    <View style={styles.unreadBadge}>
-                      <Text style={styles.unreadBadgeText}>
-                        {unreadCount > 99 ? '99+' : unreadCount}
-                      </Text>
-                    </View>
-                  )}
-                </View>
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => router.back()}
+                >
+                  <ArrowLeft size={24} color={colors.white} />
+                </TouchableOpacity>
                 
                 <View style={styles.headerActions}>
                   {unreadCount > 0 && (
@@ -307,6 +310,19 @@ export default function NotificationsScreen() {
                     <Settings size={20} color={colors.white} />
                   </TouchableOpacity>
                 </View>
+              </View>
+
+              {/* Title Section */}
+              <View style={styles.titleContainer}>
+                <Bell size={28} color={colors.white} />
+                <Text style={styles.headerTitle}>Notifications</Text>
+                {unreadCount > 0 && (
+                  <View style={styles.unreadBadge}>
+                    <Text style={styles.unreadBadgeText}>
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </Text>
+                  </View>
+                )}
               </View>
 
               {/* Filter Tabs */}
@@ -400,6 +416,7 @@ export default function NotificationsScreen() {
           <EmptyNotificationsState 
             filter={activeFilter}
             onChangeFilter={handleFilterChange}
+            router={router}
           />
         }
         ListFooterComponent={renderLoadingFooter}
@@ -417,8 +434,7 @@ export default function NotificationsScreen() {
         contentContainerStyle={styles.listContainer}
       />
 
-      {/* Global Bottom Navigation */}
-      <GlobalBottomNavigation />
+
     </ThemedView>
   );
 }
@@ -452,11 +468,21 @@ const styles = {
     flexDirection: 'row' as const,
     justifyContent: 'space-between' as const,
     alignItems: 'center' as const,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
   },
   titleContainer: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
+    paddingLeft: spacing.xl,
+    marginBottom: spacing.md,
   },
   headerTitle: {
     marginLeft: spacing.md,
@@ -482,6 +508,7 @@ const styles = {
   headerActions: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
+    gap: spacing.sm,
   },
   headerButton: {
     width: 40,
@@ -490,7 +517,6 @@ const styles = {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    marginLeft: spacing.sm,
   },
 
   // Section Styles

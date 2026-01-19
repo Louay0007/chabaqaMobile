@@ -165,7 +165,7 @@ export const styles = StyleSheet.create({
     borderRadius: borderRadius.sm,
     gap: 4,
   },
-  errorText: {
+  errorBadgeText: {
     fontSize: fontSize.xs,
     color: '#EF4444',
     fontWeight: '500',

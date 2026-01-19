@@ -1,12 +1,12 @@
 import { useAuth } from '@/hooks/use-auth';
 import { useAdaptiveColors } from '@/hooks/useAdaptiveColors';
+import { getCachedUser, logout } from '@/lib/auth';
+import { getMyJoinedCommunities } from '@/lib/communities-api';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View, Modal } from 'react-native';
+import { ActivityIndicator, Image, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getMyJoinedCommunities } from '@/lib/communities-api';
-import { logout, getCachedUser } from '@/lib/auth';
 import { getImageUrl } from '@/lib/image-utils';
 import { getWalletBalance, formatAmount } from '@/lib/wallet-api';
 
@@ -80,7 +80,6 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
   const fetchJoinedCommunities = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching joined communities for sidebar...');
 
       const response = await getMyJoinedCommunities();
       if (response.success && response.data) {
@@ -95,7 +94,6 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
         }));
 
         setJoinedCommunities(transformedCommunities);
-        console.log('✅ Joined communities loaded:', transformedCommunities.length);
       }
     } catch (error) {
       console.error('❌ Error fetching joined communities:', error);

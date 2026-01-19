@@ -2,9 +2,9 @@ import BackButton from '@/_components/BackButton';
 import { ThemedText } from '@/_components/ThemedText';
 import { ThemedView } from '@/_components/ThemedView';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { ScrollView } from 'react-native';
-import { getMentorById, getSessionTypeById } from '../../../../../lib/session-utils';
+import React, { useState, useEffect } from 'react';
+import { ScrollView, ActivityIndicator } from 'react-native';
+import { getSessionById, getAvailableSlots, bookSlot, convertSessionForUI } from '../../../../../lib/session-api';
 import { styles } from '../styles';
 import { BookingButton } from './_components/BookingButton';
 import { DateTimeOption, DateTimeSelector } from './_components/DateTimeSelector';
@@ -18,38 +18,104 @@ export default function SessionDetailScreen() {
   const { slug, sessionId } = useLocalSearchParams<{ slug: string; sessionId: string }>();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   
-  const sessionType = getSessionTypeById(sessionId);
-  const mentor = sessionType ? getMentorById(sessionType.mentor.id) : null;
+  // Backend state
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [sessionType, setSessionType] = useState<any>(null);
+  const [dateOptions, setDateOptions] = useState<DateTimeOption[]>([]);
+  const [bookingInProgress, setBookingInProgress] = useState(false);
   
-  // Mock date options for booking
-  const dateOptions: DateTimeOption[] = [
-    { id: '1', date: 'Mon, 15 Jul', time: '10:00 AM', available: true },
-    { id: '2', date: 'Mon, 15 Jul', time: '2:00 PM', available: true },
-    { id: '3', date: 'Tue, 16 Jul', time: '11:00 AM', available: true },
-    { id: '4', date: 'Tue, 16 Jul', time: '3:00 PM', available: false },
-    { id: '5', date: 'Wed, 17 Jul', time: '9:00 AM', available: true },
-    { id: '6', date: 'Wed, 17 Jul', time: '1:00 PM', available: true },
-    { id: '7', date: 'Thu, 18 Jul', time: '10:00 AM', available: false },
-    { id: '8', date: 'Thu, 18 Jul', time: '4:00 PM', available: true },
-  ];
+  // Fetch session data from backend
+  useEffect(() => {
+    fetchSessionData();
+  }, [sessionId]);
+  
+  const fetchSessionData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('📚 Fetching session details:', sessionId);
+      
+      // Fetch session details
+      const sessionData = await getSessionById(sessionId as string);
+      const transformedSession = convertSessionForUI(sessionData);
+      setSessionType(transformedSession);
+      
+      // Fetch available slots for booking
+      const slots = await getAvailableSlots(sessionId as string);
+      const transformedSlots: DateTimeOption[] = slots.map((slot) => ({
+        id: slot.id,
+        date: new Date(slot.start_time).toLocaleDateString('en-US', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short'
+        }),
+        time: new Date(slot.start_time).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }),
+        available: slot.is_available,
+        startTime: slot.start_time,
+        endTime: slot.end_time,
+      }));
+      setDateOptions(transformedSlots);
+      
+      console.log('✅ Session data loaded');
+    } catch (err: any) {
+      console.error('❌ Error fetching session data:', err);
+      setError(err.message || 'Failed to load session details');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const mentor = sessionType?.mentor;
   
   const handleBackToHome = () => {
     router.replace(`/(community)/${slug}/(loggedUser)/home`);
   };
   
-  const handleBookSession = () => {
-    if (selectedDate) {
-      // In a real app, this would make an API call to book the session
-      // For now, we'll just navigate back to the sessions list
+  const handleBookSession = async () => {
+    if (!selectedDate) return;
+    
+    try {
+      setBookingInProgress(true);
+      console.log('📝 Booking session:', sessionId, 'Slot:', selectedDate);
+      
+      // Book the selected slot
+      await bookSlot(sessionId as string, {
+        slot_id: selectedDate,
+        notes: '', // Add notes input if needed
+      });
+      
+      console.log('✅ Session booked successfully');
+      // Navigate back to sessions list
       router.push(`/(community)/${slug}/sessions`);
+    } catch (err: any) {
+      console.error('❌ Error booking session:', err);
+      setError(err.message || 'Failed to book session');
+    } finally {
+      setBookingInProgress(false);
     }
   };
   
-  if (!sessionType || !mentor) {
+  if (loading) {
+    return (
+      <ThemedView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#8e78fb" />
+        <ThemedText style={{ marginTop: 16, opacity: 0.7 }}>Loading session details...</ThemedText>
+      </ThemedView>
+    );
+  }
+  
+  if (error || !sessionType || !mentor) {
     return (
       <ThemedView style={styles.container}>
         <BackButton onPress={handleBackToHome} />
-        <ThemedText style={styles.notFound}>Session not found</ThemedText>
+        <ThemedText style={styles.notFound}>
+          {error || 'Session not found'}
+        </ThemedText>
       </ThemedView>
     );
   }
@@ -79,7 +145,7 @@ export default function SessionDetailScreen() {
         
         <BookingButton
           onBook={handleBookSession}
-          disabled={!selectedDate}
+          disabled={!selectedDate || bookingInProgress}
         />
       </ScrollView>
     </ThemedView>

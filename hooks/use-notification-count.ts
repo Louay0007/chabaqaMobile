@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getNotifications } from '@/lib/notification-api';
+import { getUnreadNotificationCount } from '@/lib/notification-api';
 import { useAuth } from './use-auth';
 
 /**
  * Hook pour récupérer le nombre de notifications non lues depuis le backend
+ * Utilise l'endpoint optimisé /api/notifications/unread-count
  */
 export function useNotificationCount() {
   const { isAuthenticated } = useAuth();
@@ -18,10 +19,11 @@ export function useNotificationCount() {
 
     try {
       setLoading(true);
-      const response = await getNotifications(1, 50, true);
-      setUnreadCount(response.unreadCount);
+      const count = await getUnreadNotificationCount();
+      setUnreadCount(count);
     } catch (error) {
-      console.error('Error fetching notification count:', error);
+      console.error('❌ [USE-NOTIFICATION-COUNT] Error fetching count:', error);
+      setUnreadCount(0);
     } finally {
       setLoading(false);
     }

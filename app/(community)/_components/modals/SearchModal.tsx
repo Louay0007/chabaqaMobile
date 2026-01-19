@@ -1,9 +1,11 @@
 import { colors } from '@/lib/design-tokens';
+import { globalSearch } from '@/lib/search-api';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, BookOpen, Hash, Search, User } from 'lucide-react-native';
+import { ArrowLeft, Hash, Search, User } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
   FlatList,
+  Image,
   Keyboard,
   Modal,
   SafeAreaView,
@@ -13,15 +15,16 @@ import {
   View
 } from 'react-native';
 import { modalStyles } from './modal-styles';
-import { globalSearch } from '@/lib/search-api';
 
 // Types pour la recherche
 interface SearchResult {
   id: string;
-  type: 'user' | 'course';
+  type: 'user' | 'post';
   title: string;
   subtitle?: string;
   imageUrl?: string;
+  communitySlug?: string; // Pour la navigation vers les posts
+  postId?: string; // ID du post pour la navigation
 }
 
 interface SearchModalProps {
@@ -38,19 +41,14 @@ export default function SearchModal({ visible, onClose }: SearchModalProps) {
 
   // Perform search when query changes
   useEffect(() => {
-    if (searchQuery.trim().length > 2) {
+    if (searchQuery.trim().length >= 2) {
       setIsLoading(true);
       
       const timer = setTimeout(async () => {
         try {
           const searchResults = await globalSearch(searchQuery, 10);
           
-          console.log('🔍 [SEARCH-MODAL] Raw results:', {
-            users: searchResults.users.length,
-            courses: searchResults.courses.length
-          });
-          
-          // Transform results into unified format with unique IDs (users and courses only)
+          // Transform results into unified format with unique IDs (users and posts only)
           const transformedResults: SearchResult[] = [
             ...searchResults.users
               .filter(user => user._id && user.name)
@@ -58,20 +56,20 @@ export default function SearchModal({ visible, onClose }: SearchModalProps) {
                 id: `user-${user._id}`,
                 type: 'user' as const,
                 title: user.name,
-                subtitle: `@${user.handle}`,
+                subtitle: user.handle ? `@${user.handle}` : undefined,
                 imageUrl: user.avatar,
               })),
-            ...searchResults.courses
-              .filter(course => course._id && course.titre && course.creator?.name)
-              .map(course => ({
-                id: `course-${course._id}`,
-                type: 'course' as const,
-                title: course.titre,
-                subtitle: `by ${course.creator.name}`,
+            ...searchResults.posts
+              .filter(post => post._id && post.title && post.author)
+              .map(post => ({
+                id: `post-${post._id}`,
+                type: 'post' as const,
+                title: post.title,
+                subtitle: post.community ? `in ${post.community.name}` : `by ${post.author.name}`,
+                communitySlug: post.community?.slug,
+                postId: post._id,
               })),
           ];
-
-          console.log('🔍 [SEARCH-MODAL] Transformed results:', transformedResults.length);
 
           setResults(transformedResults);
         } catch (error) {
@@ -99,12 +97,21 @@ export default function SearchModal({ visible, onClose }: SearchModalProps) {
     // Navigation basée sur le type
     switch (result.type) {
       case 'user':
-        // Navigation vers le profil utilisateur
-        console.log(`Navigate to user profile: ${result.id}`);
+        // Pas de navigation pour les users, juste fermer le modal
+        console.log(`User selected: ${result.title}`);
         break;
-      case 'course':
-        // Navigation vers le cours
-        console.log(`Navigate to course: ${result.id}`);
+      case 'post':
+        // Navigation vers le feed de posts dans la communauté avec le postId
+        if (result.communitySlug && result.postId) {
+          console.log(`Navigating to community feed: ${result.communitySlug} with postId: ${result.postId}`);
+          // Naviguer vers la page home de la communauté avec le postId pour scroll/highlight
+          router.push(`/(community)/${result.communitySlug}/(loggedUser)/home?postId=${result.postId}`);
+        } else if (result.communitySlug) {
+          console.log(`Navigating to community feed: ${result.communitySlug}`);
+          router.push(`/(community)/${result.communitySlug}/(loggedUser)/home`);
+        } else {
+          console.log(`Post selected but missing community slug: ${result.title}`);
+        }
         break;
     }
     
@@ -123,31 +130,30 @@ export default function SearchModal({ visible, onClose }: SearchModalProps) {
 
   // Rendu d'un élément de résultat
   const renderResultItem = ({ item }: { item: SearchResult }) => {
-    // Sélectionner l'icône basée sur le type
-    let IconComponent;
-    switch (item.type) {
-      case 'user':
-        IconComponent = User;
-        break;
-      case 'course':
-        IconComponent = BookOpen;
-        break;
-      default:
-        IconComponent = Search;
-    }
-
     return (
       <TouchableOpacity 
         style={modalStyles.searchResultItem} 
         onPress={() => handleResultPress(item)}
       >
-        <View style={[modalStyles.searchResultIcon, 
-          item.type === 'user' ? modalStyles.searchUserIcon : 
-          item.type === 'course' ? modalStyles.searchCourseIcon : 
-          modalStyles.searchPostIcon
-        ]}>
-          <IconComponent size={16} color="#fff" />
-        </View>
+        {/* Avatar ou icône */}
+        {item.type === 'user' && item.imageUrl ? (
+          <Image 
+            source={{ uri: item.imageUrl }}
+            style={modalStyles.searchUserAvatar}
+          />
+        ) : (
+          <View style={[modalStyles.searchResultIcon, 
+            item.type === 'user' ? modalStyles.searchUserIcon : 
+            modalStyles.searchPostIcon
+          ]}>
+            {item.type === 'user' ? (
+              <User size={16} color="#fff" />
+            ) : (
+              <Hash size={16} color="#fff" />
+            )}
+          </View>
+        )}
+        
         <View style={modalStyles.searchResultContent}>
           <Text style={modalStyles.searchResultTitle}>{item.title}</Text>
           {item.subtitle && (
@@ -175,7 +181,7 @@ export default function SearchModal({ visible, onClose }: SearchModalProps) {
             <Search size={18} color={colors.gray500} style={modalStyles.searchIcon} />
             <TextInput
               style={modalStyles.searchInput}
-              placeholder="Search posts, people, courses..."
+              placeholder="Search posts and people..."
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoFocus

@@ -7,8 +7,8 @@
  * @module dm-api
  */
 
-import { tryEndpoints } from './http';
 import { getAccessToken } from './auth';
+import { tryEndpoints } from './http';
 
 // ============================================================================
 // TypeScript Interfaces
@@ -150,6 +150,12 @@ export async function startCommunityConversation(communityId: string): Promise<D
       return resp.data.conversation;
     }
 
+    // Handle 403 Forbidden error
+    if (resp.status === 403) {
+      console.error('🚫 [DM-API] Access forbidden - user cannot start conversation with this community');
+      throw new Error('You do not have permission to message this community. Only community members can send messages.');
+    }
+
     throw new Error(resp.data.message || 'Failed to start conversation');
   } catch (error: any) {
     console.error('💥 [DM-API] Error starting community conversation:', error);
@@ -186,6 +192,12 @@ export async function startHelpConversation(): Promise<DMConversation> {
     if (resp.status >= 200 && resp.status < 300) {
       console.log('✅ [DM-API] Help conversation started');
       return resp.data.conversation;
+    }
+
+    // Handle 403 Forbidden error
+    if (resp.status === 403) {
+      console.error('🚫 [DM-API] Access forbidden - help desk unavailable');
+      throw new Error('Help desk is currently unavailable. Please try again later or contact support.');
     }
 
     throw new Error(resp.data.message || 'Failed to start help conversation');
@@ -234,6 +246,21 @@ export async function getInbox(
 
     if (resp.status >= 200 && resp.status < 300) {
       console.log('✅ [DM-API] Inbox fetched:', resp.data.conversations?.length || 0);
+      
+      // Debug: Log conversation participants to understand permission issues
+      if (resp.data.conversations && resp.data.conversations.length > 0) {
+        console.log('🔍 [DM-API] Conversation participants debug:');
+        resp.data.conversations.forEach((conv: any, idx: number) => {
+          console.log(`  ${idx + 1}. Conv ID: ${conv._id}`);
+          console.log(`     Type: ${conv.type}`);
+          console.log(`     ParticipantA: ${conv.participantA?._id || 'N/A'}`);
+          console.log(`     ParticipantB: ${conv.participantB?._id || 'N/A'}`);
+          if (conv.communityId) {
+            console.log(`     Community: ${conv.communityId.name} (${conv.communityId._id})`);
+          }
+        });
+      }
+      
       return {
         conversations: resp.data.conversations || [],
         total: resp.data.total || 0,
@@ -303,7 +330,9 @@ export async function getMessages(
     // Handle different error statuses
     if (resp.status === 403) {
       console.error('🚫 [DM-API] Access forbidden - user not authorized for this conversation');
-      console.error('   Response:', resp.data);
+      console.error('   Conversation ID:', conversationId);
+      console.error('   Response:', JSON.stringify(resp.data, null, 2));
+      console.error('   Full error details:', resp);
       throw new Error('You do not have permission to access this conversation');
     }
 

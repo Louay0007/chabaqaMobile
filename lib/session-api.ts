@@ -128,7 +128,7 @@ export interface SessionFilters {
  * Book session data
  */
 export interface BookSessionData {
-  scheduled_at: string;
+  scheduledAt: string; // Changed from scheduled_at to scheduledAt (camelCase)
   notes?: string;
 }
 
@@ -457,7 +457,7 @@ export async function getUserBookings(): Promise<SessionBooking[]> {
     console.log('📅 [SESSION-API] Fetching user bookings');
 
     const resp = await tryEndpoints<any>(
-      `/api/sessions/bookings/user`,
+      `/api/sessions/bookings`,
       {
         method: 'GET',
         headers: {
@@ -773,16 +773,34 @@ export async function cancelSlot(
  * @param apiSession - Session from API
  * @returns Converted session for UI components
  */
-export function convertSessionForUI(apiSession: Session): any {
+export function convertSessionForUI(apiSession: any): any {
+  // Extract creator info - backend returns creatorId, creatorName, creatorAvatar separately
+  let creatorId = 'unknown';
+  let creatorName = 'Unknown Mentor';
+  let creatorAvatar = undefined;
+  
+  // Handle different creator formats
+  if (apiSession.creator && typeof apiSession.creator === 'object') {
+    // Full creator object
+    creatorId = apiSession.creator._id || apiSession.creator.id || 'unknown';
+    creatorName = apiSession.creator.name || 'Unknown Mentor';
+    creatorAvatar = apiSession.creator.avatar || apiSession.creator.photo_profil;
+  } else {
+    // Separate fields (current backend format)
+    creatorId = apiSession.creatorId || 'unknown';
+    creatorName = apiSession.creatorName || 'Unknown Mentor';
+    creatorAvatar = apiSession.creatorAvatar;
+  }
+  
   return {
     id: apiSession.id || apiSession._id,
-    title: apiSession.title,
-    description: apiSession.description,
-    duration: apiSession.duration,
-    price: apiSession.price,
-    currency: apiSession.currency,
+    title: apiSession.title || 'Untitled Session',
+    description: apiSession.description || '',
+    duration: apiSession.duration || 60,
+    price: apiSession.price || 0,
+    currency: apiSession.currency || 'USD',
     category: apiSession.category || 'General',
-    tags: [], // Add tags if available in backend
+    tags: apiSession.tags || [],
     mentor: {
       id: apiSession.creator._id,
       name: apiSession.creator.name,
@@ -793,12 +811,13 @@ export function convertSessionForUI(apiSession: Session): any {
       reviews: apiSession.creator.reviews || apiSession.rating_count || 0,
       bio: apiSession.creator.bio || apiSession.description,
     },
-    isActive: apiSession.is_active,
+    isActive: apiSession.isActive !== false,
     bookingsCount: apiSession.bookings_count || apiSession.bookings?.length || 0,
     canBookMore: apiSession.can_book_more !== false,
     resources: apiSession.resources || [],
-    createdAt: apiSession.created_at,
-    updatedAt: apiSession.updated_at,
+    bookings: apiSession.bookings || [], // IMPORTANT: Preserve bookings array
+    createdAt: apiSession.created_at || apiSession.createdAt,
+    updatedAt: apiSession.updated_at || apiSession.updatedAt,
   };
 }
 

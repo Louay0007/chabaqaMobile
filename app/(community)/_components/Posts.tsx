@@ -54,15 +54,18 @@ interface PostsProps {
   posts: Post[];
   onLike: (postId: string) => void;
   onBookmark: (postId: string) => void;
+  onShare?: (postId: string) => void;
   onDeletePost?: (postId: string) => void;
   onEditPost?: (postId: string) => void;
+  highlightedPostId?: string | null;
+  postRefs?: React.MutableRefObject<{ [key: string]: View | null }>;
 }
 
 // Separate component for post image to manage its own loading state
 const PostImage = React.memo(({ imageUrl }: { imageUrl: string }) => {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
-  const imageTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const imageTimeoutRef = React.useRef<number | null>(null);
 
   React.useEffect(() => {
     return () => {
@@ -125,7 +128,7 @@ const PostImage = React.memo(({ imageUrl }: { imageUrl: string }) => {
   );
 });
 
-function Posts({ posts, onLike, onBookmark, onDeletePost, onEditPost }: PostsProps) {
+function Posts({ posts, onLike, onBookmark, onShare, onDeletePost, onEditPost, highlightedPostId, postRefs }: PostsProps) {
   const { user: currentUser } = useAuth();
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);

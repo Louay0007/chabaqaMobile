@@ -1,46 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Switch,
-  Alert,
-  ActivityIndicator,
-  ImageBackground,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  ArrowLeft, 
-  Bell, 
-  Mail, 
-  Smartphone, 
-  MessageSquare,
-  Calendar,
-  BookOpen,
-  Users,
-  Clock,
-  ShoppingBag,
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import {
+  ArrowLeft,
   Award,
-  Settings as SettingsIcon,
+  Bell,
+  BookOpen,
+  Calendar,
+  Clock,
+  Mail,
+  MessageSquare,
   Moon,
-  Volume2,
-  VolumeX
+  Settings as SettingsIcon,
+  ShoppingBag,
+  Smartphone,
+  Users
 } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  ImageBackground,
+  ScrollView,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedView } from '../../../_components/ThemedView';
 import { useAuth } from '../../../hooks/use-auth';
+import { borderRadius, colors, fontSize, fontWeight, spacing } from '../../../lib/design-tokens';
 import {
-  NotificationPreferences,
   ChannelPreferences,
+  NotificationPreferences,
   QuietHours,
+  UpdateNotificationPreferencesData,
   getNotificationPreferences,
   updateNotificationPreferences,
 } from '../../../lib/notification-api';
-import { colors, spacing, borderRadius, fontSize, fontWeight } from '../../../lib/design-tokens';
 
 interface PreferenceItem {
   key: string;
@@ -143,18 +142,20 @@ export default function NotificationSettingsScreen() {
     }
   };
 
-  const savePreferences = async (updatedPrefs: Partial<NotificationPreferences>) => {
+  const savePreferences = async (updatedPrefs: Partial<UpdateNotificationPreferencesData>) => {
     try {
       setSaving(true);
       console.log('💾 [NOTIFICATION-SETTINGS] Saving preferences');
 
-      const savedPrefs = await updateNotificationPreferences(updatedPrefs);
-      setPreferences(savedPrefs);
+      await updateNotificationPreferences(updatedPrefs);
+      // Don't update state here - it's already updated locally for instant feedback
 
       console.log('✅ [NOTIFICATION-SETTINGS] Preferences saved');
     } catch (error: any) {
       console.error('💥 [NOTIFICATION-SETTINGS] Error saving preferences:', error);
       Alert.alert('Error', 'Failed to save notification preferences');
+      // Reload preferences on error to restore correct state
+      loadPreferences();
     } finally {
       setSaving(false);
     }
@@ -171,17 +172,43 @@ export default function NotificationSettingsScreen() {
       sms: false,
     };
 
-    updatedPreferences.set(notificationType, {
+    const newPrefs = {
       ...currentPrefs,
       [channel]: value,
+    };
+
+    updatedPreferences.set(notificationType, newPrefs);
+
+    console.log('🎯 [NOTIFICATION-SETTINGS] Toggle change:', {
+      type: notificationType,
+      channel,
+      value,
+      newPrefs,
     });
 
-    savePreferences({ preferences: updatedPreferences });
+    // Update local state immediately for instant feedback
+    setPreferences({
+      ...preferences,
+      preferences: updatedPreferences,
+    });
+
+    // Convert Map to array format for API
+    const preferencesArray = Array.from(updatedPreferences.entries());
+    savePreferences({ preferences: preferencesArray });
   };
 
   const handleQuietHoursToggle = (value: boolean) => {
     const updatedQuietHours = { ...quietHours, isEnabled: value };
     setQuietHours(updatedQuietHours);
+    
+    // Update preferences state immediately
+    if (preferences) {
+      setPreferences({
+        ...preferences,
+        quietHours: updatedQuietHours,
+      });
+    }
+    
     savePreferences({ quietHours: updatedQuietHours });
   };
 
@@ -381,16 +408,6 @@ export default function NotificationSettingsScreen() {
 
           {renderQuietHoursSettings()}
         </View>
-
-        {/* Saving Indicator */}
-        {saving && (
-          <View style={styles.savingIndicator}>
-            <BlurView intensity={90} style={styles.savingContent}>
-              <ActivityIndicator size="small" color={colors.primary} />
-              <Text style={styles.savingText}>Saving preferences...</Text>
-            </BlurView>
-          </View>
-        )}
       </ScrollView>
     </ThemedView>
   );
@@ -410,7 +427,7 @@ const styles = {
     marginBottom: spacing.lg,
   },
   headerBackground: {
-    height: 160,
+    height: 130,
   },
   headerOverlay: {
     flex: 1,

@@ -533,10 +533,19 @@ export default function CommunityDashboard() {
       posts={posts}
       onLike={handleLike}
       onBookmark={handleBookmark}
+      onShare={async () => {}} // Share functionality not implemented yet
       refreshing={refreshing}
       onRefresh={onRefresh}
       creatingPost={creatingPost}
       resetImage={resetImage}
+      hasMore={hasMore}
+      onLoadMore={async () => {
+        if (hasMore && !refreshing) {
+          const nextPage = page + 1;
+          setPage(nextPage);
+          await fetchPosts(nextPage, false);
+        }
+      }}
     />
   );
 }

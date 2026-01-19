@@ -211,7 +211,7 @@ export default function CreatePostCard({
             {isOverLimit && (
               <View style={styles.errorBadge}>
                 <AlertCircle size={12} color="#EF4444" />
-                <Text style={styles.errorText}>Character limit exceeded</Text>
+                <Text style={styles.errorBadgeText}>Character limit exceeded</Text>
               </View>
             )}
           </View>

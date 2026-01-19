@@ -1,9 +1,9 @@
 "use client"
 
-import { SecureStorage, setSecureItem, getSecureItem, removeSecureItem } from './secure-storage';
 import { tryEndpoints } from './http';
 import PlatformUtils from './platform-utils';
 import { getImageUrl } from './image-utils';
+import { getSecureItem, removeSecureItem, setSecureItem } from './secure-storage';
 
 // Interface pour l'utilisateur (full profile from database + JWT fields)
 export interface User {
@@ -116,7 +116,14 @@ export const storeUser = async (user: User): Promise<void> => {
 export const getStoredUser = async (): Promise<User | null> => {
   try {
     const userData = await getSecureItem(USER_KEY);
-    return userData ? JSON.parse(userData) : null;
+    if (!userData) return null;
+    
+    const user = JSON.parse(userData);
+    // Normaliser _id vers id pour cohérence
+    if (user._id && !user.id) {
+      user.id = user._id;
+    }
+    return user;
   } catch (error) {
     console.error('Error getting stored user:', error);
     return null;

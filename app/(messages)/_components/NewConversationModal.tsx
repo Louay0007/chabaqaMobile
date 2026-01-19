@@ -1,30 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
-  View,
-  Text,
-  Modal,
-  TouchableOpacity,
-  FlatList,
-  TextInput,
+  MessageCircle,
+  Search,
+  Users,
+  X
+} from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import {
   ActivityIndicator,
   Alert,
   Dimensions,
+  FlatList,
   Image,
+  Modal,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  X, 
-  Search, 
-  MessageCircle,
-  Users,
-  ChevronRight
-} from 'lucide-react-native';
 
+import { Community, getMyJoinedCommunities } from '../../../lib/communities-api';
+import { borderRadius, colors, fontSize, fontWeight, spacing } from '../../../lib/design-tokens';
 import { DMConversation, startCommunityConversation } from '../../../lib/dm-api';
-import { getCommunities, Community, CommunitiesResponse } from '../../../lib/communities-api';
-import { colors, spacing, borderRadius, fontSize, fontWeight } from '../../../lib/design-tokens';
 
 interface NewConversationModalProps {
   visible: boolean;
@@ -73,20 +72,22 @@ export default function NewConversationModal({
   const loadCommunities = async () => {
     try {
       setLoading(true);
-      console.log('🏘️ [NEW-CONVERSATION] Loading communities');
+      console.log('🏘️ [NEW-CONVERSATION] Loading joined communities');
 
-      const response = await getCommunities({
-        page: 1,
-        limit: 50,
-      });
+      const response = await getMyJoinedCommunities();
 
-      setCommunities(response.data);
-      console.log('✅ [NEW-CONVERSATION] Communities loaded:', response.data.length);
+      if (response.success) {
+        setCommunities(response.data);
+        console.log('✅ [NEW-CONVERSATION] Joined communities loaded:', response.data.length);
+      } else {
+        setCommunities([]);
+        console.log('⚠️ [NEW-CONVERSATION] No joined communities');
+      }
     } catch (error: any) {
       console.error('💥 [NEW-CONVERSATION] Error loading communities:', error);
       Alert.alert(
         'Error',
-        'Failed to load communities. Please try again.',
+        'Failed to load your communities. Please try again.',
         [{ text: 'OK' }]
       );
     } finally {
@@ -189,12 +190,12 @@ export default function NewConversationModal({
     <View style={styles.emptyState}>
       <Users size={48} color={colors.gray400} />
       <Text style={styles.emptyTitle}>
-        {searchQuery ? 'No communities found' : 'No communities available'}
+        {searchQuery ? 'No communities found' : 'No joined communities'}
       </Text>
       <Text style={styles.emptyDescription}>
         {searchQuery 
           ? 'Try adjusting your search terms'
-          : 'Communities will appear here when available'
+          : 'Join communities first to message their creators. Go to Browse Communities to discover and join communities.'
         }
       </Text>
     </View>
