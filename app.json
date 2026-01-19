@@ -21,6 +21,11 @@
       }
     },
     "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "edgeToEdgeEnabled": true,
       "package": "com.mariembenali.chabaqa",
       "allowBackup": false,
       "permissions": []

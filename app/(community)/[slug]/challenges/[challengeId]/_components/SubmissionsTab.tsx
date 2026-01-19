@@ -26,6 +26,7 @@ import {
 // Task type
 interface TaskType {
   id: string;
+  backendId?: string;
   day: number;
   title: string;
   description: string;
@@ -109,6 +110,11 @@ export default function SubmissionsTab({
           onPress: async () => {
             try {
               setSubmitting(taskId);
+              console.log('📝 [CHALLENGE] Submitting task progress:', {
+                challengeId,
+                taskId,
+                status: 'completed',
+              });
               await updateChallengeProgress(challengeId, taskId, 'completed');
               
               // Update local state
@@ -145,6 +151,11 @@ export default function SubmissionsTab({
           onPress: async () => {
             try {
               setSubmitting(taskId);
+              console.log('📝 [CHALLENGE] Undo task progress:', {
+                challengeId,
+                taskId,
+                status: 'not_started',
+              });
               await updateChallengeProgress(challengeId, taskId, 'not_started');
               
               // Update local state
@@ -166,13 +177,13 @@ export default function SubmissionsTab({
     );
   };
 
-  const isTaskCompleted = (taskId: string) => userCompletedTasks.includes(taskId);
+  const isTaskCompleted = (taskId?: string) => !!taskId && userCompletedTasks.includes(taskId);
   
   const completedCount = userCompletedTasks.length;
   const totalTasks = tasks.length;
   const progress = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
   const totalPoints = tasks
-    .filter(t => userCompletedTasks.includes(t.id))
+    .filter(t => t.backendId && userCompletedTasks.includes(t.backendId))
     .reduce((sum, t) => sum + t.points, 0);
 
   // Check if user is a participant
@@ -310,15 +321,15 @@ export default function SubmissionsTab({
           </View>
         ) : (
           tasks.map((task, index) => {
-            const taskId = task.id || `task-${index}`;
+            const taskId = task.backendId;
             const completed = isTaskCompleted(taskId);
-            const isSubmitting = submitting === taskId;
+            const isSubmitting = taskId ? submitting === taskId : false;
             const isLast = index === tasks.length - 1;
-            const isExpanded = expandedTasks.includes(taskId);
+            const isExpanded = expandedTasks.includes(task.id);
 
             return (
               <View
-                key={taskId}
+                key={task.id}
                 style={{
                   padding: 16,
                   backgroundColor: completed ? '#ecfdf5' : '#ffffff',
@@ -401,7 +412,7 @@ export default function SubmissionsTab({
 
                     {/* Expand/Collapse Button */}
                     <TouchableOpacity
-                      onPress={() => toggleTaskExpanded(taskId)}
+                      onPress={() => toggleTaskExpanded(task.id)}
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -507,9 +518,25 @@ export default function SubmissionsTab({
                         )}
                       </View>
                     )}
+                    {isParticipant && !taskId && (
+                      <View style={{ marginTop: 12 }}>
+                        <View style={{
+                          backgroundColor: '#fef2f2',
+                          paddingVertical: 8,
+                          paddingHorizontal: 12,
+                          borderRadius: 8,
+                          borderWidth: 1,
+                          borderColor: '#fecaca',
+                        }}>
+                          <Text style={{ color: '#b91c1c', fontSize: 12, fontWeight: '600' }}>
+                            Task ID missing. Refresh challenge data.
+                          </Text>
+                        </View>
+                      </View>
+                    )}
 
                     {/* Action Button */}
-                    {isParticipant && task.id && (
+                    {isParticipant && taskId && (
                       <View style={{ marginTop: 12 }}>
                         {completed ? (
                           <TouchableOpacity

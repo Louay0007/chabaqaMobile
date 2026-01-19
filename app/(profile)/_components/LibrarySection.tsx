@@ -105,9 +105,22 @@ export default function LibrarySection() {
         headers: { Authorization: `Bearer ${token}` },
         timeout: 10000,
       });
-      const transactions = resp.data?.data || resp.data?.transactions || [];
-      return transactions.filter((tx: any) => tx.type === 'purchase' && tx.contentType === 'PRODUCT');
-    } catch {
+      const transactions = resp.data?.data || resp.data?.transactions || resp.data || [];
+      console.log('📦 [LIBRARY] All transactions:', transactions.length);
+      
+      // Filter for all purchases (any content type)
+      const purchases = transactions.filter((tx: any) => tx.type === 'purchase');
+      console.log('📦 [LIBRARY] Purchases found:', purchases.length);
+      console.log('📦 [LIBRARY] Purchase details:', purchases.map((p: any) => ({ 
+        type: p.type, 
+        contentType: p.contentType, 
+        description: p.description,
+        amount: p.amount 
+      })));
+      
+      return purchases;
+    } catch (error) {
+      console.log('Error fetching purchased products:', error);
       return [];
     }
   };

@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '@/lib/design-tokens';
+import { spacing, fontSize, fontWeight, borderRadius } from '@/lib/design-tokens';
 
 export const enhancedStyles = StyleSheet.create({
   container: {
