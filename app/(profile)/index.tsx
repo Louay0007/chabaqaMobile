@@ -14,7 +14,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 
 import { useAuth } from '@/hooks/use-auth';
 import { useAdaptiveColors } from '@/hooks/useAdaptiveColors';
