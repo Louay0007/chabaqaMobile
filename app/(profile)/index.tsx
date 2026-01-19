@@ -263,18 +263,11 @@ export default function ProfileScreen() {
             </LinearGradient>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[enhancedStyles.actionButtonPrimary, { flex: 1 }]}
+            style={[enhancedStyles.actionButtonSecondary, { flex: 1 }]}
             onPress={() => router.push('/(profile)/edit')}
           >
-            <LinearGradient
-              colors={['#374151', '#1f2937']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={enhancedStyles.actionButtonGradient}
-            >
-              <Ionicons name="create-outline" size={18} color="#fff" />
-              <Text style={enhancedStyles.actionButtonPrimaryText}>Edit Profile</Text>
-            </LinearGradient>
+            <Ionicons name="create-outline" size={18} color="#1F2937" />
+            <Text style={enhancedStyles.actionButtonSecondaryText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
 

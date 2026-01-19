@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: fontSize.base,
     marginTop: spacing.lg,
-    color: '#9ca3af',
+    color: '#6B7280',
   },
 
   section: {
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSize.base,
     fontWeight: fontWeight.semibold,
-    color: '#ffffff',
+    color: '#000000',
   },
 
   countBadge: {
@@ -393,17 +393,22 @@ const styles = StyleSheet.create({
 
   communityCard: {
     width: '48%',
-    backgroundColor: '#1f2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
 
   communityImage: {
     width: '100%',
     height: 80,
-    backgroundColor: '#374151',
+    backgroundColor: '#F3F4F6',
   },
 
   communityImagePlaceholder: {
@@ -413,18 +418,19 @@ const styles = StyleSheet.create({
 
   communityContent: {
     padding: spacing.sm,
+    backgroundColor: '#FFFFFF',
   },
 
   communityName: {
     fontSize: fontSize.sm,
     fontWeight: fontWeight.semibold,
-    color: '#ffffff',
+    color: '#000000',
     marginBottom: 2,
   },
 
   communityMeta: {
     fontSize: fontSize.xs,
-    color: '#9ca3af',
+    color: '#6B7280',
   },
 
   // List styles
@@ -435,11 +441,16 @@ const styles = StyleSheet.create({
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1f2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
 
   itemIcon: {
@@ -458,41 +469,41 @@ const styles = StyleSheet.create({
   listItemTitle: {
     fontSize: fontSize.sm,
     fontWeight: fontWeight.medium,
-    color: '#ffffff',
+    color: '#000000',
     marginBottom: 2,
   },
 
   listItemMeta: {
     fontSize: fontSize.xs,
-    color: '#9ca3af',
+    color: '#6B7280',
   },
 
   // Empty State
   emptyCard: {
-    backgroundColor: '#1f2937',
+    backgroundColor: '#F9FAFB',
     borderRadius: borderRadius.lg,
     padding: spacing.xl,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#E5E7EB',
   },
 
   emptyText: {
     fontSize: fontSize.sm,
     marginTop: spacing.md,
     textAlign: 'center',
-    color: '#9ca3af',
+    color: '#6B7280',
   },
 
   emptySubtext: {
     fontSize: fontSize.xs,
     marginTop: spacing.xs,
     textAlign: 'center',
-    color: '#6b7280',
+    color: '#9CA3AF',
   },
 
   exploreButton: {
-    backgroundColor: '#8e78fb',
+    backgroundColor: '#8B5CF6',
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
     borderRadius: borderRadius.full,

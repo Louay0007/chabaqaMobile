@@ -270,7 +270,7 @@ export default function BuildCommunityScreen() {
         <View style={styles.safeAreaTop} />
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.headerContainer}>
-            <BackButton onPress={() => router.back()} color="#ffffff" size={28} />
+            <BackButton onPress={() => router.back()} color="#000000" size={28} />
             {/* Chabaqa Logo - Top Right */}
             <Image
               source={require('@/assets/images/logo_chabaqa.png')}

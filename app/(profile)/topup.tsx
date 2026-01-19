@@ -131,14 +131,14 @@ export default function TopUpPage() {
           onPress={() => step > 1 ? setStep((step - 1) as 1 | 2) : router.back()} 
           style={styles.headerButton}
         >
-          <Ionicons name="chevron-back" size={24} color="#fff" />
+          <Ionicons name="chevron-back" size={24} color="#111827" />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Top Up</Text>
           <Text style={styles.headerStep}>Step {step} of 3</Text>
         </View>
         <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
-          <Ionicons name="close" size={24} color="#fff" />
+          <Ionicons name="close" size={24} color="#111827" />
         </TouchableOpacity>
       </View>
 
@@ -168,7 +168,7 @@ export default function TopUpPage() {
                   <TextInput
                     style={styles.amountInput}
                     placeholder="0"
-                    placeholderTextColor="#444"
+                    placeholderTextColor="#9ca3af"
                     keyboardType="decimal-pad"
                     value={amount}
                     onChangeText={setAmount}
@@ -200,7 +200,7 @@ export default function TopUpPage() {
                 {/* Conversion */}
                 {amount && parseFloat(amount) > 0 && (
                   <View style={styles.conversionBox}>
-                    <Ionicons name="swap-horizontal" size={16} color="#666" />
+                    <Ionicons name="swap-horizontal" size={16} color="#6b7280" />
                     <Text style={styles.conversionText}>
                       You'll receive <Text style={styles.conversionValue}>{points.toFixed(2)}</Text> points
                     </Text>
@@ -269,13 +269,13 @@ export default function TopUpPage() {
                       <Text style={styles.ribValue}>{ADMIN_BANK_DETAILS.rib}</Text>
                     </View>
                     <TouchableOpacity style={styles.copyButton}>
-                      <Ionicons name="copy-outline" size={18} color="#000" />
+                      <Ionicons name="copy-outline" size={18} color="#111827" />
                     </TouchableOpacity>
                   </View>
                 </View>
 
                 <View style={styles.noticeBox}>
-                  <Ionicons name="information-circle-outline" size={18} color="#888" />
+                  <Ionicons name="information-circle-outline" size={18} color="#6b7280" />
                   <Text style={styles.noticeText}>
                     Transfer exactly {amount} {selectedCurrency?.symbol} to this account
                   </Text>
@@ -306,7 +306,7 @@ export default function TopUpPage() {
                   ) : (
                     <View style={styles.uploadPlaceholder}>
                       <View style={styles.uploadIconBox}>
-                        <Ionicons name="cloud-upload-outline" size={28} color="#000" />
+                        <Ionicons name="cloud-upload-outline" size={28} color="#111827" />
                       </View>
                       <Text style={styles.uploadTitle}>Tap to upload</Text>
                       <Text style={styles.uploadHint}>JPG, PNG up to 10MB</Text>
@@ -342,7 +342,7 @@ export default function TopUpPage() {
               <Text style={styles.primaryButtonText}>
                 {step === 1 ? 'Continue' : 'I\'ve Made the Transfer'}
               </Text>
-              <Ionicons name="arrow-forward" size={18} color="#000" />
+              <Ionicons name="arrow-forward" size={18} color="#ffffff" />
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
@@ -351,11 +351,11 @@ export default function TopUpPage() {
               disabled={!proofFile || submitting}
             >
               {submitting ? (
-                <ActivityIndicator size="small" color="#000" />
+                <ActivityIndicator size="small" color="#ffffff" />
               ) : (
                 <>
                   <Text style={styles.primaryButtonText}>Submit Request</Text>
-                  <Ionicons name="checkmark" size={18} color="#000" />
+                  <Ionicons name="checkmark" size={18} color="#ffffff" />
                 </>
               )}
             </TouchableOpacity>
@@ -369,7 +369,7 @@ export default function TopUpPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
+    backgroundColor: '#f8fafc',
   },
   header: {
     flexDirection: 'row',
@@ -390,11 +390,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#fff',
+    color: '#111827',
   },
   headerStep: {
     fontSize: 12,
-    color: '#666',
+    color: '#6b7280',
     marginTop: 2,
   },
   progressContainer: {
@@ -403,12 +403,12 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     height: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#e5e7eb',
     borderRadius: 2,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: '#111827',
     borderRadius: 2,
   },
   keyboardView: {
@@ -422,16 +422,16 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   sectionLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6b7280',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
     marginBottom: 16,
   },
   sectionHint: {
     fontSize: 14,
-    color: '#666',
+    color: '#94a3b8',
     marginTop: -12,
     marginBottom: 16,
   },
@@ -445,15 +445,15 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   currencyPrefix: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: '600',
-    color: '#fff',
+    color: '#111827',
     marginRight: 8,
   },
   amountInput: {
-    fontSize: 56,
+    fontSize: 52,
     fontWeight: '700',
-    color: '#fff',
+    color: '#111827',
     textAlign: 'center',
     minWidth: 100,
   },
@@ -464,21 +464,24 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   currencyButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#f3f4f6',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   currencyButtonActive: {
-    backgroundColor: '#fff',
+    backgroundColor: '#111827',
+    borderColor: '#111827',
   },
   currencyButtonText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#888',
+    color: '#6b7280',
   },
   currencyButtonTextActive: {
-    color: '#000',
+    color: '#ffffff',
   },
   conversionBox: {
     flexDirection: 'row',
@@ -486,16 +489,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#f8fafc',
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   conversionText: {
     fontSize: 14,
-    color: '#888',
+    color: '#6b7280',
   },
   conversionValue: {
     fontWeight: '700',
-    color: '#fff',
+    color: '#111827',
   },
   quickSection: {
     marginBottom: 32,
@@ -507,29 +512,34 @@ const styles = StyleSheet.create({
   },
   quickButton: {
     width: (SCREEN_WIDTH - 40 - 20) / 3,
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#ffffff',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   quickButtonActive: {
-    backgroundColor: '#fff',
+    backgroundColor: '#111827',
+    borderColor: '#111827',
   },
   quickButtonText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#fff',
+    color: '#111827',
   },
   quickButtonTextActive: {
-    color: '#000',
+    color: '#ffffff',
   },
   summarySection: {
     marginBottom: 24,
   },
   summaryCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 20,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   summaryRow: {
     flexDirection: 'row',
@@ -537,32 +547,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   summaryLabel: {
-    fontSize: 14,
-    color: '#888',
+    fontSize: 13,
+    color: '#6b7280',
   },
   summaryValue: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#fff',
+    color: '#111827',
   },
   summaryValueBold: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#fff',
+    color: '#111827',
   },
   summaryDivider: {
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#e5e7eb',
     marginVertical: 16,
   },
   bankSection: {
     marginBottom: 24,
   },
   bankCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   bankRow: {
     flexDirection: 'row',
@@ -572,13 +584,13 @@ const styles = StyleSheet.create({
   },
   bankLabel: {
     fontSize: 12,
-    color: '#666',
+    color: '#6b7280',
     marginBottom: 4,
   },
   bankValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#fff',
+    color: '#111827',
     textAlign: 'right',
     flex: 1,
     marginLeft: 16,
@@ -589,7 +601,7 @@ const styles = StyleSheet.create({
   ribValue: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#fff',
+    color: '#111827',
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     letterSpacing: 1,
   },
@@ -597,7 +609,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#f3f4f6',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 12,
@@ -607,13 +619,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     padding: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#f8fafc',
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   noticeText: {
     flex: 1,
     fontSize: 13,
-    color: '#888',
+    color: '#6b7280',
     lineHeight: 18,
   },
   uploadSection: {
@@ -621,14 +635,15 @@ const styles = StyleSheet.create({
   },
   uploadArea: {
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#e5e7eb',
     borderStyle: 'dashed',
     borderRadius: 16,
     overflow: 'hidden',
+    backgroundColor: '#ffffff',
   },
   uploadAreaDone: {
     borderStyle: 'solid',
-    borderColor: '#fff',
+    borderColor: '#111827',
   },
   uploadPlaceholder: {
     alignItems: 'center',
@@ -638,7 +653,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#fff',
+    backgroundColor: '#f3f4f6',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -646,12 +661,12 @@ const styles = StyleSheet.create({
   uploadTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#fff',
+    color: '#111827',
     marginBottom: 4,
   },
   uploadHint: {
     fontSize: 13,
-    color: '#666',
+    color: '#6b7280',
   },
   uploadedPreview: {
     position: 'relative',
@@ -681,13 +696,15 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   notesInput: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 16,
     fontSize: 14,
-    color: '#fff',
+    color: '#111827',
     minHeight: 100,
     textAlignVertical: 'top',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   bottomContainer: {
     position: 'absolute',
@@ -695,26 +712,26 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 20,
-    paddingBottom: 36,
-    backgroundColor: '#111827',
+    paddingBottom: 32,
+    backgroundColor: '#ffffff',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    borderTopColor: '#e5e7eb',
   },
   primaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#111827',
     borderRadius: 14,
-    paddingVertical: 18,
+    paddingVertical: 16,
     gap: 8,
   },
   primaryButtonDisabled: {
-    backgroundColor: '#333',
+    backgroundColor: '#cbd5f5',
   },
   primaryButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: '#ffffff',
   },
 });

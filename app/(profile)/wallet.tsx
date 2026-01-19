@@ -74,7 +74,7 @@ export default function WalletPage() {
             <Ionicons
               name={isCredit ? 'arrow-down' : 'arrow-up'}
               size={16}
-              color="#fff"
+              color="#000000"
             />
           </View>
           <View style={styles.transactionInfo}>
@@ -100,7 +100,7 @@ export default function WalletPage() {
     <View style={styles.transactionItem}>
       <View style={styles.transactionLeft}>
         <View style={styles.transactionIconBox}>
-          <Ionicons name="time-outline" size={16} color="#fff" />
+          <Ionicons name="time-outline" size={16} color="#000000" />
         </View>
         <View style={styles.transactionInfo}>
           <Text style={styles.transactionTitle}>
@@ -125,7 +125,7 @@ export default function WalletPage() {
             source={require('@/assets/images/brandmark_chabaqa.png')}
             style={styles.loadingLogo}
           />
-          <ActivityIndicator size="small" color="#fff" style={{ marginTop: 24 }} />
+          <ActivityIndicator size="small" color="#000000" style={{ marginTop: 24 }} />
         </View>
       </SafeAreaView>
     );
@@ -136,11 +136,11 @@ export default function WalletPage() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
-          <Ionicons name="chevron-back" size={24} color="#fff" />
+          <Ionicons name="chevron-back" size={24} color="#000000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Wallet</Text>
         <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="ellipsis-horizontal" size={24} color="#fff" />
+          <Ionicons name="ellipsis-horizontal" size={24} color="#000000" />
         </TouchableOpacity>
       </View>
 
@@ -151,7 +151,7 @@ export default function WalletPage() {
           activeTab === 'transactions' ? renderTransaction({ item }) : renderPendingTopUp({ item })
         }
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#000000" />
         }
         ListHeaderComponent={
           <>
@@ -268,7 +268,7 @@ export default function WalletPage() {
             <Ionicons
               name={activeTab === 'transactions' ? 'receipt-outline' : 'time-outline'}
               size={40}
-              color="#444"
+              color="#9CA3AF"
             />
             <Text style={styles.emptyTitle}>
               {activeTab === 'transactions' ? 'No transactions yet' : 'No pending requests'}
@@ -290,7 +290,7 @@ export default function WalletPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
+    backgroundColor: '#FFFFFF',
   },
   loadingContainer: {
     flex: 1,
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     resizeMode: 'contain',
-    tintColor: '#fff',
+    tintColor: '#000000',
   },
   header: {
     flexDirection: 'row',
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#fff',
+    color: '#000000',
     letterSpacing: -0.3,
   },
   listContent: {
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
   balanceLabel: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#666',
+    color: '#6B7280',
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 8,
@@ -356,13 +356,13 @@ const styles = StyleSheet.create({
   balanceAmount: {
     fontSize: 36,
     fontWeight: '700',
-    color: '#fff',
+    color: '#000000',
     letterSpacing: -1,
   },
   balanceUnit: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#666',
+    color: '#6B7280',
     letterSpacing: 2,
     marginTop: 4,
     marginBottom: 12,
@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#888',
+    color: '#9CA3AF',
   },
   actionsRow: {
     flexDirection: 'row',
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   actionLabel: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#fff',
+    color: '#000000',
   },
   statsRow: {
     flexDirection: 'row',
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#E5E7EB',
     marginBottom: 24,
   },
   statItem: {
@@ -412,26 +412,26 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#fff',
+    color: '#000000',
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#666',
+    color: '#6B7280',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   statDivider: {
     width: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#E5E7EB',
   },
   tabsContainer: {
     flexDirection: 'row',
     marginHorizontal: 20,
     marginBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: '#E5E7EB',
   },
   tab: {
     flexDirection: 'row',
@@ -442,26 +442,26 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   tabActive: {
-    borderBottomColor: '#fff',
+    borderBottomColor: '#8B5CF6',
   },
   tabText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#666',
+    color: '#6B7280',
   },
   tabTextActive: {
-    color: '#fff',
+    color: '#8B5CF6',
     fontWeight: '600',
   },
   tabBadge: {
-    backgroundColor: '#fff',
+    backgroundColor: '#8B5CF6',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 10,
     marginLeft: 8,
   },
   tabBadgeText: {
-    color: '#000',
+    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '700',
   },
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: '#E5E7EB',
   },
   transactionLeft: {
     flexDirection: 'row',
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -494,20 +494,20 @@ const styles = StyleSheet.create({
   transactionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#fff',
+    color: '#000000',
     marginBottom: 2,
   },
   transactionDate: {
     fontSize: 12,
-    color: '#666',
+    color: '#6B7280',
   },
   transactionAmount: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#fff',
+    color: '#000000',
   },
   statusBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#F3F4F6',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#888',
+    color: '#6B7280',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -527,13 +527,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: '#000000',
     marginTop: 16,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 13,
-    color: '#666',
+    color: '#6B7280',
     textAlign: 'center',
   },
 });

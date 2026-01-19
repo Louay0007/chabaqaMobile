@@ -4,7 +4,7 @@ import { spacing, fontSize, fontWeight, borderRadius } from '@/lib/design-tokens
 export const enhancedStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
+    backgroundColor: '#FFFFFF',
   },
 
   // Header Styles
@@ -16,7 +16,7 @@ export const enhancedStyles = StyleSheet.create({
     paddingTop: spacing.xl,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
-    backgroundColor: '#111827',
+    backgroundColor: '#FFFFFF',
   },
 
   // Avatar Styles
@@ -27,7 +27,7 @@ export const enhancedStyles = StyleSheet.create({
   },
 
   avatarGlow: {
-    shadowColor: '#8e78fb',
+    shadowColor: '#8B5CF6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -39,7 +39,7 @@ export const enhancedStyles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 3,
-    borderColor: 'rgba(255, 255, 255, 0.9)',
+    borderColor: '#8B5CF6',
   },
 
   avatarPlaceholder: {
@@ -55,18 +55,18 @@ export const enhancedStyles = StyleSheet.create({
 
   editAvatarBadge: {
     position: 'absolute',
-    bottom: 2, // Better positioning
-    right: '32%', // Adjusted for larger avatar
-    width: 32, // Slightly larger for better visibility
+    bottom: 2,
+    right: '32%',
+    width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#ff9b28',
+    backgroundColor: '#8B5CF6',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3, // Restored border thickness
-    borderColor: '#fff', // White border for better contrast
+    borderWidth: 3,
+    borderColor: '#fff',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 }, // Enhanced shadow
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
@@ -76,7 +76,7 @@ export const enhancedStyles = StyleSheet.create({
   userName: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#ffffff',
+    color: '#000000',
     textAlign: 'center',
     marginBottom: spacing.xs,
     marginTop: spacing.sm,
@@ -86,24 +86,24 @@ export const enhancedStyles = StyleSheet.create({
   roleBadge: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
-    backgroundColor: 'rgba(142, 120, 251, 0.2)',
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
     borderRadius: borderRadius.full,
     marginBottom: spacing.xs,
     alignSelf: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(142, 120, 251, 0.4)',
+    borderColor: 'rgba(139, 92, 246, 0.3)',
   },
 
   roleText: {
     fontSize: fontSize.xs,
     fontWeight: fontWeight.semibold,
-    color: '#8e78fb',
+    color: '#8B5CF6',
     textTransform: 'capitalize',
   },
 
   userEmail: {
     fontSize: fontSize.sm,
-    color: '#9ca3af',
+    color: '#6B7280',
     textAlign: 'center',
     marginBottom: spacing.md,
     fontWeight: fontWeight.medium,
@@ -111,7 +111,7 @@ export const enhancedStyles = StyleSheet.create({
 
   userBio: {
     fontSize: fontSize.sm,
-    color: '#9ca3af',
+    color: '#6B7280',
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: spacing.xl,
@@ -139,9 +139,14 @@ export const enhancedStyles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: borderRadius.lg,
     alignItems: 'center',
-    backgroundColor: '#1f2937',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
 
   statIcon: {
@@ -156,14 +161,14 @@ export const enhancedStyles = StyleSheet.create({
   statValue: {
     fontSize: fontSize.xl,
     fontWeight: fontWeight.bold,
-    color: '#ffffff',
+    color: '#000000',
     marginBottom: 2,
   },
 
   statLabel: {
     fontSize: 10,
     fontWeight: fontWeight.medium,
-    color: '#9ca3af',
+    color: '#6B7280',
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
@@ -179,31 +184,31 @@ export const enhancedStyles = StyleSheet.create({
 
   actionButtonPrimary: {
     flex: 2,
-    borderRadius: 24, // Fully rounded button
-    overflow: 'visible', // Changed from 'hidden' to allow shadow to be visible
-    shadowColor: '#8e78fb',
-    shadowOffset: { width: 0, height: 2 }, // Reduced shadow offset
-    shadowOpacity: 0.2, // Reduced shadow opacity
-    shadowRadius: 4, // Reduced shadow spread
-    elevation: 4, // Reduced elevation
+    borderRadius: 24,
+    overflow: 'visible',
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
 
   actionButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm, // Better icon-text spacing
-    paddingVertical: spacing.lg, // More comfortable padding
-    paddingHorizontal: spacing.xl, // Better horizontal padding
-    minHeight: 48, // Ensure minimum touch target
-    borderRadius: 24, // Match parent border radius
+    gap: spacing.sm,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    minHeight: 48,
+    borderRadius: 24,
   },
 
   actionButtonPrimaryText: {
-    fontSize: fontSize.base, // Restored for better readability
-    fontWeight: fontWeight.bold, // Stronger weight for primary action
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold,
     color: '#fff',
-    letterSpacing: 0.5, // Better letter spacing
+    letterSpacing: 0.5,
   },
 
   actionButtonSecondary: {
@@ -211,43 +216,43 @@ export const enhancedStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm, // Better icon-text spacing
-    paddingVertical: spacing.lg, // Match primary button padding
-    paddingHorizontal: spacing.lg, // Better horizontal padding
-    borderRadius: 24, // Fully rounded button to match primary
-    backgroundColor: 'rgba(255, 255, 255, 0.95)', // Slightly transparent for modern look
-    borderWidth: 2, // Restored border thickness
-    borderColor: '#8e78fb',
-    shadowColor: '#8e78fb',
+    gap: spacing.sm,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
-    minHeight: 48, // Match primary button height
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    minHeight: 48,
   },
 
   actionButtonSecondaryText: {
-    fontSize: fontSize.base, // Match primary button font size
+    fontSize: fontSize.base,
     fontWeight: fontWeight.semibold,
-    color: '#8e78fb',
-    letterSpacing: 0.3, // Better letter spacing
+    color: '#1F2937',
+    letterSpacing: 0.3,
   },
 
   // Bio Section Styles
   bioSection: {
     marginHorizontal: spacing.md,
     marginVertical: spacing.sm,
-    backgroundColor: '#1f2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#E5E7EB',
   },
 
   bioTitle: {
     fontSize: fontSize.sm,
     fontWeight: fontWeight.semibold,
-    color: '#8e78fb',
+    color: '#8B5CF6',
     marginBottom: spacing.sm,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -255,7 +260,7 @@ export const enhancedStyles = StyleSheet.create({
 
   bioText: {
     fontSize: fontSize.base,
-    color: '#e5e7eb',
+    color: '#374151',
     lineHeight: 24,
     fontWeight: fontWeight.normal,
   },
@@ -269,7 +274,7 @@ export const enhancedStyles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(142, 120, 251, 0.15)',
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.sm,
@@ -277,14 +282,14 @@ export const enhancedStyles = StyleSheet.create({
 
   bioEmptyText: {
     fontSize: fontSize.sm,
-    color: '#9ca3af',
+    color: '#6B7280',
     textAlign: 'center',
     marginBottom: spacing.xs,
   },
 
   bioEmptySubtext: {
     fontSize: fontSize.xs,
-    color: '#6b7280',
+    color: '#9CA3AF',
     textAlign: 'center',
   },
 
@@ -296,11 +301,11 @@ export const enhancedStyles = StyleSheet.create({
 
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#1f2937',
+    backgroundColor: '#F3F4F6',
     borderRadius: borderRadius.lg,
     padding: 4,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#E5E7EB',
   },
 
   tab: {
@@ -328,7 +333,7 @@ export const enhancedStyles = StyleSheet.create({
   tabText: {
     fontSize: fontSize.sm,
     fontWeight: fontWeight.medium,
-    color: '#9ca3af',
+    color: '#6B7280',
     zIndex: 1,
   },
 
@@ -350,16 +355,16 @@ export const enhancedStyles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSize.lg,
     fontWeight: fontWeight.bold,
-    color: '#ffffff',
+    color: '#000000',
     marginBottom: spacing.md,
   },
 
   infoCard: {
-    backgroundColor: '#1f2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#E5E7EB',
   },
 
   infoRow: {
@@ -367,7 +372,7 @@ export const enhancedStyles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#374151',
+    borderBottomColor: '#E5E7EB',
   },
 
   infoIcon: {
@@ -377,7 +382,7 @@ export const enhancedStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
-    backgroundColor: 'rgba(142, 120, 251, 0.15)',
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
   },
 
   infoContent: {
@@ -387,7 +392,7 @@ export const enhancedStyles = StyleSheet.create({
   infoLabel: {
     fontSize: fontSize.xs,
     fontWeight: fontWeight.medium,
-    color: '#6b7280',
+    color: '#9CA3AF',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
@@ -396,7 +401,7 @@ export const enhancedStyles = StyleSheet.create({
   infoText: {
     fontSize: fontSize.base,
     fontWeight: fontWeight.medium,
-    color: '#ffffff',
+    color: '#000000',
   },
 
   // Activity Section
@@ -409,11 +414,11 @@ export const enhancedStyles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-    backgroundColor: '#1f2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: borderRadius.lg,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#E5E7EB',
   },
 
   activityIcon: {
@@ -432,37 +437,37 @@ export const enhancedStyles = StyleSheet.create({
   activityTitle: {
     fontSize: fontSize.base,
     fontWeight: fontWeight.semibold,
-    color: '#ffffff',
+    color: '#000000',
     marginBottom: spacing.xs,
   },
 
   activityDescription: {
     fontSize: fontSize.sm,
-    color: '#9ca3af',
+    color: '#6B7280',
     marginBottom: spacing.xs,
     lineHeight: 20,
   },
 
   activityTime: {
     fontSize: fontSize.xs,
-    color: '#6b7280',
+    color: '#9CA3AF',
     fontWeight: fontWeight.medium,
   },
 
   emptyStateCard: {
-    backgroundColor: '#1f2937',
+    backgroundColor: '#F9FAFB',
     borderRadius: borderRadius.lg,
     padding: spacing.xxl,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#E5E7EB',
   },
 
   emptyStateIcon: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: 'rgba(142, 120, 251, 0.15)',
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
@@ -471,13 +476,13 @@ export const enhancedStyles = StyleSheet.create({
   emptyStateText: {
     fontSize: fontSize.lg,
     fontWeight: fontWeight.semibold,
-    color: '#ffffff',
+    color: '#000000',
     marginBottom: spacing.xs,
   },
 
   emptyStateSubtext: {
     fontSize: fontSize.sm,
-    color: '#6b7280',
+    color: '#6B7280',
     textAlign: 'center',
   },
 
@@ -487,18 +492,18 @@ export const enhancedStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.xl,
-    backgroundColor: '#111827',
+    backgroundColor: '#FFFFFF',
   },
 
   emptyText: {
     fontSize: fontSize.base,
-    color: '#9ca3af',
+    color: '#6B7280',
     textAlign: 'center',
     marginTop: spacing.lg,
   },
 
   button: {
-    backgroundColor: '#8e78fb',
+    backgroundColor: '#8B5CF6',
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xxl,
     borderRadius: borderRadius.lg,

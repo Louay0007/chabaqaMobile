@@ -51,13 +51,13 @@ export interface PaymentScreenProps {
 const getContentTypeIcon = (type: string) => {
   switch (type) {
     case 'challenge':
-      return <Zap size={12} color="#9ca3af" />;
+      return <Zap size={12} color="#6B7280" />;
     case 'product':
-      return <Package size={12} color="#9ca3af" />;
+      return <Package size={12} color="#6B7280" />;
     case 'community':
-      return <Users size={12} color="#9ca3af" />;
+      return <Users size={12} color="#6B7280" />;
     default:
-      return <Zap size={12} color="#9ca3af" />;
+      return <Zap size={12} color="#6B7280" />;
   }
 };
 
@@ -142,7 +142,7 @@ export default function PaymentScreen({
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onBack} style={styles.backButton}>
-            <ChevronLeft size={24} color="#ffffff" />
+            <ChevronLeft size={24} color="#000000" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Payment</Text>
           <View style={styles.headerSpacer} />
@@ -199,7 +199,7 @@ export default function PaymentScreen({
           <View style={styles.divider} />
           
           <TouchableOpacity onPress={onTopUp} style={styles.topUpLink}>
-            <PlusCircle size={16} color="#9ca3af" />
+            <PlusCircle size={16} color="#6B7280" />
             <Text style={styles.topUpText}>Top Up Wallet</Text>
           </TouchableOpacity>
         </View>
@@ -233,7 +233,7 @@ export default function PaymentScreen({
             <Text style={styles.summaryLabelBold}>Balance After</Text>
             <Text style={[
               styles.summaryValueBold,
-              { color: hasEnoughBalance ? '#22d3ee' : '#ef4444' }
+              { color: hasEnoughBalance ? '#8B5CF6' : '#ef4444' }
             ]}>
               {hasEnoughBalance ? balanceAfter.toFixed(2) : '0.00'} DT
             </Text>
@@ -256,24 +256,24 @@ export default function PaymentScreen({
             style={[styles.payButton, processing && styles.payButtonDisabled]}
           >
             {processing ? (
-              <ActivityIndicator size="small" color="#111827" />
+              <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
               <>
-                <CheckCircle2 size={20} color="#111827" />
+                <CheckCircle2 size={20} color="#FFFFFF" />
                 <Text style={styles.payButtonText}>Pay with Wallet</Text>
               </>
             )}
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={onTopUp} style={styles.topUpButton}>
-            <PlusCircle size={20} color="#ffffff" />
+            <PlusCircle size={20} color="#FFFFFF" />
             <Text style={styles.topUpButtonText}>Top Up Wallet</Text>
           </TouchableOpacity>
         )}
         
         {/* Security Notice */}
         <View style={styles.securityNotice}>
-          <Shield size={14} color="#6b7280" />
+          <Shield size={14} color="#9CA3AF" />
           <Text style={styles.securityText}>
             Your payment is secure. Points will be deducted instantly and access granted immediately.
           </Text>
@@ -286,10 +286,10 @@ export default function PaymentScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
+    backgroundColor: '#FFFFFF',
   },
   safeArea: {
-    backgroundColor: '#111827',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -297,6 +297,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
   backButton: {
     padding: 8,
@@ -305,7 +307,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#000000',
   },
   headerSpacer: {
     width: 40,
@@ -326,7 +328,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#374151',
+    backgroundColor: '#F3F4F6',
     overflow: 'hidden',
   },
   avatar: {
@@ -338,10 +340,10 @@ const styles = StyleSheet.create({
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f59e0b',
+    backgroundColor: '#8B5CF6',
   },
   avatarInitials: {
-    color: '#ffffff',
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '700',
   },
@@ -354,33 +356,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   contentTypeText: {
-    color: '#9ca3af',
+    color: '#6B7280',
     fontSize: 11,
     marginLeft: 4,
     letterSpacing: 0.5,
   },
   contentTitle: {
-    color: '#ffffff',
+    color: '#000000',
     fontSize: 16,
     fontWeight: '600',
     marginTop: 4,
   },
   creatorName: {
-    color: '#9ca3af',
+    color: '#6B7280',
     fontSize: 13,
     marginTop: 2,
   },
   contentDescription: {
-    color: '#6b7280',
+    color: '#9CA3AF',
     fontSize: 12,
     marginTop: 2,
   },
   card: {
     marginHorizontal: 16,
     marginTop: 24,
-    backgroundColor: '#1f2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   walletHeader: {
     flexDirection: 'row',
@@ -390,35 +399,35 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 8,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
   walletLabel: {
-    color: '#9ca3af',
+    color: '#6B7280',
     fontSize: 12,
     marginLeft: 12,
     letterSpacing: 1,
   },
   walletBalance: {
-    color: '#ffffff',
+    color: '#000000',
     fontSize: 36,
     fontWeight: '700',
     marginTop: 16,
   },
   walletUnit: {
-    color: '#6b7280',
+    color: '#6B7280',
     fontSize: 12,
     letterSpacing: 1,
   },
   divider: {
     height: 1,
-    backgroundColor: '#374151',
+    backgroundColor: '#E5E7EB',
     marginVertical: 16,
   },
   dividerLight: {
     height: 1,
-    backgroundColor: '#374151',
+    backgroundColor: '#E5E7EB',
     marginVertical: 12,
   },
   topUpLink: {
@@ -426,12 +435,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   topUpText: {
-    color: '#9ca3af',
+    color: '#6B7280',
     fontSize: 14,
     marginLeft: 8,
   },
   cardTitle: {
-    color: '#9ca3af',
+    color: '#6B7280',
     fontSize: 12,
     letterSpacing: 1,
     marginBottom: 16,
@@ -443,21 +452,21 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   summaryLabel: {
-    color: '#9ca3af',
+    color: '#6B7280',
     fontSize: 14,
   },
   summaryValue: {
-    color: '#ffffff',
+    color: '#000000',
     fontSize: 16,
     fontWeight: '600',
   },
   summaryValueCyan: {
-    color: '#22d3ee',
+    color: '#8B5CF6',
     fontSize: 16,
     fontWeight: '600',
   },
   summaryLabelBold: {
-    color: '#ffffff',
+    color: '#000000',
     fontSize: 14,
     fontWeight: '600',
     fontStyle: 'italic',
@@ -467,33 +476,38 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   conversionNote: {
-    color: '#6b7280',
+    color: '#6B7280',
     fontSize: 12,
     marginTop: 12,
     textAlign: 'center',
     fontStyle: 'italic',
   },
   bottomSection: {
-    backgroundColor: '#111827',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: Platform.OS === 'ios' ? 34 : 16,
     borderTopWidth: 1,
-    borderTopColor: '#1f2937',
+    borderTopColor: '#E5E7EB',
   },
   payButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#8B5CF6',
     paddingVertical: 16,
     borderRadius: 30,
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   payButtonDisabled: {
     opacity: 0.7,
   },
   payButtonText: {
-    color: '#111827',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
@@ -502,12 +516,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f59e0b',
+    backgroundColor: '#8B5CF6',
     paddingVertical: 16,
     borderRadius: 30,
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   topUpButtonText: {
-    color: '#ffffff',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
@@ -520,7 +539,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   securityText: {
-    color: '#6b7280',
+    color: '#9CA3AF',
     fontSize: 12,
     marginLeft: 6,
     flex: 1,
