@@ -1,5 +1,8 @@
-// Re-export Community type from mock-data for consistency
-export { Community, User } from './mock-data';
+// Re-export types for consistency
+// User comes from auth.ts (real backend structure)
+export { User } from './auth';
+// Community comes from mock-data for now
+export { Community } from './mock-data';
 
 // Additional model types can be added here in the future
 export interface CommunityStats {

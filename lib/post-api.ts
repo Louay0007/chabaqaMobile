@@ -7,8 +7,8 @@
  * @module post-api
  */
 
-import { tryEndpoints } from './http';
 import { getAccessToken } from './auth';
+import { tryEndpoints } from './http';
 
 // ============================================================================
 // TypeScript Interfaces
@@ -21,7 +21,7 @@ export interface PostAuthor {
   id: string;
   name: string;
   email: string;
-  profile_picture?: string;
+  avatar?: string;
 }
 
 /**
@@ -61,7 +61,9 @@ export interface Post {
   author: PostAuthor;
   isPublished: boolean;
   likes: number;
+  shares?: number;
   isLikedByUser: boolean;
+  isBookmarked: boolean;
   comments: PostComment[];
   tags: string[];
   createdAt: string;
@@ -122,8 +124,10 @@ export interface UpdatePostData {
 export interface PostStats {
   postId: string;
   totalLikes: number;
+  totalShares: number;
   totalComments: number;
   isLikedByUser: boolean;
+  isSharedByUser: boolean;
 }
 
 // ============================================================================
@@ -483,8 +487,6 @@ export async function deletePost(postId: string): Promise<{ success: boolean; me
       throw new Error('Authentication required');
     }
 
-    console.log('🗑️ [POST-API] Deleting post:', postId);
-
     const resp = await tryEndpoints<any>(
       `/api/posts/${postId}`,
       {
@@ -497,13 +499,12 @@ export async function deletePost(postId: string): Promise<{ success: boolean; me
     );
 
     if (resp.status >= 200 && resp.status < 300) {
-      console.log('✅ [POST-API] Post deleted successfully');
       return { success: true, message: 'Post deleted successfully' };
     }
 
     throw new Error(resp.data.message || 'Failed to delete post');
   } catch (error: any) {
-    console.error('💥 [POST-API] Error deleting post:', error);
+    console.error('❌ [DELETE] Backend bug - 403 Forbidden même si auteur');
     throw new Error(error.message || 'Failed to delete post');
   }
 }
@@ -587,6 +588,84 @@ export async function unlikePost(postId: string): Promise<PostStats> {
 }
 
 /**
+ * Share a post
+ * 
+ * @param postId - Post ID
+ * @returns Promise with updated stats
+ */
+export async function sharePost(postId: string): Promise<PostStats> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+
+    console.log('🔄 [POST-API] Sharing post:', postId);
+
+    const resp = await tryEndpoints<any>(
+      `/api/posts/${postId}/share`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000,
+      }
+    );
+
+    if (resp.status >= 200 && resp.status < 300) {
+      console.log('✅ [POST-API] Post shared');
+      return resp.data.data;
+    }
+
+    throw new Error(resp.data.message || 'Failed to share post');
+  } catch (error: any) {
+    console.error('💥 [POST-API] Error sharing post:', error);
+    throw new Error(error.message || 'Failed to share post');
+  }
+}
+
+/**
+ * Unshare a post
+ * 
+ * @param postId - Post ID
+ * @returns Promise with updated stats
+ */
+export async function unsharePost(postId: string): Promise<PostStats> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+
+    console.log('🔄 [POST-API] Unsharing post:', postId);
+
+    const resp = await tryEndpoints<any>(
+      `/api/posts/${postId}/unshare`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000,
+      }
+    );
+
+    if (resp.status >= 200 && resp.status < 300) {
+      console.log('✅ [POST-API] Post unshared');
+      return resp.data.data;
+    }
+
+    throw new Error(resp.data.message || 'Failed to unshare post');
+  } catch (error: any) {
+    console.error('💥 [POST-API] Error unsharing post:', error);
+    throw new Error(error.message || 'Failed to unshare post');
+  }
+}
+
+/**
  * Add comment to a post
  * 
  * @param postId - Post ID
@@ -624,6 +703,43 @@ export async function addComment(postId: string, content: string): Promise<PostC
   } catch (error: any) {
     console.error('💥 [POST-API] Error adding comment:', error);
     throw new Error(error.message || 'Failed to add comment');
+  }
+}
+
+/**
+ * Get comments for a post
+ * 
+ * @param postId - Post ID
+ * @param userId - Optional user ID to check modification rights
+ * @returns Promise with list of comments
+ */
+export async function getComments(postId: string, userId?: string): Promise<PostComment[]> {
+  try {
+    console.log('💬 [POST-API] Fetching comments for post:', postId);
+
+    const params = new URLSearchParams();
+    if (userId) params.append('userId', userId);
+
+    const resp = await tryEndpoints<any>(
+      `/api/posts/${postId}/comments${params.toString() ? '?' + params.toString() : ''}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000,
+      }
+    );
+
+    if (resp.status >= 200 && resp.status < 300) {
+      console.log('✅ [POST-API] Comments fetched:', resp.data.data?.length || 0);
+      return resp.data.data || [];
+    }
+
+    throw new Error(resp.data.message || 'Failed to fetch comments');
+  } catch (error: any) {
+    console.error('💥 [POST-API] Error fetching comments:', error);
+    return []; // Retourner un tableau vide en cas d'erreur
   }
 }
 
@@ -688,7 +804,6 @@ export async function updateComment(
       throw new Error('Authentication required');
     }
 
-    console.log('✏️ [POST-API] Updating comment:', commentId);
 
     const resp = await tryEndpoints<any>(
       `/api/posts/${postId}/comments/${commentId}`,
@@ -883,42 +998,6 @@ export async function getPostStats(postId: string, userId?: string): Promise<Pos
     console.error('💥 [POST-API] Error fetching post stats:', error);
     throw new Error(error.message || 'Failed to fetch post stats');
   }
-}
-
-/**
- * Convert API post to UI-compatible format
- * 
- * @param apiPost - Post from API
- * @returns Converted post for UI components
- */
-export function convertPostForUI(apiPost: any): Post {
-  return {
-    id: apiPost.id,
-    title: apiPost.title,
-    content: apiPost.content,
-    excerpt: apiPost.excerpt,
-    thumbnail: apiPost.thumbnail,
-    communityId: apiPost.communityId,
-    community: {
-      id: apiPost.community?.id || apiPost.communityId,
-      name: apiPost.community?.name || 'Unknown Community',
-      slug: apiPost.community?.slug || 'unknown',
-    },
-    authorId: apiPost.authorId,
-    author: {
-      id: apiPost.author?.id || apiPost.authorId,
-      name: apiPost.author?.name || 'Unknown Author',
-      email: apiPost.author?.email || '',
-      profile_picture: apiPost.author?.profile_picture,
-    },
-    isPublished: apiPost.isPublished ?? true,
-    likes: apiPost.likes || 0,
-    isLikedByUser: apiPost.isLikedByUser || false,
-    comments: apiPost.comments || [],
-    tags: apiPost.tags || [],
-    createdAt: apiPost.createdAt,
-    updatedAt: apiPost.updatedAt,
-  };
 }
 
 /**

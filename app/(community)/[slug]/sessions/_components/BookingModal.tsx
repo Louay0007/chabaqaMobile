@@ -18,6 +18,7 @@ interface BookingModalProps {
   onNotesChange: (notes: string) => void;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
+  isLoading?: boolean;
 }
 
 export const BookingModal: React.FC<BookingModalProps> = ({
@@ -34,6 +35,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   onNotesChange,
   onPreviousMonth,
   onNextMonth,
+  isLoading = false,
 }) => {
   const availableTimes = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
 
@@ -212,13 +214,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({
           <TouchableOpacity 
             style={[
               styles.confirmButton,
-              (!selectedDate || !selectedTime) && styles.disabledButton
+              (!selectedDate || !selectedTime || isLoading) && styles.disabledButton
             ]}
             onPress={onConfirm}
-            disabled={!selectedDate || !selectedTime}
+            disabled={!selectedDate || !selectedTime || isLoading}
           >
             <Text style={styles.confirmButtonText}>
-              Confirm Booking - ${selectedSession?.price}
+              {isLoading ? 'Booking...' : `Confirm Booking - $${selectedSession?.price}`}
             </Text>
           </TouchableOpacity>
         </ScrollView>

@@ -1,5 +1,4 @@
 import { getAccessToken } from './auth';
-import { tryEndpoints } from './http';
 import PlatformUtils from './platform-utils';
 
 const API_BASE_URL = PlatformUtils.getApiUrl();
@@ -44,18 +43,17 @@ export interface SearchCourse {
 export interface SearchResults {
   users: SearchUser[];
   posts: SearchPost[];
-  courses: SearchCourse[];
 }
 
 /**
- * Search across users, posts, and courses
+ * Search across users and posts
  */
 export async function globalSearch(
   query: string,
   limit: number = 5
 ): Promise<SearchResults> {
   if (!query || query.trim().length === 0) {
-    return { users: [], posts: [], courses: [] };
+    return { users: [], posts: [] };
   }
 
   const token = await getAccessToken();
@@ -83,28 +81,25 @@ export async function globalSearch(
       }
 
       const data = await response.json();
-      console.log('🔍 [SEARCH] Raw API response:', JSON.stringify(data).substring(0, 200));
       
       // Try different response structures
       const allUsers = data.data || data.users || data || [];
-      
-      console.log('🔍 [SEARCH] All users count:', allUsers.length);
       
       // Filter users by query (case-insensitive)
       const filtered = allUsers.filter((user: any) => 
         user.name?.toLowerCase().includes(query.toLowerCase()) ||
         user.handle?.toLowerCase().includes(query.toLowerCase())
       );
-
-      console.log('🔍 [SEARCH] Filtered users:', filtered.length);
-
-      return filtered.slice(0, limit).map((user: any) => ({
+      
+      const mappedUsers = filtered.slice(0, limit).map((user: any) => ({
         _id: user._id,
         name: user.name,
-        handle: user.handle,
-        avatar: user.avatar,
+        handle: user.handle || user.username,
+        avatar: user.avatar || user.photo || user.profilePicture || user.image,
         bio: user.bio,
       }));
+      
+      return mappedUsers;
     } catch (error) {
       console.error('Error searching users:', error);
       return [];
@@ -132,17 +127,23 @@ export async function globalSearch(
 
       const result = await response.json();
       const posts = result.data?.posts || [];
-
+      
       // Filter out posts with missing data and map to SearchPost format
-      return posts
-        .filter((post: any) => post._id && post.author && post.author.name)
+      const mappedPosts = posts
+        .filter((post: any) => {
+          // Filtrer les posts invalides et les posts partagés avec SHARED_POST
+          const hasValidId = post._id || post.id;
+          const hasTitle = post.title && !post.title.startsWith('SHARED_POST:');
+          const hasAuthor = post.author;
+          return hasValidId && hasTitle && hasAuthor;
+        })
         .map((post: any) => ({
-          _id: post._id,
+          _id: post._id || post.id,
           title: post.title || 'Untitled Post',
           content: post.content,
           author: {
             name: post.author.name,
-            handle: post.author.handle || '',
+            handle: post.author.handle || post.author.username || '',
           },
           community: post.community ? {
             name: post.community.name,
@@ -150,6 +151,8 @@ export async function globalSearch(
           } : undefined,
           createdAt: post.createdAt,
         }));
+      
+      return mappedPosts;
     } catch (error) {
       console.error('Error searching posts:', error);
       return [];
@@ -176,12 +179,9 @@ export async function globalSearch(
       }
 
       const result = await response.json();
-      console.log('🔍 [SEARCH] Raw courses response:', JSON.stringify(result).substring(0, 200));
       
       // Try different response structures
       const courses = result.data?.courses || result.courses || result.data || result || [];
-
-      console.log('🔍 [SEARCH] Courses found:', courses.length);
 
       return courses.map((course: any) => ({
         _id: course._id,
@@ -201,13 +201,13 @@ export async function globalSearch(
     }
   };
 
-  // Execute searches in parallel (users and courses only)
-  const [users, courses] = await Promise.all([
+  // Execute searches in parallel (users and posts)
+  const [users, posts] = await Promise.all([
     searchUsers(),
-    searchCourses(),
+    searchPosts(),
   ]);
 
-  return { users, posts: [], courses };
+  return { users, posts };
 }
 
 /**

@@ -64,7 +64,7 @@ export const styles = StyleSheet.create({
   },
   createPostHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: spacing.md,
   },
   profilePic: {
@@ -84,11 +84,6 @@ export const styles = StyleSheet.create({
     fontWeight: fontWeight.semibold,
     color: colors.gray800,
     marginBottom: 2,
-  },
-  userRole: {
-    fontSize: fontSize.xs,
-    color: colors.gray500,
-    textTransform: 'capitalize',
   },
   inputWrapper: {
     flex: 1,

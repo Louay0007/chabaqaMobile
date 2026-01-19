@@ -7,8 +7,8 @@
  * @module notification-api
  */
 
-import { tryEndpoints } from './http';
 import { getAccessToken } from './auth';
+import { tryEndpoints } from './http';
 
 // ============================================================================
 // TypeScript Interfaces
@@ -74,15 +74,31 @@ export interface QuietHours {
  * Notification preferences
  */
 export interface NotificationPreferences {
+  _id?: string;
+  user?: string;
   preferences: Map<string, ChannelPreferences>;
   quietHours: QuietHours;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * Notification preferences API response
+ */
+export interface NotificationPreferencesResponse {
+  _id: string;
+  user: string;
+  preferences: Record<string, ChannelPreferences>;
+  quietHours: QuietHours;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
  * Update notification preferences data
  */
 export interface UpdateNotificationPreferencesData {
-  preferences?: Map<string, ChannelPreferences>;
+  preferences?: Array<[string, ChannelPreferences]>;
   quietHours?: QuietHours;
 }
 
@@ -136,9 +152,17 @@ export async function getNotifications(
     );
 
     if (resp.status >= 200 && resp.status < 300) {
-      // If backend returns array directly
-      const notifications = Array.isArray(resp.data) ? resp.data : resp.data.notifications || [];
+      // Backend retourne data:{} au lieu de data:[] si vide
+      let notificationsData = resp.data.data || resp.data;
+      const notifications = Array.isArray(notificationsData) ? notificationsData : 
+                           (Array.isArray(resp.data.notifications) ? resp.data.notifications : []);
       const unreadCount = notifications.filter((n: Notification) => !n.isRead).length;
+      
+      console.log('✅ [NOTIFICATION-API] Notifications fetched:', {
+        count: notifications.length,
+        unread: unreadCount,
+        total: resp.data.total || notifications.length
+      });
       
       return {
         notifications,
@@ -194,128 +218,31 @@ export async function markNotificationAsRead(notificationId: string): Promise<No
 }
 
 /**
- * Mark all notifications as read
+ * Get unread notification count
  * 
- * @returns Promise with success status
+ * Compte les notifications non lues en récupérant toutes les notifications
+ * 
+ * @returns Promise with unread count
  */
-export async function markAllNotificationsAsRead(): Promise<{ success: boolean; count: number }> {
+export async function getUnreadNotificationCount(): Promise<number> {
   try {
     const token = await getAccessToken();
     if (!token) {
-      throw new Error('Authentication required to mark notifications as read');
+      console.log('⚠️ [NOTIFICATION-API] No token - returning 0 for unread count');
+      return 0;
     }
 
-    console.log('👁️ [NOTIFICATION-API] Marking all notifications as read');
-
-    const resp = await tryEndpoints<any>(
-      `/api/notifications/mark-all-read`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        timeout: 30000,
-      }
-    );
-
-    if (resp.status >= 200 && resp.status < 300) {
-      console.log('✅ [NOTIFICATION-API] All notifications marked as read');
-      return {
-        success: true,
-        count: resp.data.count || 0,
-      };
-    }
-
-    throw new Error(resp.data.message || 'Failed to mark all notifications as read');
+    // Récupère toutes les notifications et compte les non lues
+    const response = await getNotifications(1, 100, false);
+    const count = response.notifications.filter((n) => !n.isRead).length;
+    console.log('✅ [NOTIFICATION-API] Unread count:', count);
+    return count;
   } catch (error: any) {
-    console.error('💥 [NOTIFICATION-API] Error marking all as read:', error);
-    // Don't throw error for this operation, just return failure
-    return { success: false, count: 0 };
+    console.error('💥 [NOTIFICATION-API] Error fetching unread count:', error);
+    return 0;
   }
 }
 
-/**
- * Get user notification preferences
- * 
- * @returns Promise with notification preferences
- */
-export async function getNotificationPreferences(): Promise<NotificationPreferences> {
-  try {
-    const token = await getAccessToken();
-    if (!token) {
-      throw new Error('Authentication required to access notification preferences');
-    }
-
-    console.log('⚙️ [NOTIFICATION-API] Fetching notification preferences');
-
-    const resp = await tryEndpoints<any>(
-      `/api/notifications/preferences`,
-      {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        timeout: 30000,
-      }
-    );
-
-    if (resp.status >= 200 && resp.status < 300) {
-      console.log('✅ [NOTIFICATION-API] Notification preferences fetched');
-      return resp.data;
-    }
-
-    throw new Error(resp.data.message || 'Failed to fetch notification preferences');
-  } catch (error: any) {
-    console.error('💥 [NOTIFICATION-API] Error fetching preferences:', error);
-    throw new Error(error.message || 'Failed to fetch notification preferences');
-  }
-}
-
-/**
- * Update user notification preferences
- * 
- * @param preferences - Updated notification preferences
- * @returns Promise with updated preferences
- */
-export async function updateNotificationPreferences(
-  preferences: UpdateNotificationPreferencesData
-): Promise<NotificationPreferences> {
-  try {
-    const token = await getAccessToken();
-    if (!token) {
-      throw new Error('Authentication required to update notification preferences');
-    }
-
-    console.log('⚙️ [NOTIFICATION-API] Updating notification preferences');
-
-    const resp = await tryEndpoints<any>(
-      `/api/notifications/preferences`,
-      {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        data: preferences,
-        timeout: 30000,
-      }
-    );
-
-    if (resp.status >= 200 && resp.status < 300) {
-      console.log('✅ [NOTIFICATION-API] Notification preferences updated');
-      return resp.data;
-    }
-
-    throw new Error(resp.data.message || 'Failed to update notification preferences');
-  } catch (error: any) {
-    console.error('💥 [NOTIFICATION-API] Error updating preferences:', error);
-    throw new Error(error.message || 'Failed to update notification preferences');
-  }
-}
-
-// ============================================================================
-// Utility Functions
-// ============================================================================
 
 /**
  * Get notification icon based on type
@@ -461,4 +388,143 @@ export function groupNotificationsByDate(notifications: Notification[]): Array<{
  */
 export function getUnreadCount(notifications: Notification[]): number {
   return notifications.filter(notification => !notification.isRead).length;
+}
+
+// ============================================================================
+// Notification Preferences API
+// ============================================================================
+
+/**
+ * Get notification preferences for the authenticated user
+ * 
+ * @returns Promise with notification preferences
+ */
+export async function getNotificationPreferences(): Promise<NotificationPreferences> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      throw new Error('Authentication required to access notification preferences');
+    }
+
+    console.log('⚙️ [NOTIFICATION-API] Fetching notification preferences');
+
+    const resp = await tryEndpoints<any>(
+      `/api/notifications/preferences`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    if (resp.status >= 200 && resp.status < 300) {
+      const data: NotificationPreferencesResponse = resp.data.data || resp.data;
+      
+      // Convert preferences object to Map
+      const preferencesMap = new Map<string, ChannelPreferences>();
+      if (data.preferences) {
+        Object.entries(data.preferences).forEach(([key, value]) => {
+          preferencesMap.set(key, value);
+        });
+      }
+      
+      console.log('✅ [NOTIFICATION-API] Notification preferences fetched');
+      
+      return {
+        _id: data._id,
+        user: data.user,
+        preferences: preferencesMap,
+        quietHours: data.quietHours || {
+          start: '22:00',
+          end: '08:00',
+          isEnabled: false,
+        },
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+      };
+    }
+
+    throw new Error(resp.data.message || 'Failed to fetch notification preferences');
+  } catch (error: any) {
+    console.error('💥 [NOTIFICATION-API] Error fetching notification preferences:', error);
+    throw new Error(error.message || 'Failed to fetch notification preferences');
+  }
+}
+
+/**
+ * Update notification preferences for the authenticated user
+ * 
+ * @param updates - Partial updates to notification preferences
+ * @returns Promise with updated notification preferences
+ */
+export async function updateNotificationPreferences(
+  updates: Partial<UpdateNotificationPreferencesData>
+): Promise<NotificationPreferences> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      throw new Error('Authentication required to update notification preferences');
+    }
+
+    console.log('💾 [NOTIFICATION-API] Updating notification preferences', updates);
+
+    // Prepare request body
+    const body: any = {};
+    
+    if (updates.preferences) {
+      // Convert preferences to array format for backend
+      body.preferences = updates.preferences;
+    }
+    
+    if (updates.quietHours) {
+      body.quietHours = updates.quietHours;
+    }
+
+    const resp = await tryEndpoints<any>(
+      `/api/notifications/preferences`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        data: body,
+        timeout: 30000,
+      }
+    );
+
+    if (resp.status >= 200 && resp.status < 300) {
+      const data: NotificationPreferencesResponse = resp.data.data || resp.data;
+      
+      // Convert preferences object to Map
+      const preferencesMap = new Map<string, ChannelPreferences>();
+      if (data.preferences) {
+        Object.entries(data.preferences).forEach(([key, value]) => {
+          preferencesMap.set(key, value);
+        });
+      }
+      
+      console.log('✅ [NOTIFICATION-API] Notification preferences updated');
+      
+      return {
+        _id: data._id,
+        user: data.user,
+        preferences: preferencesMap,
+        quietHours: data.quietHours || {
+          start: '22:00',
+          end: '08:00',
+          isEnabled: false,
+        },
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+      };
+    }
+
+    throw new Error(resp.data.message || 'Failed to update notification preferences');
+  } catch (error: any) {
+    console.error('💥 [NOTIFICATION-API] Error updating notification preferences:', error);
+    throw new Error(error.message || 'Failed to update notification preferences');
+  }
 }

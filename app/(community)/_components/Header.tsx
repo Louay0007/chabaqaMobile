@@ -1,20 +1,24 @@
-import { colors, fontSize, fontWeight, spacing } from '@/lib/design-tokens';
-import { getCommunityBySlug, getCurrentUser } from '@/lib/mock-data';
-import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
-import { Bell, ChevronLeft, Home, Menu, Search } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import { useNotificationCount } from "@/hooks/use-notification-count";
+import { colors, fontSize, fontWeight, spacing } from "@/lib/design-tokens";
+import { useLocalSearchParams, usePathname, useRouter } from "expo-router";
+import {
+  Bell,
+  ChevronLeft,
+  Home,
+  Menu,
+  Search
+} from "lucide-react-native";
+import React, { useEffect, useState } from "react";
 import {
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import NotificationModal from './modals/NotificationModal';
-import SearchModal from './modals/SearchModal';
-import Sidebar from '../../_components/Sidebar';
-import { useNotificationCount } from '@/hooks/use-notification-count';
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Sidebar from "../../_components/Sidebar";
+import SearchModal from "./modals/SearchModal";
 
 interface CommunityHeaderProps {
   showBack?: boolean;
@@ -22,55 +26,52 @@ interface CommunityHeaderProps {
   communitySlug?: string;
 }
 
-export default function CommunityHeader({ showBack = false, title, communitySlug }: CommunityHeaderProps) {
+export default function CommunityHeader({
+  showBack = false,
+  title,
+  communitySlug,
+}: CommunityHeaderProps) {
   const router = useRouter();
   const params = useLocalSearchParams();
   const pathname = usePathname();
-  const currentUser = getCurrentUser();
   const [communityName, setCommunityName] = useState<string | undefined>(title);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [menuModalVisible, setMenuModalVisible] = useState(false);
-  const [notificationModalVisible, setNotificationModalVisible] = useState(false);
-  
+
   // Hook pour récupérer le nombre de notifications non lues
-  const { unreadCount, refresh: refreshNotifications } = useNotificationCount();
-  
+  const { unreadCount } = useNotificationCount();
+
   // Get community info if slug is provided or available in params
   useEffect(() => {
     const fetchCommunityName = async () => {
-      const slug = communitySlug || params.slug as string;
+      const slug = communitySlug || (params.slug as string);
       if (slug && !title) {
         try {
-          console.log('🏷️ [HEADER] Fetching community name for slug:', slug);
+          console.log("🏷️ [HEADER] Fetching community name for slug:", slug);
           // Importer depuis communities-api pour récupérer du backend
-          const { getCommunityBySlug: getRealCommunity } = require('@/lib/communities-api');
+          const {
+            getCommunityBySlug: getRealCommunity,
+          } = require("@/lib/communities-api");
           const response = await getRealCommunity(slug);
-          
+
           if (response.success && response.data) {
             setCommunityName(response.data.name);
-            console.log('✅ [HEADER] Community name loaded:', response.data.name);
+            console.log(
+              "✅ [HEADER] Community name loaded:",
+              response.data.name,
+            );
           } else {
-            console.warn('⚠️ [HEADER] Community not found, trying mock data');
-            // Fallback to mock data
-            const community = getCommunityBySlug(slug);
-            if (community) {
-              setCommunityName(community.name);
-            }
+            console.warn("⚠️ [HEADER] Community not found");
           }
         } catch (error) {
-          console.error('❌ [HEADER] Error fetching community:', error);
-          // Fallback to mock data
-          const community = getCommunityBySlug(slug);
-          if (community) {
-            setCommunityName(community.name);
-          }
+          console.error("❌ [HEADER] Error fetching community:", error);
         }
       }
     };
-    
+
     fetchCommunityName();
   }, [communitySlug, params.slug, title]);
-  
+
   const handleOpenSearch = () => {
     setSearchModalVisible(true);
   };
@@ -78,63 +79,56 @@ export default function CommunityHeader({ showBack = false, title, communitySlug
   const handleCloseSearch = () => {
     setSearchModalVisible(false);
   };
-  
+
   const handleOpenMenu = () => {
-    console.log('📱 [HEADER] Opening menu/sidebar');
     setMenuModalVisible(true);
   };
-  
+
   const handleCloseMenu = () => {
-    console.log('📱 [HEADER] Closing menu/sidebar');
     setMenuModalVisible(false);
   };
 
   const handleOpenNotifications = () => {
-    setNotificationModalVisible(true);
-  };
-
-  const handleCloseNotifications = () => {
-    setNotificationModalVisible(false);
-    // Rafraîchir le compteur après fermeture des notifications
-    refreshNotifications();
+    // Rediriger vers le module complet des notifications
+    router.push("/(notifications)");
   };
 
   const handleBackToHome = () => {
     const slug = communitySlug || params.slug;
-    
+
     // Si on est dans la section (community), retourner vers la liste des communautés
-    if (pathname.includes('/(community)/')) {
-      console.log('Navigating to communities list from community section');
-      router.replace('/(communities)');
+    if (pathname.includes("/(community)/")) {
+      console.log("Navigating to communities list from community section");
+      router.replace("/(communities)");
     }
     // Si on est sur une page home d'une communauté spécifique ET qu'on a un slug valide
-    else if (pathname.includes('/home') && slug) {
-      console.log('Navigating to communities list from community home');
-      router.replace('/(communities)');
+    else if (pathname.includes("/home") && slug) {
+      console.log("Navigating to communities list from community home");
+      router.replace("/(communities)");
     }
     // Fallback vers la liste des communautés
     else {
-      console.log('Fallback to communities list');
-      router.replace('/(communities)');
+      console.log("Fallback to communities list");
+      router.replace("/(communities)");
     }
   };
 
   return (
-    <SafeAreaView edges={['top']} style={styles.safeArea}>
+    <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <View style={styles.headerContainer}>
         <View style={styles.leftSection}>
           {showBack ? (
-            <TouchableOpacity 
-              onPress={handleBackToHome} 
+            <TouchableOpacity
+              onPress={handleBackToHome}
               style={styles.backButton}
               activeOpacity={0.7}
             >
               <ChevronLeft size={24} color="#333" />
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity 
-              onPress={handleBackToHome} 
+            <TouchableOpacity
+              onPress={handleBackToHome}
               style={styles.iconButton}
               activeOpacity={0.7}
             >
@@ -151,15 +145,24 @@ export default function CommunityHeader({ showBack = false, title, communitySlug
         <View style={styles.spacer} />
 
         <View style={styles.rightSection}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.iconButton}
             activeOpacity={0.7}
             onPress={handleOpenSearch}
           >
             <Search size={22} color="#333" />
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          {/* Temporarily hidden - Message button */}
+          {/* <TouchableOpacity 
+            style={styles.iconButton}
+            activeOpacity={0.7}
+            onPress={() => router.push('/(messages)')}
+          >
+            <MessageSquare size={22} color="#8e78fb" />
+          </TouchableOpacity> */}
+
+          <TouchableOpacity
             style={styles.notificationButton}
             activeOpacity={0.7}
             onPress={handleOpenNotifications}
@@ -168,13 +171,13 @@ export default function CommunityHeader({ showBack = false, title, communitySlug
             {unreadCount > 0 && (
               <View style={styles.notificationBadge}>
                 <Text style={styles.notificationBadgeText}>
-                  {unreadCount > 99 ? '99+' : unreadCount}
+                  {unreadCount > 99 ? "99+" : unreadCount}
                 </Text>
               </View>
             )}
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.menuButton}
             activeOpacity={0.7}
             onPress={handleOpenMenu}
@@ -183,24 +186,12 @@ export default function CommunityHeader({ showBack = false, title, communitySlug
           </TouchableOpacity>
         </View>
       </View>
-      
+
       {/* Modal de recherche */}
-      <SearchModal 
-        visible={searchModalVisible}
-        onClose={handleCloseSearch}
-      />
-      
-      {/* Modal des notifications */}
-      <NotificationModal
-        visible={notificationModalVisible}
-        onClose={handleCloseNotifications}
-      />
-      
+      <SearchModal visible={searchModalVisible} onClose={handleCloseSearch} />
+
       {/* Sidebar */}
-      <Sidebar
-        isVisible={menuModalVisible}
-        onClose={handleCloseMenu}
-      />
+      <Sidebar isVisible={menuModalVisible} onClose={handleCloseMenu} />
     </SafeAreaView>
   );
 }
@@ -213,21 +204,21 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: spacing.lg,
   },
   leftSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   spacer: {
     flex: 1,
   },
   rightSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   backButton: {
     padding: spacing.sm,
@@ -248,18 +239,18 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     marginLeft: spacing.sm,
     borderRadius: 20,
-    position: 'relative',
+    position: "relative",
   },
   notificationBadge: {
-    position: 'absolute',
+    position: "absolute",
     top: 6,
     right: 6,
     backgroundColor: colors.error,
     borderRadius: 8,
     minWidth: 16,
     height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: spacing.xs,
   },
   notificationBadgeText: {
@@ -286,8 +277,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.gray200,
     borderWidth: 2,
     borderColor: colors.gray300,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   menuButton: {
     width: 34,
@@ -295,7 +286,7 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     backgroundColor: colors.gray100,
     marginLeft: spacing.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  }
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

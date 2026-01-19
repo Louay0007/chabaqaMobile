@@ -1,34 +1,28 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import * as ImagePicker from 'expo-image-picker';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   ImageBackground,
-  Platform,
   RefreshControl,
   ScrollView,
-  StatusBar,
   Text,
   TouchableOpacity,
-  View,
-  Alert,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ThemedText } from '@/_components/ThemedText';
-import { ThemedView } from '@/_components/ThemedView';
-import GlobalBottomNavigation from '../_components/GlobalBottomNavigation';
-import { LinearGradient } from 'expo-linear-gradient';
 
 import { useAuth } from '@/hooks/use-auth';
 import { useAdaptiveColors } from '@/hooks/useAdaptiveColors';
-import { enhancedStyles } from './_enhanced-styles';
-import LibrarySection from './_components/LibrarySection';
-import { colors } from '@/lib/design-tokens';
-import Sidebar from '../_components/Sidebar';
+import { formatActivityTime, getActivityColor, getActivityIcon, getProfileData, ProfileData } from '@/lib/profile-api';
 import { communityStyles } from '../(communities)/_styles';
-import { getProfileData, ProfileData, UserActivity, formatActivityTime, getActivityIcon, getActivityColor } from '@/lib/profile-api';
+import Sidebar from '../_components/Sidebar';
+import LibrarySection from './_components/LibrarySection';
+import { enhancedStyles } from './_enhanced-styles';
 
 export default function ProfileScreen() {
   const { user, isAuthenticated } = useAuth();
@@ -534,8 +528,6 @@ export default function ProfileScreen() {
         onClose={() => setSidebarVisible(false)}
       />
 
-      {/* Global Bottom Navigation */}
-      <GlobalBottomNavigation />
     </SafeAreaView>
   );
 }

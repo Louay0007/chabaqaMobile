@@ -1,46 +1,30 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
   Text,
   TouchableOpacity,
-  Alert,
-  ImageBackground,
+  View
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  ArrowLeft, 
-  MoreHorizontal, 
-  Phone, 
-  Video,
-  Info,
-  User,
-  HelpCircle,
-  Users
-} from 'lucide-react-native';
 
 import { ThemedView } from '../../../_components/ThemedView';
 import { useAuth } from '../../../hooks/use-auth';
+import { borderRadius, colors, fontSize, fontWeight, spacing } from '../../../lib/design-tokens';
 import {
-  DMMessage,
   DMConversation,
+  DMMessage,
   getMessages,
-  sendMessage,
-  markConversationRead,
-  getConversationDisplayName,
-  getConversationAvatar,
   isMyMessage,
+  markConversationRead,
+  sendMessage
 } from '../../../lib/dm-api';
-import { colors, spacing, borderRadius, fontSize, fontWeight } from '../../../lib/design-tokens';
+import ChatHeader from '../_components/ChatHeader';
 import MessageBubble from '../_components/MessageBubble';
 import MessageInput from '../_components/MessageInput';
-import ChatHeader from '../_components/ChatHeader';
 
 export default function ConversationScreen() {
   const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
@@ -64,6 +48,12 @@ export default function ConversationScreen() {
   // Load messages from API
   const loadMessages = useCallback(async (isRefresh = false) => {
     if (!conversationId) return;
+    
+    // Don't auto-reload if we already have a permission error (but allow manual refresh)
+    if (error.includes('permission') && !isRefresh) {
+      console.log('⚠️ [CHAT] Skipping auto-reload due to permission error');
+      return;
+    }
 
     try {
       if (isRefresh) {
@@ -76,6 +66,7 @@ export default function ConversationScreen() {
       setError('');
 
       console.log('💬 [CHAT] Loading messages:', { conversationId, page: isRefresh ? 1 : page });
+      console.log('👤 [CHAT] Current user ID:', user?._id);
 
       const response = await getMessages(conversationId as string, isRefresh ? 1 : page, 30);
 
@@ -96,6 +87,13 @@ export default function ConversationScreen() {
       // Set conversation object from API response
       if (response.conversation && !conversation) {
         setConversation(response.conversation);
+        console.log('📝 [CHAT] Conversation loaded:', {
+          id: response.conversation._id,
+          type: response.conversation.type,
+          participantA: response.conversation.participantA,
+          participantB: response.conversation.participantB,
+          communityId: response.conversation.communityId
+        });
       }
       
       // Mark conversation as read when first loading
@@ -107,24 +105,25 @@ export default function ConversationScreen() {
       console.log('✅ [CHAT] Messages loaded:', response.messages.length);
     } catch (err: any) {
       console.error('💥 [CHAT] Error loading messages:', err);
-      setError(err.message || 'Failed to load messages');
+      const errorMessage = err.message || 'Failed to load messages';
+      setError(errorMessage);
       
-      if (page === 1) {
-        Alert.alert(
-          'Error Loading Messages',
-          err.message || 'Failed to load messages. Please try again.',
-          [{ text: 'Retry', onPress: () => loadMessages(true) }, { text: 'Cancel' }]
-        );
+      // Log errors but don't show alerts - the UI will show error state
+      if (errorMessage.includes('permission') || errorMessage.includes('access') || errorMessage.includes('authorized')) {
+        console.error('🚫 [CHAT] Permission denied for conversation:', conversationId);
+        console.error('   This usually means the backend has not granted access to this conversation');
+      } else {
+        console.error('❌ [CHAT] General error:', errorMessage);
       }
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [conversationId, page, conversation]);
+  }, [conversationId, page, conversation, error]);
 
   // Initial load
   useEffect(() => {
-    if (conversationId) {
+    if (conversationId && !error.includes('permission')) {
       loadMessages();
     }
   }, [conversationId]);
@@ -240,6 +239,31 @@ export default function ConversationScreen() {
     );
   };
 
+  // Error state for permission denied
+  if (error && (error.includes('permission') || error.includes('access') || error.includes('authorized')) && messages.length === 0) {
+    return (
+      <ThemedView style={styles.container}>
+        <ChatHeader
+          conversation={conversation}
+          onBack={handleBack}
+          currentUserId={user?._id || ''}
+        />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorIcon}>⚠️</Text>
+          <Text style={styles.errorTitle}>Cannot Access Conversation</Text>
+          <Text style={styles.errorMessage}>
+            This conversation appears in your inbox but the backend is denying access.{'\n\n'}
+            This is a temporary server issue. The conversation was created but permissions weren't configured properly.{'\n\n'}
+            Please try again later or contact support.
+          </Text>
+          <TouchableOpacity style={styles.errorButton} onPress={handleBack}>
+            <Text style={styles.errorButtonText}>Go Back to Messages</Text>
+          </TouchableOpacity>
+        </View>
+      </ThemedView>
+    );
+  }
+
   // Loading state
   if (loading && messages.length === 0) {
     return (
@@ -339,5 +363,42 @@ const styles = {
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     paddingVertical: spacing.md,
+  },
+
+  // Error States
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: spacing.xl,
+  },
+  errorIcon: {
+    fontSize: 64,
+    marginBottom: spacing.lg,
+  },
+  errorTitle: {
+    fontSize: fontSize.xxl,
+    fontWeight: fontWeight.bold as any,
+    color: colors.gray900,
+    marginBottom: spacing.md,
+    textAlign: 'center' as const,
+  },
+  errorMessage: {
+    fontSize: fontSize.base,
+    color: colors.gray600,
+    textAlign: 'center' as const,
+    lineHeight: 24,
+    marginBottom: spacing.xl,
+  },
+  errorButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+  },
+  errorButtonText: {
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.semibold as any,
+    color: colors.white,
   },
 };

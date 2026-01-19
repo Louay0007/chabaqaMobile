@@ -1,27 +1,26 @@
 import { useAuth } from '@/hooks/use-auth';
+import * as ImagePicker from 'expo-image-picker';
 import {
+  Camera,
   ImageIcon,
+  ImagePlus,
   LinkIcon,
   Send,
   Smile,
-  Loader2,
-  Camera,
-  ImagePlus,
   X
 } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Image,
+  Modal,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-  Modal,
-  ScrollView,
-  Alert
+  View
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { styles } from '../styles';
 
 interface CreatePostCardProps {
@@ -40,7 +39,6 @@ export default function CreatePostCard({
   resetImage = false,
 }: CreatePostCardProps) {
   const { user: currentUser, isLoading } = useAuth();
-  const [displayUser, setDisplayUser] = useState<any>(null);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showLinkInput, setShowLinkInput] = useState(false);
@@ -55,14 +53,6 @@ export default function CreatePostCard({
     '🤔', '😍', '🥳', '😎', '🤩', '😇', '🙏', '💖'
   ];
   
-  // Update display user when auth user changes
-  useEffect(() => {
-    if (currentUser && !isLoading) {
-      console.log('👤 [CREATE-POST] User loaded:', currentUser.name);
-      setDisplayUser(currentUser);
-    }
-  }, [currentUser, isLoading]);
-  
   // Reset image when resetImage prop changes
   useEffect(() => {
     if (resetImage) {
@@ -70,15 +60,33 @@ export default function CreatePostCard({
     }
   }, [resetImage]);
   
-  // Generate avatar URL
-  const avatarUrl = displayUser?.profile_picture || 
-    (displayUser?.name 
-      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(displayUser.name)}&background=8e78fb&color=fff`
-      : "https://ui-avatars.com/api/?name=U&background=8e78fb&color=fff");
-  
-  const userName = displayUser?.name || 'User';
-  const userRole = displayUser?.role || 'Member';
-  const firstName = userName.split(' ')[0] || 'there';
+  // Generate avatar URL and user info with useMemo to prevent re-renders
+  const { avatarUrl, userName, firstName } = useMemo(() => {
+    // Ne retourner des valeurs que si currentUser est chargé
+    if (!currentUser || !currentUser.name) {
+      return {
+        avatarUrl: '',
+        userName: '',
+        firstName: ''
+      };
+    }
+    
+    const name = currentUser.name;
+    // Générer l'avatar avec ui-avatars.com (format simplifié)
+    const avatar = currentUser.avatar || 
+      `https://ui-avatars.com/api/?name=${name.replace(/ /g, '+')}&background=8e78fb&color=ffffff&size=128`;
+    
+    return {
+      avatarUrl: avatar,
+      userName: name,
+      firstName: name.split(' ')[0] || 'there'
+    };
+  }, [currentUser]);
+
+  // Ne pas afficher la carte si l'utilisateur n'est pas encore chargé
+  if (!currentUser || isLoading || !userName) {
+    return null;
+  }
 
   // Handle image selection
   const handleTakePhoto = async () => {
@@ -142,12 +150,10 @@ export default function CreatePostCard({
       <View style={styles.createPostHeader}>
         <Image
           source={{ uri: avatarUrl }}
-          style={styles.profilePic}
-          key={avatarUrl}
+          style={[styles.profilePic, { backgroundColor: '#f3f4f6' }]}
         />
         <View style={styles.userInfoSection}>
           <Text style={styles.userName}>{userName}</Text>
-          <Text style={styles.userRole}>{userRole}</Text>
         </View>
       </View>
 

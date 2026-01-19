@@ -1,41 +1,34 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  FlatList,
-  ActivityIndicator,
-  Text,
-  TouchableOpacity,
-  RefreshControl,
-  ImageBackground,
-  Alert,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  MessageCircle, 
-  Plus, 
-  Search, 
-  Filter,
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import {
+  ArrowLeft,
   HelpCircle,
+  MessageCircle,
+  Plus,
   Users
 } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  ImageBackground,
+  RefreshControl,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedView } from '../../_components/ThemedView';
 import { useAuth } from '../../hooks/use-auth';
-import GlobalBottomNavigation from '../_components/GlobalBottomNavigation';
+import { borderRadius, colors, fontSize, fontWeight, spacing } from '../../lib/design-tokens';
 import {
   DMConversation,
   getInbox,
-  startHelpConversation,
-  getConversationDisplayName,
-  getConversationAvatar,
-  getUnreadCount,
-  formatMessageTime,
-  formatMessagePreview,
+  startHelpConversation
 } from '../../lib/dm-api';
-import { colors, spacing, borderRadius, fontSize, fontWeight } from '../../lib/design-tokens';
 import ConversationItem from './_components/ConversationItem';
 import EmptyMessagesState from './_components/EmptyMessagesState';
 import NewConversationModal from './_components/NewConversationModal';
@@ -101,6 +94,17 @@ export default function MessagesScreen() {
 
       setHasMore(response.hasMore);
       console.log('✅ [MESSAGES] Conversations loaded:', response.conversations.length);
+      
+      // Log conversation details for debugging access issues
+      if (response.conversations.length > 0) {
+        console.log('📋 [MESSAGES] Conversation details:');
+        response.conversations.forEach((conv, index) => {
+          console.log(`  ${index + 1}. ID: ${conv._id}, Type: ${conv.type}, Last message: "${conv.lastMessageText || 'No messages yet'}"`);
+          if (conv.type === 'COMMUNITY_DM' && conv.communityId) {
+            console.log(`     Community: ${conv.communityId.name} (${conv.communityId._id})`);
+          }
+        });
+      }
     } catch (err: any) {
       console.error('💥 [MESSAGES] Error loading conversations:', err);
       setError(err.message || 'Failed to load conversations');
@@ -186,12 +190,14 @@ export default function MessagesScreen() {
         >
           <SafeAreaView style={styles.headerContent}>
             <BlurView intensity={20} style={styles.headerBlur}>
-              {/* Title and Actions */}
+              {/* Top Bar with Back and Actions */}
               <View style={styles.headerTop}>
-                <View style={styles.titleContainer}>
-                  <MessageCircle size={28} color={colors.white} />
-                  <Text style={styles.headerTitle}>Messages</Text>
-                </View>
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => router.back()}
+                >
+                  <ArrowLeft size={24} color={colors.white} />
+                </TouchableOpacity>
                 
                 <View style={styles.headerActions}>
                   <TouchableOpacity
@@ -208,6 +214,12 @@ export default function MessagesScreen() {
                     <Plus size={20} color={colors.white} />
                   </TouchableOpacity>
                 </View>
+              </View>
+
+              {/* Title Section */}
+              <View style={styles.titleContainer}>
+                <MessageCircle size={28} color={colors.white} />
+                <Text style={styles.headerTitle}>Messages</Text>
               </View>
 
               {/* Filter Tabs */}
@@ -340,14 +352,17 @@ export default function MessagesScreen() {
       <NewConversationModal
         visible={showNewConversation}
         onClose={() => setShowNewConversation(false)}
-        onConversationStarted={(conversation) => {
+        onConversationStarted={async (conversation) => {
           setShowNewConversation(false);
-          router.push(`/(messages)/${conversation._id}`);
+          // Reload conversations to get the newly created one from backend
+          await loadConversations(true, activeFilter);
+          // Navigate after a short delay to ensure backend sync
+          setTimeout(() => {
+            router.push(`/(messages)/${conversation._id}`);
+          }, 500);
         }}
       />
 
-      {/* Global Bottom Navigation */}
-      <GlobalBottomNavigation />
     </ThemedView>
   );
 }
@@ -381,11 +396,21 @@ const styles = {
     flexDirection: 'row' as const,
     justifyContent: 'space-between' as const,
     alignItems: 'center' as const,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
   },
   titleContainer: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
+    paddingLeft: spacing.xl,
+    marginBottom: spacing.md,
   },
   headerTitle: {
     marginLeft: spacing.md,
@@ -396,6 +421,7 @@ const styles = {
   headerActions: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
+    gap: spacing.sm,
   },
   headerButton: {
     width: 40,
@@ -404,7 +430,6 @@ const styles = {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    marginLeft: spacing.sm,
   },
 
   // Filter Styles
