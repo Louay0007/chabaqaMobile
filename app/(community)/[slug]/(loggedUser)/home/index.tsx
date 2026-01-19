@@ -117,28 +117,30 @@ export default function CommunityDashboard() {
         limit: 10
       });
 
-      // Transform posts for UI
-      const transformedPosts = postsResponse.posts.map((post: any) => ({
-        id: post.id,
-        content: post.content,
-        title: post.title,
-        author: {
-          id: post.author?.id || post.authorId,
-          name: post.author?.name || 'Unknown User',
-          avatar: post.author?.profile_picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author?.name || 'U')}&background=8e78fb&color=fff`,
-          role: post.author?.role || 'member',
-        },
-        createdAt: new Date(post.createdAt),
-        likes: post.likes || 0,
-        comments: post.comments?.length || 0,
-        shares: 0,
-        images: post.thumbnail ? [post.thumbnail] : [],
-        tags: post.tags || [],
-        isLiked: post.isLikedByUser || false,
-        isBookmarked: false, // TODO: Add bookmark status from backend
-        excerpt: post.excerpt,
-        thumbnail: post.thumbnail,
-      }));
+      // Transform posts for UI - use backend URLs directly
+      const transformedPosts = postsResponse.posts.map((post: any) => {
+        return {
+          id: post.id,
+          content: post.content,
+          title: post.title,
+          author: {
+            id: post.author?.id || post.authorId,
+            name: post.author?.name || 'Unknown User',
+            avatar: post.author?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author?.name || 'U')}&background=8B5CF6&color=fff`,
+            role: post.author?.role || 'member',
+          },
+          createdAt: new Date(post.createdAt),
+          likes: post.likes || 0,
+          comments: post.comments?.length || 0,
+          shares: 0,
+          images: post.thumbnail ? [post.thumbnail] : (post.images || []),
+          tags: post.tags || [],
+          isLiked: post.isLikedByUser || false,
+          isBookmarked: false,
+          excerpt: post.excerpt,
+          thumbnail: post.thumbnail,
+        };
+      });
 
       if (pageNum === 1 || isRefresh) {
         setPosts(transformedPosts);
@@ -439,12 +441,13 @@ export default function CommunityDashboard() {
       console.log('🖼️ Selected image:', selectedImage);
 
       // Upload image if selected
-      let thumbnailUrl = undefined;
+      let imageUrls: string[] = [];
       if (selectedImage) {
         console.log('📤 Uploading image...');
         try {
-          thumbnailUrl = await uploadPostImage(selectedImage);
-          console.log('✅ Image uploaded:', thumbnailUrl);
+          const uploadedUrl = await uploadPostImage(selectedImage);
+          console.log('✅ Image uploaded:', uploadedUrl);
+          imageUrls.push(uploadedUrl);
         } catch (uploadError) {
           console.error('❌ Failed to upload image:', uploadError);
           Alert.alert('Warning', 'Failed to upload image. Post will be created without image.');
@@ -456,7 +459,8 @@ export default function CommunityDashboard() {
         content: trimmedContent,
         communityId: community.id,
         tags: [],
-        thumbnail: thumbnailUrl,
+        images: imageUrls, // Send images array
+        thumbnail: imageUrls.length > 0 ? imageUrls[0] : undefined, // Also set thumbnail for backward compatibility
       };
 
       console.log('📝 Post data being sent:', postData);

@@ -60,16 +60,10 @@ export function getImageUrl(url: string | undefined | null, addCacheBuster: bool
   if (baseUrl.includes('/uploads/')) {
     const pathAfterUploads = baseUrl.split('/uploads/')[1];
     result = `${API_BASE_URL}/uploads/${pathAfterUploads}`;
-    console.log('🔗 [IMAGE-UTILS] Forcing upload path to API_BASE_URL:', {
-      input: baseUrl,
-      output: result,
-      apiBase: API_BASE_URL
-    });
   }
   // If it's a relative path starting with uploads/ (no leading slash)
   else if (baseUrl.startsWith('uploads/')) {
     result = `${API_BASE_URL}/${baseUrl}`;
-    console.log('🔗 [IMAGE-UTILS] Relative uploads path transformed:', result);
   }
   // Handle any localhost or local IP URLs
   else if (isLocalUrl && baseUrl.startsWith('http')) {
@@ -80,19 +74,16 @@ export function getImageUrl(url: string | undefined | null, addCacheBuster: bool
       const path = pathParts.slice(1).join('/');
       if (path) {
         result = `${API_BASE_URL}/${path}`;
-        console.log('🔗 [IMAGE-UTILS] Local URL transformed:', { input: baseUrl, output: result });
       }
     }
   }
   // If it's already a full URL (external like ui-avatars, google, etc.) 
   else if (baseUrl.startsWith('http')) {
-    console.log('🔗 [IMAGE-UTILS] External URL unchanged:', baseUrl);
     result = baseUrl;
   }
   // Default: assume it's a relative path if it's not empty
   else if (baseUrl.trim().length > 0) {
     result = `${API_BASE_URL}/${baseUrl.startsWith('/') ? baseUrl.slice(1) : baseUrl}`;
-    console.log('🔗 [IMAGE-UTILS] Default transform (relative):', result);
   }
 
   // Re-add existing query params if any

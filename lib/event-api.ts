@@ -11,105 +11,133 @@ import { tryEndpoints } from './http';
 import { getAccessToken } from './auth';
 
 // ============================================================================
-// TypeScript Interfaces
+// TypeScript Interfaces - Matching Backend DTOs
 // ============================================================================
 
 /**
- * Event creator information
- */
-export interface EventCreator {
-  _id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-}
-
-/**
- * Event session
+ * Event session (matches backend EventSession)
  */
 export interface EventSession {
-  _id: string;
-  title: string;
-  description?: string;
-  speaker?: string;
-  start_time: string;
-  end_time: string;
-  location?: string;
-}
-
-/**
- * Event ticket type
- */
-export interface EventTicket {
-  _id: string;
-  name: string;
-  description?: string;
-  price: number;
-  currency: string;
-  quantity_available: number;
-  quantity_sold: number;
-  is_available: boolean;
-}
-
-/**
- * Event speaker
- */
-export interface EventSpeaker {
-  _id: string;
-  name: string;
-  title?: string;
-  bio?: string;
-  avatar?: string;
-  company?: string;
-}
-
-/**
- * Main event interface
- */
-export interface Event {
-  _id: string;
+  id: string;
   title: string;
   description: string;
-  short_description?: string;
-  thumbnail?: string;
-  cover_image?: string;
-  category?: string;
-  type: 'online' | 'in-person' | 'hybrid';
-  start_date: string;
-  end_date: string;
-  start_time?: string;
-  end_time?: string;
-  location?: string;
-  venue?: string;
-  is_active: boolean;
-  is_published: boolean;
-  created_by: EventCreator;
-  community_id?: {
-    _id: string;
+  startTime: string;
+  endTime: string;
+  speaker: string;
+  notes?: string;
+  isActive: boolean;
+  attendance: number;
+}
+
+/**
+ * Event ticket type (matches backend EventTicket)
+ */
+export interface EventTicket {
+  id: string;
+  type: 'regular' | 'vip' | 'early-bird' | 'student' | 'free';
+  name: string;
+  price: number;
+  description: string;
+  quantity?: number;
+  sold: number;
+}
+
+/**
+ * Event speaker (matches backend EventSpeaker)
+ */
+export interface EventSpeaker {
+  id: string;
+  name: string;
+  title: string;
+  bio: string;
+  photo?: string;
+}
+
+/**
+ * Event attendee (matches backend EventAttendee)
+ */
+export interface EventAttendee {
+  id: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  ticketType: string;
+  registeredAt: string;
+  checkedIn: boolean;
+  checkedInAt?: string;
+}
+
+/**
+ * Main event interface (matches backend EventResponseDto)
+ */
+export interface Event {
+  // MongoDB _id (for compatibility with backend responses)
+  _id?: string;
+  
+  // Custom ID field
+  id: string;
+  
+  // Basic info
+  title: string;
+  description: string;
+  startDate: string;
+  endDate?: string;
+  startTime: string;
+  endTime: string;
+  timezone: string;
+  location: string;
+  onlineUrl?: string;
+  category: string;
+  type: 'In-person' | 'Online' | 'Hybrid';
+  isActive: boolean;
+  isPublished: boolean;
+  notes?: string;
+  image?: string;
+  
+  // Relations (support both formats)
+  communityId?: string;
+  creatorId?: string;
+  community: {
+    id: string;
     name: string;
     slug: string;
   };
-  sessions?: EventSession[];
-  tickets?: EventTicket[];
-  speakers?: EventSpeaker[];
-  attendees_count: number;
-  max_attendees?: number;
-  tags?: string[];
-  created_at: string;
-  updated_at: string;
+  creator: {
+    id: string;
+    name: string;
+    email: string;
+    profile_picture?: string;
+  };
+  
+  // Sub-entities
+  sessions: EventSession[];
+  tickets: EventTicket[];
+  speakers: EventSpeaker[];
+  attendees: EventAttendee[];
+  
+  // Computed
+  totalRevenue: number;
+  totalAttendees: number;
+  averageAttendance: number;
+  tags: string[];
+  
+  // Timestamps
+  publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
- * User event registration
+ * User event registration (matches backend registration structure)
  */
 export interface EventRegistration {
-  _id: string;
-  user_id: string;
-  event_id: string;
-  ticket_id?: string;
-  registered_at: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  qr_code?: string;
+  eventId: string;
+  event: Event;
+  ticketType: string;
+  registeredAt: string;
+  checkedIn: boolean;
 }
 
 /**
@@ -124,15 +152,17 @@ export interface EventListResponse {
 }
 
 /**
- * Event filters for browsing
+ * Event filters for browsing (matches backend filter parameters)
  */
 export interface EventFilters {
   page?: number;
   limit?: number;
   communityId?: string;
+  communitySlug?: string;
   category?: string;
-  type?: 'online' | 'in-person' | 'hybrid';
+  type?: 'In-person' | 'Online' | 'Hybrid';
   isActive?: boolean;
+  isPublished?: boolean;
   search?: string;
 }
 
@@ -157,6 +187,7 @@ export async function getEvents(filters: EventFilters = {}): Promise<EventListRe
     if (filters.category) params.append('category', filters.category);
     if (filters.type) params.append('type', filters.type);
     if (filters.isActive !== undefined) params.append('isActive', filters.isActive.toString());
+    if (filters.isPublished !== undefined) params.append('isPublished', filters.isPublished.toString());
     if (filters.search) params.append('search', filters.search);
 
     const resp = await tryEndpoints<any>(
@@ -178,7 +209,7 @@ export async function getEvents(filters: EventFilters = {}): Promise<EventListRe
       };
     }
 
-    throw new Error(resp.data.message || 'Failed to fetch events');
+    throw new Error(resp.data?.message || 'Failed to fetch events');
   } catch (error: any) {
     console.error('💥 [EVENT-API] Error fetching events:', error);
     throw new Error(error.message || 'Failed to fetch events');
@@ -219,37 +250,47 @@ export async function getEventById(eventId: string): Promise<Event> {
  * Register for an event
  * 
  * @param eventId - Event ID to register for
- * @param ticketId - Optional ticket ID to purchase
- * @returns Promise with registration data
+ * @param ticketType - Ticket type to register with (e.g., 'regular', 'vip', 'early-bird', 'student', 'free')
+ * @param promoCode - Optional promo code for discount
+ * @returns Promise with success message
  */
 export async function registerForEvent(
   eventId: string,
-  ticketId?: string
-): Promise<EventRegistration> {
+  ticketType: string,
+  promoCode?: string
+): Promise<{ success: boolean; message: string }> {
   try {
     const token = await getAccessToken();
     if (!token) {
       throw new Error('Authentication required. Please login to register for events.');
     }
 
-    console.log('📝 [EVENT-API] Registering for event:', eventId);
+    console.log('📝 [EVENT-API] Registering for event:', { eventId, ticketType, promoCode });
+
+    // Build the URL with promo code if provided
+    const url = promoCode 
+      ? `/api/events/${eventId}/register?promoCode=${encodeURIComponent(promoCode)}`
+      : `/api/events/${eventId}/register`;
 
     const resp = await tryEndpoints<any>(
-      `/api/events/${eventId}/register`,
+      url,
       {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        data: ticketId ? { ticket_id: ticketId } : {},
+        data: { ticketType },
         timeout: 30000,
       }
     );
 
     if (resp.status >= 200 && resp.status < 300) {
       console.log('✅ [EVENT-API] Registration successful');
-      return resp.data.registration || resp.data;
+      return {
+        success: resp.data.success || true,
+        message: resp.data.message || 'Successfully registered for event'
+      };
     }
 
     throw new Error(resp.data.message || 'Failed to register for event');
@@ -299,55 +340,45 @@ export async function unregisterFromEvent(eventId: string): Promise<{ success: b
 }
 
 /**
- * Get events by community
+ * Get events by community ID
  * 
  * @param communityId - Community ID
- * @param filters - Additional filters
- * @returns Promise with event list
+ * @param filters - Additional filters (category, type, search, etc.)
+ * @returns Promise with event list response
  */
 export async function getEventsByCommunity(
   communityId: string,
   filters: Omit<EventFilters, 'communityId'> = {}
 ): Promise<EventListResponse> {
-  try {
-    console.log('🎉 [EVENT-API] Fetching events for community:', communityId);
-
-    const params = new URLSearchParams();
-    if (filters.page) params.append('page', filters.page.toString());
-    if (filters.limit) params.append('limit', filters.limit.toString());
-
-    const resp = await tryEndpoints<any>(
-      `/api/events/community/${communityId}?${params.toString()}`,
-      {
-        method: 'GET',
-        timeout: 30000,
-      }
-    );
-
-    if (resp.status >= 200 && resp.status < 300) {
-      console.log('✅ [EVENT-API] Community events fetched:', resp.data.data?.events?.length || 0);
-      return {
-        events: resp.data.data?.events || [],
-        total: resp.data.data?.total || 0,
-        page: resp.data.data?.page || 1,
-        limit: resp.data.data?.limit || 10,
-        totalPages: resp.data.data?.totalPages || 1,
-      };
-    }
-
-    throw new Error(resp.data.message || 'Failed to fetch community events');
-  } catch (error: any) {
-    console.error('💥 [EVENT-API] Error fetching community events:', error);
-    throw new Error(error.message || 'Failed to fetch community events');
-  }
+  return getEvents({
+    ...filters,
+    communityId,
+  });
 }
 
 /**
- * Get user's registered events
+ * Get events by community slug (alternative method)
  * 
- * @returns Promise with list of registered events
+ * @param communitySlug - Community slug (URL-friendly identifier)
+ * @param filters - Additional filters (category, type, search, etc.)
+ * @returns Promise with event list response
  */
-export async function getMyRegisteredEvents(): Promise<Event[]> {
+export async function getEventsByCommunitySlug(
+  communitySlug: string,
+  filters: Omit<EventFilters, 'communitySlug'> = {}
+): Promise<EventListResponse> {
+  return getEvents({
+    ...filters,
+    communitySlug,
+  });
+}
+
+/**
+ * Get user's event registrations
+ * 
+ * @returns Promise with list of events the user is registered for
+ */
+export async function getMyEventRegistrations(): Promise<Event[]> {
   try {
     const token = await getAccessToken();
     if (!token) {
@@ -355,7 +386,7 @@ export async function getMyRegisteredEvents(): Promise<Event[]> {
       return [];
     }
 
-    console.log('🎉 [EVENT-API] Fetching registered events');
+    console.log('📊 [EVENT-API] Fetching my event registrations');
     
     const resp = await tryEndpoints<any>(
       `/api/events/my-registrations`,
@@ -369,21 +400,87 @@ export async function getMyRegisteredEvents(): Promise<Event[]> {
     );
 
     if (resp.status >= 200 && resp.status < 300) {
-      console.log('✅ [EVENT-API] Registered events fetched:', resp.data.events?.length || 0);
+      console.log('✅ [EVENT-API] Event registrations fetched:', resp.data.events?.length || 0);
       return resp.data.events || [];
     }
 
     return [];
   } catch (error: any) {
-    console.error('💥 [EVENT-API] Error fetching registered events:', error);
+    console.error('💥 [EVENT-API] Error fetching event registrations:', error);
     return [];
+  }
+}
+
+/**
+ * Get user's registered events (alias for getMyEventRegistrations)
+ * 
+ * @returns Promise with list of registered events
+ * @deprecated Use getMyEventRegistrations() instead
+ */
+export async function getMyRegisteredEvents(): Promise<Event[]> {
+  return getMyEventRegistrations();
+}
+
+/**
+ * Purchase event with wallet
+ * 
+ * @param eventId - Event ID to purchase
+ * @param amount - Amount to pay (in the event's currency)
+ * @param creatorId - Creator ID (event owner)
+ * @returns Promise with purchase result including new balance
+ */
+export async function purchaseEventWithWallet(
+  eventId: string,
+  amount: number,
+  creatorId: string
+): Promise<{ success: boolean; newBalance: number; message?: string }> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      throw new Error('Authentication required. Please login to purchase events.');
+    }
+
+    console.log('💳 [EVENT-API] Purchasing event with wallet:', { eventId, amount, creatorId });
+
+    const resp = await tryEndpoints<any>(
+      '/api/wallet/purchase',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        data: {
+          contentType: 'event',
+          contentId: eventId,
+          amount,
+          creatorId,
+          description: 'Event registration',
+        },
+        timeout: 30000,
+      }
+    );
+
+    if (resp.status >= 200 && resp.status < 300) {
+      console.log('✅ [EVENT-API] Event purchased successfully');
+      return {
+        success: true,
+        newBalance: resp.data.data?.newBalance || 0,
+        message: resp.data.message || 'Purchase successful',
+      };
+    }
+
+    throw new Error(resp.data?.message || 'Failed to purchase event');
+  } catch (error: any) {
+    console.error('💥 [EVENT-API] Error purchasing event:', error);
+    throw new Error(error.message || 'Failed to purchase event');
   }
 }
 
 /**
  * Check if user is registered for an event
  * 
- * @param eventId - Event ID
+ * @param eventId - Event ID (can be either _id or id field)
  * @returns Promise with boolean registration status
  */
 export async function isRegisteredForEvent(eventId: string): Promise<boolean> {
@@ -393,34 +490,38 @@ export async function isRegisteredForEvent(eventId: string): Promise<boolean> {
       return false;
     }
 
-    const registeredEvents = await getMyRegisteredEvents();
-    return registeredEvents.some(event => event._id === eventId);
+    const registeredEvents = await getMyEventRegistrations();
+    return registeredEvents.some(event => event._id === eventId || event.id === eventId);
   } catch (error) {
     return false;
   }
 }
 
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
 /**
- * Get event status (upcoming, ongoing, past)
+ * Get event status based on current date
  * 
  * @param event - Event object
- * @returns Status string
+ * @returns Status: 'upcoming', 'active', or 'completed'
  */
-export function getEventStatus(event: Event): 'upcoming' | 'ongoing' | 'past' {
+export function getEventStatus(event: Event): 'upcoming' | 'active' | 'completed' {
   const now = new Date();
-  const startDate = new Date(event.start_date);
-  const endDate = new Date(event.end_date);
-
-  if (endDate < now) return 'past';
+  const startDate = new Date(event.startDate);
+  const endDate = new Date(event.endDate || event.startDate);
+  
   if (startDate > now) return 'upcoming';
-  return 'ongoing';
+  if (endDate < now) return 'completed';
+  return 'active';
 }
 
 /**
- * Calculate days until event
+ * Calculate days until event starts
  * 
- * @param startDate - Event start date
- * @returns Number of days until event
+ * @param startDate - Event start date (ISO string)
+ * @returns Number of days until event (0 if event has started or passed)
  */
 export function getDaysUntilEvent(startDate: string): number {
   const now = new Date();
@@ -431,15 +532,15 @@ export function getDaysUntilEvent(startDate: string): number {
 }
 
 /**
- * Format event date range
+ * Format event date range for display
  * 
- * @param startDate - Start date
- * @param endDate - End date
- * @returns Formatted date range string
+ * @param startDate - Event start date (ISO string)
+ * @param endDate - Event end date (ISO string, optional)
+ * @returns Formatted date range string (e.g., "Jan 15, 2024" or "Jan 15 - Jan 17, 2024")
  */
-export function formatEventDateRange(startDate: string, endDate: string): string {
+export function formatEventDateRange(startDate: string, endDate?: string): string {
   const start = new Date(startDate);
-  const end = new Date(endDate);
+  const end = endDate ? new Date(endDate) : start;
   
   const options: Intl.DateTimeFormatOptions = { 
     month: 'short', 
@@ -452,39 +553,145 @@ export function formatEventDateRange(startDate: string, endDate: string): string
     return start.toLocaleDateString('en-US', options);
   }
   
+  // Multi-day event
   return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`;
 }
 
 /**
- * Check if event has available tickets
+ * Get the minimum price from available event tickets
  * 
  * @param event - Event object
- * @returns Boolean indicating ticket availability
+ * @returns Minimum ticket price (0 if all tickets are free or no tickets)
  */
-export function hasAvailableTickets(event: Event): boolean {
-  if (!event.tickets || event.tickets.length === 0) return true;
-  
-  return event.tickets.some(ticket => 
-    ticket.is_available && 
-    ticket.quantity_available > ticket.quantity_sold
-  );
+export function getEventPrice(event: Event): number {
+  if (!event.tickets || event.tickets.length === 0) return 0;
+  const prices = event.tickets.map(t => t.price).filter(p => p > 0);
+  return prices.length > 0 ? Math.min(...prices) : 0;
 }
 
 /**
- * Get cheapest ticket price
+ * Check if event is free (all tickets are free or no tickets)
  * 
  * @param event - Event object
- * @returns Cheapest ticket price or 0 if free
+ * @returns True if event is free, false otherwise
  */
-export function getCheapestTicketPrice(event: Event): number {
-  if (!event.tickets || event.tickets.length === 0) return 0;
+export function isEventFree(event: Event): boolean {
+  return getEventPrice(event) === 0;
+}
+
+/**
+ * Check if user is registered for an event
+ * 
+ * @param event - Event object
+ * @param userId - User ID to check (null if not logged in)
+ * @returns True if user is registered, false otherwise
+ */
+export function isUserRegistered(event: Event, userId: string | null): boolean {
+  if (!userId || !event.attendees) return false;
+  return event.attendees.some(a => a.user.id === userId);
+}
+
+/**
+ * Format event time for display
+ * 
+ * @param startTime - Start time string (e.g., "14:00")
+ * @param endTime - End time string (e.g., "16:00")
+ * @returns Formatted time range (e.g., "2:00 PM - 4:00 PM")
+ */
+export function formatEventTime(startTime: string, endTime: string): string {
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+  };
   
-  const availableTickets = event.tickets.filter(ticket => 
-    ticket.is_available && 
-    ticket.quantity_available > ticket.quantity_sold
-  );
+  return `${formatTime(startTime)} - ${formatTime(endTime)}`;
+}
+
+/**
+ * Get event duration in hours
+ * 
+ * @param startTime - Start time string (e.g., "14:00")
+ * @param endTime - End time string (e.g., "16:00")
+ * @returns Duration in hours
+ */
+export function getEventDuration(startTime: string, endTime: string): number {
+  const [startHours, startMinutes] = startTime.split(':').map(Number);
+  const [endHours, endMinutes] = endTime.split(':').map(Number);
   
-  if (availableTickets.length === 0) return 0;
+  const startTotalMinutes = startHours * 60 + startMinutes;
+  const endTotalMinutes = endHours * 60 + endMinutes;
   
-  return Math.min(...availableTickets.map(ticket => ticket.price));
+  return (endTotalMinutes - startTotalMinutes) / 60;
+}
+
+/**
+ * Get available spots remaining for an event
+ * 
+ * @param event - Event object
+ * @returns Number of available spots (null if unlimited)
+ */
+export function getAvailableSpots(event: Event): number | null {
+  if (!event.tickets || event.tickets.length === 0) return null;
+  
+  const totalCapacity = event.tickets.reduce((sum, ticket) => {
+    return sum + (ticket.quantity || 0);
+  }, 0);
+  
+  const totalSold = event.tickets.reduce((sum, ticket) => {
+    return sum + ticket.sold;
+  }, 0);
+  
+  if (totalCapacity === 0) return null; // Unlimited
+  return Math.max(0, totalCapacity - totalSold);
+}
+
+/**
+ * Check if event is sold out
+ * 
+ * @param event - Event object
+ * @returns True if event is sold out, false otherwise
+ */
+export function isEventSoldOut(event: Event): boolean {
+  const availableSpots = getAvailableSpots(event);
+  return availableSpots !== null && availableSpots === 0;
+}
+
+/**
+ * Get event type icon name (for UI display)
+ * 
+ * @param type - Event type
+ * @returns Icon name string
+ */
+export function getEventTypeIcon(type: 'In-person' | 'Online' | 'Hybrid'): string {
+  switch (type) {
+    case 'In-person':
+      return 'map-pin';
+    case 'Online':
+      return 'video';
+    case 'Hybrid':
+      return 'globe';
+    default:
+      return 'calendar';
+  }
+}
+
+/**
+ * Get event status badge color
+ * 
+ * @param status - Event status
+ * @returns Color string for badge
+ */
+export function getEventStatusColor(status: 'upcoming' | 'active' | 'completed'): string {
+  switch (status) {
+    case 'upcoming':
+      return '#3b82f6'; // Blue
+    case 'active':
+      return '#10b981'; // Green
+    case 'completed':
+      return '#6b7280'; // Gray
+    default:
+      return '#6b7280';
+  }
 }

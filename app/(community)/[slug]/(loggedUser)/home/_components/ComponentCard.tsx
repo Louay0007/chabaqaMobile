@@ -1,4 +1,5 @@
 import { useAuth } from '@/hooks/use-auth';
+import { getImageUrl } from '@/lib/image-utils';
 import {
   ImageIcon,
   LinkIcon,
@@ -7,7 +8,9 @@ import {
   Loader2,
   Camera,
   ImagePlus,
-  X
+  X,
+  FileText,
+  AlertCircle
 } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
@@ -19,7 +22,8 @@ import {
   View,
   Modal,
   ScrollView,
-  Alert
+  Alert,
+  Dimensions
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { styles } from '../styles';
@@ -31,6 +35,9 @@ interface CreatePostCardProps {
   creatingPost?: boolean;
   resetImage?: boolean;
 }
+
+const MAX_CHARS = 10000;
+const MIN_CHARS = 2;
 
 export default function CreatePostCard({
   newPost,
@@ -46,6 +53,8 @@ export default function CreatePostCard({
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   
   // Common emojis
   const emojis = [
@@ -71,14 +80,21 @@ export default function CreatePostCard({
   }, [resetImage]);
   
   // Generate avatar URL
-  const avatarUrl = displayUser?.profile_picture || 
-    (displayUser?.name 
-      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(displayUser.name)}&background=8e78fb&color=fff`
-      : "https://ui-avatars.com/api/?name=U&background=8e78fb&color=fff");
+  const avatarUrl = displayUser?.profile_picture 
+    ? getImageUrl(displayUser.profile_picture)
+    : (displayUser?.name 
+      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(displayUser.name)}&background=8B5CF6&color=fff`
+      : "https://ui-avatars.com/api/?name=U&background=8B5CF6&color=fff");
   
   const userName = displayUser?.name || 'User';
   const userRole = displayUser?.role || 'Member';
   const firstName = userName.split(' ')[0] || 'there';
+
+  // Character count
+  const charCount = newPost.length;
+  const isOverLimit = charCount > MAX_CHARS;
+  const isUnderMin = charCount < MIN_CHARS && charCount > 0;
+  const canPost = charCount >= MIN_CHARS && charCount <= MAX_CHARS && !creatingPost;
 
   // Handle image selection
   const handleTakePhoto = async () => {
@@ -88,16 +104,19 @@ export default function CreatePostCard({
       return;
     }
 
+    setUploadingImage(true);
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false, // Keep original size
-      quality: 1.0, // Maximum quality (100%)
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
     });
 
     if (!result.canceled) {
       setSelectedImage(result.assets[0].uri);
       setShowImagePicker(false);
     }
+    setUploadingImage(false);
   };
 
   const handleChooseFromLibrary = async () => {
@@ -107,16 +126,19 @@ export default function CreatePostCard({
       return;
     }
 
+    setUploadingImage(true);
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false, // Keep original size
-      quality: 1.0, // Maximum quality (100%)
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
     });
 
     if (!result.canceled) {
       setSelectedImage(result.assets[0].uri);
       setShowImagePicker(false);
     }
+    setUploadingImage(false);
   };
 
   const handleRemoveImage = () => {
@@ -137,7 +159,7 @@ export default function CreatePostCard({
   };
 
   return (
-    <View style={styles.createPostCard}>
+    <View style={[styles.createPostCard, isFocused && styles.createPostCardFocused]}>
       {/* User Profile Section */}
       <View style={styles.createPostHeader}>
         <Image
@@ -158,22 +180,58 @@ export default function CreatePostCard({
           placeholder={`What's on your mind, ${firstName}?`}
           value={newPost}
           onChangeText={setNewPost}
-          style={styles.inputContainer}
+          style={[
+            styles.inputContainer,
+            isFocused && styles.inputContainerFocused,
+            isOverLimit && styles.inputContainerError
+          ]}
           placeholderTextColor="#9ca3af"
           editable={!creatingPost}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          maxLength={MAX_CHARS + 100} // Allow typing a bit over to show error
         />
+        
+        {/* Character Counter */}
+        {charCount > 0 && (
+          <View style={styles.charCounterContainer}>
+            <Text style={[
+              styles.charCounter,
+              isOverLimit && styles.charCounterError,
+              isUnderMin && styles.charCounterWarning
+            ]}>
+              {charCount} / {MAX_CHARS}
+            </Text>
+            {isUnderMin && (
+              <View style={styles.warningBadge}>
+                <AlertCircle size={12} color="#F59E0B" />
+                <Text style={styles.warningText}>Min {MIN_CHARS} characters</Text>
+              </View>
+            )}
+            {isOverLimit && (
+              <View style={styles.errorBadge}>
+                <AlertCircle size={12} color="#EF4444" />
+                <Text style={styles.errorText}>Character limit exceeded</Text>
+              </View>
+            )}
+          </View>
+        )}
       </View>
 
       {/* Selected Image Preview */}
       {selectedImage && (
-        <View style={styles.imagePreview}>
-          <Image source={{ uri: selectedImage }} style={styles.previewImage} />
-          <TouchableOpacity 
-            style={styles.removeImageButton}
-            onPress={handleRemoveImage}
-          >
-            <X size={16} color="white" />
-          </TouchableOpacity>
+        <View style={styles.imagePreviewContainer}>
+          <View style={styles.imagePreview}>
+            <Image source={{ uri: selectedImage }} style={styles.previewImage} />
+            {!creatingPost && (
+              <TouchableOpacity 
+                style={styles.removeImageButton}
+                onPress={handleRemoveImage}
+              >
+                <X size={18} color="white" />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       )}
 
@@ -181,11 +239,15 @@ export default function CreatePostCard({
       <View style={styles.actionsRow}>
         <View style={styles.actionButtonsContainer}>
           <TouchableOpacity
-            style={styles.actionButton}
-            disabled={creatingPost}
+            style={[styles.actionButton, selectedImage && styles.actionButtonActive]}
+            disabled={creatingPost || uploadingImage}
             onPress={() => setShowImagePicker(true)}
           >
-            <ImageIcon size={20} color="#6b7280" />
+            {uploadingImage ? (
+              <ActivityIndicator size="small" color="#8B5CF6" />
+            ) : (
+              <ImageIcon size={22} color={selectedImage ? "#8B5CF6" : "#6b7280"} />
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -193,7 +255,7 @@ export default function CreatePostCard({
             disabled={creatingPost}
             onPress={() => setShowLinkInput(true)}
           >
-            <LinkIcon size={20} color="#6b7280" />
+            <LinkIcon size={22} color="#6b7280" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -201,7 +263,7 @@ export default function CreatePostCard({
             disabled={creatingPost}
             onPress={() => setShowEmojiPicker(true)}
           >
-            <Smile size={20} color="#6b7280" />
+            <Smile size={22} color="#6b7280" />
           </TouchableOpacity>
         </View>
 
@@ -209,19 +271,19 @@ export default function CreatePostCard({
         <TouchableOpacity
           style={[
             styles.postButton,
-            (!newPost.trim() || creatingPost) && styles.postButtonDisabled,
+            !canPost && styles.postButtonDisabled,
           ]}
           onPress={() => onCreatePost(selectedImage)}
-          disabled={!newPost.trim() || creatingPost}
+          disabled={!canPost}
         >
           {creatingPost ? (
             <>
-              <ActivityIndicator size="small" color="white" style={{ marginRight: 6 }} />
+              <ActivityIndicator size="small" color="white" style={{ marginRight: 8 }} />
               <Text style={styles.postButtonText}>Posting...</Text>
             </>
           ) : (
             <>
-              <Send size={16} color="white" style={{ marginRight: 6 }} />
+              <Send size={18} color="white" style={{ marginRight: 8 }} />
               <Text style={styles.postButtonText}>Post</Text>
             </>
           )}
@@ -243,20 +305,39 @@ export default function CreatePostCard({
           <View style={styles.bottomModalContent}>
             <View style={styles.modalHandle} />
             
+            <Text style={styles.modalTitle}>Add Photo</Text>
+            
             <TouchableOpacity 
               style={styles.bottomOptionButton}
               onPress={handleTakePhoto}
             >
-              <Camera size={24} color="#374151" />
-              <Text style={styles.bottomOptionText}>Take a photo</Text>
+              <View style={styles.optionIconContainer}>
+                <Camera size={24} color="#8B5CF6" />
+              </View>
+              <View style={styles.optionTextContainer}>
+                <Text style={styles.bottomOptionText}>Take a photo</Text>
+                <Text style={styles.bottomOptionSubtext}>Use your camera</Text>
+              </View>
             </TouchableOpacity>
             
             <TouchableOpacity 
               style={styles.bottomOptionButton}
               onPress={handleChooseFromLibrary}
             >
-              <ImagePlus size={24} color="#374151" />
-              <Text style={styles.bottomOptionText}>Choose from library</Text>
+              <View style={styles.optionIconContainer}>
+                <ImagePlus size={24} color="#8B5CF6" />
+              </View>
+              <View style={styles.optionTextContainer}>
+                <Text style={styles.bottomOptionText}>Choose from library</Text>
+                <Text style={styles.bottomOptionSubtext}>Select from your photos</Text>
+              </View>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.cancelButton}
+              onPress={() => setShowImagePicker(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -331,8 +412,9 @@ export default function CreatePostCard({
             />
             
             <TouchableOpacity
-              style={styles.addButton}
+              style={[styles.addButton, !linkUrl.trim() && styles.addButtonDisabled]}
               onPress={handleAddLink}
+              disabled={!linkUrl.trim()}
             >
               <Text style={styles.addButtonText}>Add Link</Text>
             </TouchableOpacity>

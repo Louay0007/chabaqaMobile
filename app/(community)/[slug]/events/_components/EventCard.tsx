@@ -1,8 +1,11 @@
 import { ThemedText } from '@/_components/ThemedText';
 import { Event } from '@/lib/mock-data';
+import { registerForEvent } from '@/lib/event-api';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { X } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, ActivityIndicator } from 'react-native';
 
 interface EventCardProps {
   event: Event;
@@ -28,6 +31,10 @@ export default function EventCard({
   handleRegister
 }: EventCardProps) {
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [registering, setRegistering] = useState(false);
+  const { user } = useAuth();
+  const router = useRouter();
+  const { slug } = useLocalSearchParams<{ slug: string }>();
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { 
@@ -45,10 +52,46 @@ export default function EventCard({
     setShowRegistrationModal(true);
   };
 
-  const handleConfirmRegistration = () => {
-    console.log('Registration confirmed');
-    handleRegister();
-    setShowRegistrationModal(false);
+  const handleConfirmRegistration = async () => {
+    if (!user) {
+      Alert.alert('Authentication Required', 'Please login to register for events');
+      setShowRegistrationModal(false);
+      return;
+    }
+
+    if (!selectedTicket) {
+      Alert.alert('Select Ticket', 'Please select a ticket type');
+      return;
+    }
+
+    try {
+      setRegistering(true);
+      console.log('📝 [EVENT-CARD] Registering for event:', { 
+        eventId: event.id, 
+        ticketType: selectedTicket 
+      });
+
+      await registerForEvent(event.id, selectedTicket);
+      
+      Alert.alert('Success!', 'You have successfully registered for this event', [
+        { 
+          text: 'OK', 
+          onPress: () => {
+            setShowRegistrationModal(false);
+            handleRegister(); // Refresh the events list
+          }
+        }
+      ]);
+    } catch (error: any) {
+      console.error('❌ [EVENT-CARD] Registration error:', error);
+      Alert.alert('Registration Failed', error.message || 'Failed to register for event');
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const handleViewDetails = () => {
+    router.push(`/(community)/${slug}/events/${event.id}`);
   };
 
   const selectedTicketData = event.tickets.find(t => t.id === selectedTicket);
@@ -56,20 +99,24 @@ export default function EventCard({
 
   return (
     <View style={styles.card}>
-      <Image source={{ uri: event.image }} style={styles.image} />
+      <TouchableOpacity onPress={handleViewDetails} activeOpacity={0.9}>
+        <Image source={{ uri: event.image }} style={styles.image} />
+      </TouchableOpacity>
       
       <View style={styles.content}>
-        <View style={styles.header}>
-          <View style={styles.titleContainer}>
-            <ThemedText style={styles.title}>{event.title}</ThemedText>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{event.type}</Text>
+        <TouchableOpacity onPress={handleViewDetails} activeOpacity={0.9}>
+          <View style={styles.header}>
+            <View style={styles.titleContainer}>
+              <ThemedText style={styles.title}>{event.title}</ThemedText>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{event.type}</Text>
+              </View>
             </View>
+            <ThemedText style={styles.description} numberOfLines={2}>
+              {event.description}
+            </ThemedText>
           </View>
-          <ThemedText style={styles.description} numberOfLines={2}>
-            {event.description}
-          </ThemedText>
-        </View>
+        </TouchableOpacity>
 
         <View style={styles.details}>
           <View style={styles.detailRow}>
@@ -100,7 +147,7 @@ export default function EventCard({
         <View style={styles.footer}>
           <View style={styles.priceContainer}>
             <ThemedText style={styles.priceLabel}>From</ThemedText>
-            <ThemedText style={styles.price}>${minPrice}</ThemedText>
+            <ThemedText style={styles.price}>{minPrice === 0 ? 'Free' : `${minPrice} TND`}</ThemedText>
           </View>
           
           <TouchableOpacity style={styles.registerButton} onPress={handleRegisterPress}>
@@ -143,49 +190,24 @@ export default function EventCard({
                     key={ticket.id}
                     style={[
                       styles.ticketOption,
-                      selectedTicket === ticket.id && styles.selectedTicketOption
+                      selectedTicket === ticket.type && styles.selectedTicketOption
                     ]}
-                    onPress={() => setSelectedTicket(ticket.id)}
+                    onPress={() => setSelectedTicket(ticket.type)}
                   >
                     <View style={styles.ticketInfo}>
                       <ThemedText style={styles.ticketName}>{ticket.name}</ThemedText>
                       <ThemedText style={styles.ticketDescription}>{ticket.description}</ThemedText>
+                      {ticket.quantity && (
+                        <ThemedText style={styles.ticketAvailability}>
+                          {ticket.quantity - ticket.sold} / {ticket.quantity} available
+                        </ThemedText>
+                      )}
                     </View>
-                    <ThemedText style={styles.ticketPrice}>${ticket.price}</ThemedText>
+                    <ThemedText style={styles.ticketPrice}>
+                      {ticket.price === 0 ? 'Free' : `${ticket.price} TND`}
+                    </ThemedText>
                   </TouchableOpacity>
                 ))}
-
-                <View style={styles.quantitySection}>
-                  <ThemedText style={styles.sectionTitle}>Quantity</ThemedText>
-                  <View style={styles.quantityControls}>
-                    <TouchableOpacity
-                      style={styles.quantityButton}
-                      onPress={() => setQuantity(Math.max(1, quantity - 1))}
-                    >
-                      <Text style={styles.quantityButtonText}>-</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.quantityValue}>{quantity}</Text>
-                    <TouchableOpacity
-                      style={styles.quantityButton}
-                      onPress={() => setQuantity(quantity + 1)}
-                    >
-                      <Text style={styles.quantityButtonText}>+</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                <View style={styles.notesSection}>
-                  <ThemedText style={styles.sectionTitle}>Notes (Optional)</ThemedText>
-                  <TextInput
-                    style={styles.notesInput}
-                    placeholder="Any special requests or info?"
-                    placeholderTextColor="#9ca3af"
-                    value={notes}
-                    onChangeText={setNotes}
-                    multiline
-                    numberOfLines={3}
-                  />
-                </View>
 
                 {selectedTicket && (
                   <View style={styles.summary}>
@@ -193,13 +215,11 @@ export default function EventCard({
                       <ThemedText style={styles.summaryLabel}>Ticket:</ThemedText>
                       <ThemedText style={styles.summaryValue}>{selectedTicketData?.name}</ThemedText>
                     </View>
-                    <View style={styles.summaryRow}>
-                      <ThemedText style={styles.summaryLabel}>Quantity:</ThemedText>
-                      <ThemedText style={styles.summaryValue}>{quantity}</ThemedText>
-                    </View>
                     <View style={[styles.summaryRow, styles.totalRow]}>
                       <ThemedText style={styles.summaryTotal}>Total:</ThemedText>
-                      <ThemedText style={styles.summaryTotal}>${totalAmount}</ThemedText>
+                      <ThemedText style={styles.summaryTotal}>
+                        {selectedTicketData?.price === 0 ? 'Free' : `${selectedTicketData?.price} TND`}
+                      </ThemedText>
                     </View>
                   </View>
                 )}
@@ -211,6 +231,7 @@ export default function EventCard({
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={() => setShowRegistrationModal(false)}
+              disabled={registering}
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
@@ -218,12 +239,16 @@ export default function EventCard({
             <TouchableOpacity
               style={[
                 styles.confirmButton,
-                !selectedTicket && styles.disabledButton
+                (!selectedTicket || registering) && styles.disabledButton
               ]}
               onPress={handleConfirmRegistration}
-              disabled={!selectedTicket}
+              disabled={!selectedTicket || registering}
             >
-              <Text style={styles.confirmButtonText}>Confirm Registration</Text>
+              {registering ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.confirmButtonText}>Confirm Registration</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>

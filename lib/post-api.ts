@@ -21,7 +21,9 @@ export interface PostAuthor {
   id: string;
   name: string;
   email: string;
+  avatar?: string;
   profile_picture?: string;
+  role?: 'creator' | 'admin' | 'member';
 }
 
 /**
@@ -47,7 +49,7 @@ export interface PostCommunity {
 }
 
 /**
- * Main post interface (aligned with backend DTOs)
+ * Main post interface (aligned with backend DTOs - basics + media)
  */
 export interface Post {
   id: string;
@@ -64,6 +66,14 @@ export interface Post {
   isLikedByUser: boolean;
   comments: PostComment[];
   tags: string[];
+  images?: string[];
+  videos?: string[];
+  links?: Array<{
+    url: string;
+    title?: string;
+    description?: string;
+    thumbnail?: string;
+  }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -103,6 +113,14 @@ export interface CreatePostData {
   thumbnail?: string;
   communityId: string;
   tags?: string[];
+  images?: string[];
+  videos?: string[];
+  links?: Array<{
+    url: string;
+    title?: string;
+    description?: string;
+    thumbnail?: string;
+  }>;
 }
 
 /**
@@ -114,10 +132,18 @@ export interface UpdatePostData {
   excerpt?: string;
   thumbnail?: string;
   tags?: string[];
+  images?: string[];
+  videos?: string[];
+  links?: Array<{
+    url: string;
+    title?: string;
+    description?: string;
+    thumbnail?: string;
+  }>;
 }
 
 /**
- * Post statistics (aligned with backend DTO)
+ * Post statistics (aligned with backend DTO - basics only)
  */
 export interface PostStats {
   postId: string;
@@ -211,19 +237,23 @@ export async function getPostById(postId: string): Promise<Post> {
  * 
  * @param communityId - Community ID
  * @param filters - Additional filters
+ * @param userId - Optional user ID to check if posts are liked
  * @returns Promise with post list
  */
 export async function getPostsByCommunity(
   communityId: string,
-  filters: Omit<PostFilters, 'communityId'> = {}
+  filters: Omit<PostFilters, 'communityId'> = {},
+  userId?: string
 ): Promise<PostListResponse> {
   try {
     console.log('📝 [POST-API] Fetching posts for community:', communityId);
     console.log('🔗 [POST-API] Request filters:', filters);
+    console.log('👤 [POST-API] User ID for like check:', userId);
 
     const params = new URLSearchParams();
     if (filters.page) params.append('page', filters.page.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());
+    if (userId) params.append('userId', userId);
 
     const url = `/api/posts/community/${communityId}?${params.toString()}`;
     console.log('🔗 [POST-API] Request URL:', url);
@@ -341,14 +371,31 @@ export async function uploadPostImage(imageUri: string): Promise<string> {
 
     // Create form data
     const formData = new FormData();
-    formData.append('file', {
-      uri: imageUri,
-      type: 'image/jpeg',
-      name: 'post-image.jpg',
-    } as any);
+    
+    // Check if running on web
+    const isWeb = typeof window !== 'undefined' && typeof document !== 'undefined';
+    
+    if (isWeb) {
+      // For web: Convert data URI to Blob
+      console.log('🌐 [POST-API] Web platform detected, converting to Blob');
+      
+      // Fetch the image as blob
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      
+      // Append as file with proper name
+      formData.append('file', blob, 'post-image.jpg');
+    } else {
+      // For mobile: Use the standard approach
+      formData.append('file', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: 'post-image.jpg',
+      } as any);
+    }
 
     // Use native fetch instead of tryEndpoints for FormData
-    const response = await fetch(uploadUrl, {
+    const uploadResponse = await fetch(uploadUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -357,13 +404,13 @@ export async function uploadPostImage(imageUri: string): Promise<string> {
       body: formData,
     });
 
-    const data = await response.json();
+    const data = await uploadResponse.json();
     
-    console.log('📤 [POST-API] Upload response status:', response.status);
+    console.log('📤 [POST-API] Upload response status:', uploadResponse.status);
     console.log('📤 [POST-API] Upload response data:', data);
 
-    if (response.ok && data.success !== false) {
-      let imageUrl = data.file?.url || data.url || '';
+    if (uploadResponse.ok && data.success !== false) {
+      let imageUrl = data.file?.url || data.url || data.filename || '';
       
       // Replace localhost with actual API URL for mobile compatibility
       if (imageUrl.includes('localhost')) {
@@ -375,7 +422,7 @@ export async function uploadPostImage(imageUri: string): Promise<string> {
       return imageUrl;
     }
 
-    throw new Error(data.message || 'Failed to upload image');
+    throw new Error(data.message || data.error?.message || 'Failed to upload image');
   } catch (error: any) {
     console.error('💥 [POST-API] Error uploading image:', error);
     throw new Error(error.message || 'Failed to upload image');
@@ -583,6 +630,36 @@ export async function unlikePost(postId: string): Promise<PostStats> {
   } catch (error: any) {
     console.error('💥 [POST-API] Error unliking post:', error);
     throw new Error(error.message || 'Failed to unlike post');
+  }
+}
+
+/**
+ * Get comments for a post
+ * 
+ * @param postId - Post ID
+ * @returns Promise with list of comments
+ */
+export async function getComments(postId: string): Promise<PostComment[]> {
+  try {
+    console.log('💬 [POST-API] Fetching comments for post:', postId);
+
+    const resp = await tryEndpoints<any>(
+      `/api/posts/${postId}/comments`,
+      {
+        method: 'GET',
+        timeout: 30000,
+      }
+    );
+
+    if (resp.status >= 200 && resp.status < 300) {
+      console.log('✅ [POST-API] Comments fetched:', resp.data.data?.length || 0);
+      return resp.data.data || [];
+    }
+
+    throw new Error(resp.data.message || 'Failed to fetch comments');
+  } catch (error: any) {
+    console.error('💥 [POST-API] Error fetching comments:', error);
+    throw new Error(error.message || 'Failed to fetch comments');
   }
 }
 
@@ -909,13 +986,18 @@ export function convertPostForUI(apiPost: any): Post {
       id: apiPost.author?.id || apiPost.authorId,
       name: apiPost.author?.name || 'Unknown Author',
       email: apiPost.author?.email || '',
-      profile_picture: apiPost.author?.profile_picture,
+      avatar: apiPost.author?.avatar || apiPost.author?.profile_picture,
+      profile_picture: apiPost.author?.profile_picture || apiPost.author?.avatar,
+      role: apiPost.author?.role || 'member',
     },
     isPublished: apiPost.isPublished ?? true,
     likes: apiPost.likes || 0,
     isLikedByUser: apiPost.isLikedByUser || false,
     comments: apiPost.comments || [],
     tags: apiPost.tags || [],
+    images: apiPost.images || [],
+    videos: apiPost.videos || [],
+    links: apiPost.links || [],
     createdAt: apiPost.createdAt,
     updatedAt: apiPost.updatedAt,
   };

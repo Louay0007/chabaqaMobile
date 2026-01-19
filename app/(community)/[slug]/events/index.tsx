@@ -4,9 +4,9 @@ import { ActivityIndicator } from 'react-native';
 import CommunityHeader from '../../_components/Header';
 import { ThemedView } from '../../../../_components/ThemedView';
 import { ThemedText } from '../../../../_components/ThemedText';
-import { availableEvents as mockEvents, myTickets as mockTickets } from '../../../../lib/mock-data';
 import { getCommunityBySlug } from '../../../../lib/communities-api';
-import { getEventsByCommunity, getMyRegisteredEvents, Event as BackendEvent } from '../../../../lib/event-api';
+import { getEventsByCommunity, getMyEventRegistrations, Event as BackendEvent } from '../../../../lib/event-api';
+import { getImageUrl } from '../../../../lib/image-utils';
 import BottomNavigation from '../../_components/BottomNavigation';
 import EventsPageContent from './_components/EventsPageContent';
 import { styles } from './styles';
@@ -48,7 +48,8 @@ export default function EventsPage() {
       const eventsResponse = await getEventsByCommunity(communityData.id, {
         page: 1,
         limit: 50,
-        isActive: true
+        isActive: true,
+        isPublished: true
       });
 
       console.log('📦 [EVENTS] Response:', {
@@ -61,34 +62,48 @@ export default function EventsPage() {
       // Transform backend events to match frontend interface
       console.log('🔄 [EVENTS] Transforming', eventsResponse.events.length, 'events');
       const transformedEvents = (eventsResponse.events || []).map((event: BackendEvent) => {
-        console.log('   → Event:', event.title);
+        console.log('   → Event:', event.title, '| Image:', event.image);
+        
+        // Process image URL using image-utils
+        const processedImage = getImageUrl(event.image) || 'https://via.placeholder.com/400x300?text=Event';
+        console.log('   → Processed Image:', processedImage);
+
         return {
-          id: event._id,
+          id: event._id || event.id,
           title: event.title,
           description: event.description,
-          shortDescription: event.short_description || event.description,
-          image: event.thumbnail || event.cover_image || 'https://via.placeholder.com/400x300',
+          shortDescription: event.description.substring(0, 100) + '...',
+          image: processedImage,
           communityId: communityData.id,
-          creatorId: event.created_by?._id || event.created_by,
-          creator: event.created_by,
-          startDate: new Date(event.start_date),
-          endDate: event.end_date ? new Date(event.end_date) : undefined,
-          startTime: event.start_time,
-          endTime: event.end_time,
+          creatorId: event.creator?.id || event.creatorId,
+          creator: {
+            id: event.creator?.id || event.creatorId || '',
+            name: event.creator?.name || 'Unknown',
+            email: event.creator?.email || '',
+            avatar: getImageUrl(event.creator?.profile_picture) || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(event.creator?.name || 'U')
+          },
+          startDate: new Date(event.startDate),
+          endDate: event.endDate ? new Date(event.endDate) : undefined,
+          startTime: event.startTime,
+          endTime: event.endTime,
           location: event.location,
+          onlineUrl: event.onlineUrl,
           type: event.type,
-          isActive: event.is_active,
-          isPublished: event.is_published,
-          maxAttendees: event.max_attendees,
-          attendeesCount: event.attendees_count,
+          isActive: event.isActive,
+          isPublished: event.isPublished,
+          maxAttendees: event.tickets?.reduce((sum, t) => sum + (t.quantity || 0), 0) || 0,
+          attendeesCount: event.totalAttendees || 0,
           tickets: event.tickets || [],
           sessions: event.sessions || [],
-          speakers: event.speakers || [],
+          speakers: (event.speakers || []).map(speaker => ({
+            ...speaker,
+            photo: getImageUrl(speaker.photo)
+          })),
           tags: event.tags || [],
           category: event.category,
-          venue: event.venue,
-          createdAt: new Date(event.created_at),
-          updatedAt: new Date(event.updated_at),
+          venue: event.location,
+          createdAt: new Date(event.createdAt),
+          updatedAt: new Date(event.updatedAt),
         };
       });
 
@@ -98,39 +113,59 @@ export default function EventsPage() {
       // Fetch user's registered events
       console.log('📊 [EVENTS] Fetching user registrations');
       try {
-        const registeredEvents = await getMyRegisteredEvents();
+        const registeredEvents = await getMyEventRegistrations();
         console.log('📊 [EVENTS] User registrations response:', registeredEvents?.length || 0);
 
-        const transformedTickets = (registeredEvents || []).map(event => ({
-          id: Date.now().toString() + Math.random(),
-          eventId: event._id,
-          event: {
-            ...event,
-            id: event._id,
-            startDate: new Date(event.start_date),
-            endDate: event.end_date ? new Date(event.end_date) : undefined,
-          },
-          userId: 'current-user',
-          ticketId: 'general',
-          ticket: {
-            id: 'general',
-            eventId: event._id,
-            name: 'General Admission',
-            description: 'Standard event access',
-            price: 0,
+        const transformedTickets = (registeredEvents || []).map(event => {
+          // Find the ticket type the user registered with
+          const userRegistration = event.user_registration;
+          const ticketType = userRegistration?.ticket_type || 'regular';
+          const ticket = event.tickets?.find(t => t.type === ticketType) || event.tickets?.[0];
+
+          // Process image URL
+          const eventImage = getImageUrl(event.thumbnail || event.cover_image || event.image) || 'https://via.placeholder.com/400x300?text=Event';
+
+          return {
+            id: `${event._id || event.id}-${Date.now()}`,
+            eventId: event._id || event.id,
+            event: {
+              id: event._id || event.id,
+              title: event.title,
+              description: event.description,
+              image: eventImage,
+              startDate: new Date(event.start_date || event.startDate),
+              endDate: event.end_date ? new Date(event.end_date) : event.endDate ? new Date(event.endDate) : undefined,
+              startTime: event.start_time || event.startTime,
+              endTime: event.end_time || event.endTime,
+              location: event.venue || event.location,
+              onlineUrl: event.onlineUrl,
+              type: event.type,
+              creator: event.created_by || event.creator,
+            },
+            userId: 'current-user',
+            ticketId: ticket?.id || 'general',
+            ticket: ticket || {
+              id: 'general',
+              eventId: event._id || event.id,
+              name: 'General Admission',
+              description: 'Standard event access',
+              price: 0,
+              currency: 'TND',
+              type: 'regular',
+              maxQuantity: 100,
+              sold: 0,
+              isActive: true,
+              benefits: ['Event access']
+            },
+            quantity: 1,
+            totalAmount: ticket?.price || 0,
             currency: 'TND',
-            maxQuantity: 100,
-            sold: 0,
-            isActive: true,
-            benefits: ['Event access', 'Networking opportunities']
-          },
-          quantity: 1,
-          totalAmount: 0,
-          currency: 'TND',
-          status: 'confirmed' as const,
-          registeredAt: new Date(),
-          updatedAt: new Date()
-        }));
+            status: 'confirmed' as const,
+            registeredAt: userRegistration?.registered_at ? new Date(userRegistration.registered_at) : new Date(),
+            updatedAt: new Date(),
+            notes: ''
+          };
+        });
 
         console.log('✅ [EVENTS] Transformed tickets:', transformedTickets.length);
         setMyTickets(transformedTickets);
@@ -143,11 +178,8 @@ export default function EventsPage() {
     } catch (err: any) {
       console.error('❌ [EVENTS] Error fetching events:', err);
       setError(err.message || 'Failed to load events');
-
-      // Fallback to mock data
-      console.log('⚠️ [EVENTS] Falling back to mock data');
-      setAvailableEvents(mockEvents);
-      setMyTickets(mockTickets);
+      setAvailableEvents([]);
+      setMyTickets([]);
     } finally {
       setLoading(false);
     }
@@ -165,12 +197,16 @@ export default function EventsPage() {
   if (error) {
     return (
       <ThemedView style={styles.container}>
-        <ThemedText style={{ color: '#ef4444', textAlign: 'center', margin: 20 }}>
-          {error}
-        </ThemedText>
-        <ThemedText style={{ textAlign: 'center', opacity: 0.7 }}>
-          Community: {slug}
-        </ThemedText>
+        <CommunityHeader showBack communitySlug={slug as string} />
+        <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <ThemedText style={{ color: '#ef4444', textAlign: 'center', marginBottom: 8 }}>
+            {error}
+          </ThemedText>
+          <ThemedText style={{ textAlign: 'center', opacity: 0.7 }}>
+            No events available for this community yet.
+          </ThemedText>
+        </ThemedView>
+        <BottomNavigation slug={slug as string} currentTab="events" />
       </ThemedView>
     );
   }

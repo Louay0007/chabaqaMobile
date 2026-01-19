@@ -379,15 +379,15 @@ export async function purchaseWithWallet(
     }
   }
 
-  console.log('📤 [WALLET] Purchase request:', { 
-    contentType, 
-    contentId, 
-    originalAmount: amount,
-    originalCurrency: contentCurrency,
-    amountInTND, 
-    creatorId, 
-    description 
-  });
+  const requestData = {
+    contentType,
+    contentId,
+    amount: amountInTND, // Send converted amount in TND
+    creatorId,
+    description: description || `Purchase ${contentType} (${amount} ${contentCurrency})`,
+  };
+
+  console.log('📤 [WALLET] Purchase request:', requestData);
 
   const resp = await tryEndpoints<{
     success: boolean;
@@ -400,14 +400,9 @@ export async function purchaseWithWallet(
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
     },
-    data: {
-      contentType,
-      contentId,
-      amount: amountInTND, // Send converted amount in TND
-      creatorId,
-      description: description || `Purchase ${contentType} (${amount} ${contentCurrency})`,
-    },
+    data: requestData,
     timeout: 30000,
   });
 
