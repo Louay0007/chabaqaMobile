@@ -2,7 +2,7 @@ import AdaptiveBackground from '@/_components/AdaptiveBackground';
 import AdaptiveStatusBar from '@/_components/AdaptiveStatusBar';
 import { useAuth } from '@/hooks/use-auth';
 import { useAdaptiveColors } from '@/hooks/useAdaptiveColors';
-import { loginAction, verifyTwoFactorAction } from '@/lib/auth-api';
+import { loginAction } from '@/lib/auth-api';
 import { authenticateWithGoogle } from '@/lib/google-auth';
 import { BlurView } from 'expo-blur';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -31,13 +31,10 @@ export default function SignInScreen() {
   const colors = useAdaptiveColors();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
-  const [userId, setUserId] = useState(''); // Store userId for 2FA
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRequestingCode, setIsRequestingCode] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [showTwoFactor, setShowTwoFactor] = useState(false);
 
   // Récupérer le paramètre de redirection
   const params = useLocalSearchParams();
@@ -105,14 +102,8 @@ export default function SignInScreen() {
         remember_me: true
       });
 
-      if (result.success && result.requires2FA && result.userId) {
-        console.log('📱 [SIGNIN] 2FA requis, userId:', result.userId);
-        setUserId(result.userId); // Store userId for 2FA verification
-        setShowTwoFactor(true);
-        setSuccessMessage(result.message || '✉️ Code de vérification envoyé par email');
-        setPassword(''); // Clear password for security
-      } else if (result.success && !result.requires2FA) {
-        console.log('✅ [SIGNIN] Connexion directe réussie (pas de 2FA)');
+      if (result.success) {
+        console.log('✅ [SIGNIN] Connexion réussie');
         setSuccessMessage('✅ Connexion réussie!');
         // Le login est géré automatiquement par le stockage des tokens
         await handleSuccessfulLogin();
@@ -128,71 +119,6 @@ export default function SignInScreen() {
     }
   };
 
-  const handleTwoFactorSubmit = async () => {
-    // Validation du code 2FA
-    if (!verificationCode || verificationCode.trim().length !== 6) {
-      setError('Veuillez entrer le code à 6 chiffres');
-      return;
-    }
-
-    if (!userId) {
-      setError('Session expirée. Veuillez vous reconnecter.');
-      handleBackToCredentials();
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError('');
-    setSuccessMessage('');
-
-    try {
-      console.log('🔐 [SIGNIN] Vérification du code 2FA...');
-      const result = await verifyTwoFactorAction({
-        userId: userId,
-        code: verificationCode.trim(),
-        rememberMe: true
-      });
-
-      if (result.success) {
-        console.log('✅ [SIGNIN] 2FA validé avec succès');
-        setSuccessMessage('✅ Code vérifié! Connexion en cours...');
-
-        // Les tokens sont automatiquement stockés par verifyTwoFactorAction
-        if (result.user) {
-          // Mettre à jour le contexte d'auth
-          login(result.user);
-        }
-
-        // Refetch et redirection
-        await refetch();
-
-        // Petit délai pour que l'utilisateur voie le message de succès
-        setTimeout(() => {
-          handleSuccessfulLogin();
-        }, 500);
-      } else {
-        console.log('❌ [SIGNIN] Erreur 2FA:', result.error);
-        setError(result.error || 'Code de vérification invalide');
-        setVerificationCode(''); // Clear invalid code
-      }
-    } catch (error: any) {
-      console.error('💥 [SIGNIN] Exception lors de la vérification 2FA:', error);
-      setError('Erreur de connexion. Veuillez réessayer.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleBackToCredentials = () => {
-    console.log('⬅️ [SIGNIN] Retour à la saisie des identifiants');
-    setShowTwoFactor(false);
-    setVerificationCode('');
-    setUserId(''); // Clear userId
-    setError('');
-    setSuccessMessage('');
-    // Reset password for security
-    setPassword('');
-  };
 
   const handleGoogleLogin = async () => {
     try {
@@ -252,7 +178,7 @@ export default function SignInScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Header
-            showTwoFactor={showTwoFactor}
+            showTwoFactor={false}
             email={email}
             styles={styles}
           />
@@ -275,35 +201,20 @@ export default function SignInScreen() {
             {/* ===== FIN MODE TEST STATIQUE ===== */}
 
 
-            {!showTwoFactor ? (
-              <LoginForm
-                email={email}
-                setEmail={setEmail}
-                password={password}
-                setPassword={setPassword}
-                isRequestingCode={isRequestingCode}
-                error={error}
-                successMessage={successMessage}
-                onSubmit={handleInitialSubmit}
-                onGoogleLogin={handleGoogleLogin}
-                styles={styles}
-              />
-            ) : (
-              <TwoFactorForm
-                verificationCode={verificationCode}
-                setVerificationCode={setVerificationCode}
-                isLoading={isSubmitting}
-                error={error}
-                successMessage={successMessage}
-                onSubmit={handleTwoFactorSubmit}
-                onBackToCredentials={handleBackToCredentials}
-                styles={styles}
-              />
-            )}
+            <LoginForm
+              email={email}
+              setEmail={setEmail}
+              password={password}
+              setPassword={setPassword}
+              isRequestingCode={isRequestingCode}
+              error={error}
+              successMessage={successMessage}
+              onSubmit={handleInitialSubmit}
+              onGoogleLogin={handleGoogleLogin}
+              styles={styles}
+            />
 
-            {!showTwoFactor && (
-              <FooterLinks styles={styles} />
-            )}
+            <FooterLinks styles={styles} />
           </BlurView>
 
           <View style={styles.footer}>

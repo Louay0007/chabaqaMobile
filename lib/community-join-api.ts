@@ -28,7 +28,8 @@ export interface MembershipStatusResponse {
 
 export interface MyCommunitiesResponse {
   success: boolean;
-  communities: any[];
+  communities?: any[];
+  data?: any[];
   pagination?: {
     page: number;
     limit: number;
@@ -123,8 +124,8 @@ export const getMembershipStatus = async (
       return { success: true, isMember: false };
     }
 
-    const resp = await tryEndpoints<MembershipStatusResponse>(
-      `/api/community-aff-crea-join/status/${communityId}`,
+    const resp = await tryEndpoints<{ success: boolean; data?: any }>(
+      '/api/community-aff-crea-join/my-joined',
       {
         method: 'GET',
         headers: {
@@ -134,8 +135,14 @@ export const getMembershipStatus = async (
       }
     );
 
-    console.log('✅ [COMMUNITY-JOIN] Membership status:', resp.data.isMember);
-    return resp.data;
+    const joinedCommunities = resp.data?.data || [];
+    const isMember = joinedCommunities.some((c: any) => c._id === communityId || c.id === communityId);
+
+    console.log('✅ [COMMUNITY-JOIN] Membership status:', isMember);
+    return {
+      success: true,
+      isMember,
+    };
   } catch (error: any) {
     console.error('💥 [COMMUNITY-JOIN] Error checking membership:', error);
     // Return false on error (user not member)
@@ -172,8 +179,12 @@ export const getMyJoinedCommunities = async (
       }
     );
 
-    console.log('✅ [COMMUNITY-JOIN] Joined communities:', resp.data.communities.length);
-    return resp.data;
+    const communities = resp.data?.data || [];
+    console.log('✅ [COMMUNITY-JOIN] Joined communities:', communities.length);
+    return {
+      success: true,
+      communities,
+    };
   } catch (error: any) {
     console.error('💥 [COMMUNITY-JOIN] Error fetching joined communities:', error);
     // Return empty array on error

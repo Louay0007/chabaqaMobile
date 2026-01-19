@@ -298,8 +298,8 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
             paddingHorizontal: 16,
             paddingVertical: 12,
             borderBottomWidth: 1,
-            borderBottomColor: adaptiveColors.isDark ? '#374151' : '#f3f4f6',
-            backgroundColor: adaptiveColors.isDark ? '#1f2937' : '#111827',
+            borderBottomColor: adaptiveColors.isDark ? '#374151' : '#e5e7eb',
+            backgroundColor: adaptiveColors.isDark ? '#1f2937' : '#ffffff',
           }}>
             <View style={{
               flexDirection: 'row',
@@ -321,28 +321,28 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
                   width: 40,
                   height: 40,
                   borderRadius: 20,
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  backgroundColor: adaptiveColors.isDark ? 'rgba(255, 255, 255, 0.1)' : '#f3f4f6',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginRight: 12,
                 }}>
-                  <Ionicons name="wallet" size={20} color="#ffffff" />
+                  <Ionicons name="wallet" size={20} color={adaptiveColors.isDark ? '#ffffff' : '#111827'} />
                 </View>
                 <View>
                   <Text style={{
                     fontSize: 12,
-                    color: 'rgba(255, 255, 255, 0.6)',
+                    color: adaptiveColors.isDark ? 'rgba(255, 255, 255, 0.6)' : '#6b7280',
                     marginBottom: 2,
                   }}>
                     Wallet Balance
                   </Text>
                   {loadingWallet ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
+                    <ActivityIndicator size="small" color={adaptiveColors.isDark ? '#ffffff' : '#111827'} />
                   ) : (
                     <Text style={{
                       fontSize: 18,
                       fontWeight: '700',
-                      color: '#ffffff',
+                      color: adaptiveColors.isDark ? '#ffffff' : '#111827',
                     }}>
                       {walletBalance.toFixed(2)} pts
                     </Text>
@@ -352,7 +352,7 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
               
               <TouchableOpacity
                 style={{
-                  backgroundColor: '#ffffff',
+                  backgroundColor: adaptiveColors.isDark ? '#ffffff' : '#111827',
                   paddingHorizontal: 14,
                   paddingVertical: 10,
                   borderRadius: 10,
@@ -364,9 +364,9 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
                   onClose();
                 }}
               >
-                <Ionicons name="add" size={16} color="#111827" />
+                <Ionicons name="add" size={16} color={adaptiveColors.isDark ? '#111827' : '#ffffff'} />
                 <Text style={{
-                  color: '#111827',
+                  color: adaptiveColors.isDark ? '#111827' : '#ffffff',
                   fontSize: 13,
                   fontWeight: '600',
                   marginLeft: 4,
@@ -381,7 +381,7 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
         {/* Scrollable Content */}
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 20 }}
           showsVerticalScrollIndicator={false}
         >
           {/* Main Menu Items */}
@@ -391,14 +391,23 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                paddingVertical: 12,
-                paddingHorizontal: 8,
-                borderRadius: 8,
-                marginBottom: 4,
+                paddingVertical: 14,
+                paddingHorizontal: 12,
+                borderRadius: 10,
+                marginBottom: 8,
+                backgroundColor: adaptiveColors.isDark ? 'rgba(255,255,255,0.05)' : '#f9fafb',
               }}
               onPress={item.onPress}
             >
-              <View style={{ marginRight: 12 }}>
+              <View style={{ 
+                width: 36, 
+                height: 36, 
+                borderRadius: 10, 
+                backgroundColor: adaptiveColors.isDark ? 'rgba(255,255,255,0.1)' : '#e5e7eb',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: 14,
+              }}>
                 {item.logo ? (
                   <Image
                     source={{ uri: getImageUrl(item.logo) }}
@@ -407,15 +416,15 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
                 ) : (
                   <Ionicons
                     name={item.icon as any}
-                    size={20}
-                    color={adaptiveColors.isDark ? '#9ca3af' : '#6b7280'}
+                    size={18}
+                    color={adaptiveColors.isDark ? '#ffffff' : '#374151'}
                   />
                 )}
               </View>
               <Text style={{
-                fontSize: 16,
+                fontSize: 15,
                 color: adaptiveColors.isDark ? '#ffffff' : '#1f2937',
-                fontWeight: '500',
+                fontWeight: '600',
               }}>
                 {item.title}
               </Text>
@@ -426,9 +435,9 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
           {isAuthenticated && (
             <>
               <View style={{
-                marginTop: 24,
-                marginBottom: 16,
-                paddingTop: 16,
+                marginTop: 20,
+                marginBottom: 12,
+                paddingTop: 20,
                 borderTopWidth: 1,
                 borderTopColor: adaptiveColors.isDark ? '#374151' : '#e5e7eb',
               }}>
@@ -436,14 +445,15 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  marginBottom: 12,
+                  marginBottom: 8,
+                  paddingHorizontal: 4,
                 }}>
                   <Text style={{
-                    fontSize: 14,
-                    fontWeight: '600',
+                    fontSize: 12,
+                    fontWeight: '700',
                     color: adaptiveColors.isDark ? '#9ca3af' : '#6b7280',
                     textTransform: 'uppercase',
-                    letterSpacing: 0.5,
+                    letterSpacing: 0.8,
                   }}>
                     My Communities
                   </Text>
@@ -461,36 +471,44 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
-                      paddingVertical: 10,
-                      paddingHorizontal: 8,
-                      borderRadius: 8,
-                      marginBottom: 2,
-                      backgroundColor: 'transparent',
+                      paddingVertical: 12,
+                      paddingHorizontal: 12,
+                      borderRadius: 10,
+                      marginBottom: 6,
+                      backgroundColor: adaptiveColors.isDark ? 'rgba(255,255,255,0.03)' : '#ffffff',
+                      borderWidth: 1,
+                      borderColor: adaptiveColors.isDark ? 'rgba(255,255,255,0.08)' : '#f3f4f6',
                     }}
                     onPress={() => {
                       router.push(`/(community)/${community.slug}/(loggedUser)/home`);
                       onClose();
                     }}
                   >
-                    <View style={{ marginRight: 12 }}>
+                    <View style={{ 
+                      width: 40, 
+                      height: 40, 
+                      borderRadius: 10, 
+                      overflow: 'hidden',
+                      marginRight: 14,
+                      backgroundColor: '#f3f4f6',
+                    }}>
                       <Image
                         source={{
                           uri: getImageUrl(community.logo) || generateCommunityLogo(community.name, community.category)
                         }}
                         style={{
-                          width: 20,
-                          height: 20,
-                          borderRadius: 4,
-                          backgroundColor: '#f3f4f6'
+                          width: 40,
+                          height: 40,
                         }}
                       />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text
                         style={{
-                          fontSize: 14,
+                          fontSize: 15,
                           color: adaptiveColors.isDark ? '#ffffff' : '#1f2937',
-                          fontWeight: '500',
+                          fontWeight: '600',
+                          marginBottom: 2,
                         }}
                         numberOfLines={1}
                       >
@@ -498,9 +516,8 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
                       </Text>
                       <Text
                         style={{
-                          fontSize: 12,
+                          fontSize: 13,
                           color: adaptiveColors.isDark ? '#9ca3af' : '#6b7280',
-                          marginTop: 2,
                         }}
                         numberOfLines={1}
                       >
@@ -509,7 +526,7 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
                     </View>
                     <Ionicons
                       name="chevron-forward"
-                      size={16}
+                      size={18}
                       color={adaptiveColors.isDark ? '#6b7280' : '#9ca3af'}
                     />
                   </TouchableOpacity>
@@ -517,20 +534,23 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
               ) : (
                 !loading && (
                   <View style={{
-                    paddingVertical: 16,
-                    paddingHorizontal: 8,
+                    paddingVertical: 24,
+                    paddingHorizontal: 16,
                     alignItems: 'center',
+                    backgroundColor: adaptiveColors.isDark ? 'rgba(255,255,255,0.03)' : '#f9fafb',
+                    borderRadius: 12,
                   }}>
                     <Ionicons
                       name="people-outline"
-                      size={24}
+                      size={32}
                       color={adaptiveColors.isDark ? '#6b7280' : '#9ca3af'}
                     />
                     <Text style={{
-                      fontSize: 12,
+                      fontSize: 13,
                       color: adaptiveColors.isDark ? '#6b7280' : '#9ca3af',
                       textAlign: 'center',
-                      marginTop: 8,
+                      marginTop: 12,
+                      lineHeight: 18,
                     }}>
                       No communities joined yet.{"\n"}Discover some communities!
                     </Text>
@@ -547,10 +567,10 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'center',
-                paddingVertical: 8,
-                paddingHorizontal: 12,
-                borderRadius: 6,
-                marginTop: 12,
+                paddingVertical: 10,
+                paddingHorizontal: 16,
+                borderRadius: 8,
+                marginTop: 16,
                 backgroundColor: adaptiveColors.isDark ? '#374151' : '#f3f4f6',
               }}
               onPress={fetchJoinedCommunities}
@@ -558,14 +578,14 @@ export default function Sidebar({ isVisible, onClose }: SidebarProps) {
             >
               <Ionicons
                 name={loading ? 'hourglass' : 'refresh'}
-                size={14}
+                size={16}
                 color={adaptiveColors.isDark ? '#9ca3af' : '#6b7280'}
               />
               <Text style={{
-                fontSize: 12,
+                fontSize: 13,
                 color: adaptiveColors.isDark ? '#9ca3af' : '#6b7280',
-                marginLeft: 6,
-                fontWeight: '500',
+                marginLeft: 8,
+                fontWeight: '600',
               }}>
                 {loading ? 'Refreshing...' : 'Refresh'}
               </Text>

@@ -80,13 +80,13 @@ export default function ProfileScreen() {
   const getTabColors = (tab: string): [string, string] => {
     switch (tab) {
       case 'about':
-        return ['#8e78fb', '#7a68f5']; // Purple like communities
+        return ['#8B5CF6', '#7C3AED']; // Purple like communities
       case 'library':
         return ['#47c7ea', '#3bb5d6']; // Cyan like courses
       case 'activity':
         return ['#ff9b28', '#ff8c1a']; // Orange like challenges
       default:
-        return ['#8e78fb', '#7a68f5'];
+        return ['#8B5CF6', '#7C3AED'];
     }
   };
 
@@ -123,7 +123,7 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={enhancedStyles.container}>
         <View style={enhancedStyles.centerContainer}>
-          <Ionicons name="person-circle-outline" size={80} color="#8e78fb" />
+          <Ionicons name="person-circle-outline" size={80} color="#8B5CF6" />
           <Text style={enhancedStyles.emptyText}>
             Please login to view your profile
           </Text>
@@ -142,7 +142,7 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={enhancedStyles.container}>
         <View style={enhancedStyles.centerContainer}>
-          <ActivityIndicator size="large" color="#8e78fb" />
+          <ActivityIndicator size="large" color="#8B5CF6" />
         </View>
       </SafeAreaView>
     );
@@ -178,7 +178,7 @@ export default function ProfileScreen() {
                 ) : (
                   <View style={[enhancedStyles.avatar, enhancedStyles.avatarPlaceholder]}>
                     <LinearGradient
-                      colors={['#8e78fb', '#667eea']}
+                      colors={['#8B5CF6', '#7C3AED']}
                       style={enhancedStyles.avatarGradient}
                     >
                       <Ionicons name="person" size={42} color="#fff" />
@@ -203,7 +203,7 @@ export default function ProfileScreen() {
             <View style={enhancedStyles.statsRow}>
               <View style={enhancedStyles.statCardWrapper}>
                 <View style={enhancedStyles.statCard}>
-                  <View style={[enhancedStyles.statIcon, { backgroundColor: '#8e78fb' }]}>
+                  <View style={[enhancedStyles.statIcon, { backgroundColor: '#8B5CF6' }]}>
                     <Ionicons name="people-outline" size={18} color="#fff" />
                   </View>
                   <Text style={enhancedStyles.statValue}>{profileData?.stats?.communitiesJoined || 0}</Text>
@@ -253,7 +253,7 @@ export default function ProfileScreen() {
             onPress={() => router.push('/(profile)/wallet')}
           >
             <LinearGradient
-              colors={['#8e78fb', '#7a68f5']}
+              colors={['#8B5CF6', '#7C3AED']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={enhancedStyles.actionButtonGradient}
@@ -263,18 +263,11 @@ export default function ProfileScreen() {
             </LinearGradient>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[enhancedStyles.actionButtonPrimary, { flex: 1 }]}
+            style={[enhancedStyles.actionButtonSecondary, { flex: 1 }]}
             onPress={() => router.push('/(profile)/edit')}
           >
-            <LinearGradient
-              colors={['#374151', '#1f2937']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={enhancedStyles.actionButtonGradient}
-            >
-              <Ionicons name="create-outline" size={18} color="#fff" />
-              <Text style={enhancedStyles.actionButtonPrimaryText}>Edit Profile</Text>
-            </LinearGradient>
+            <Ionicons name="create-outline" size={18} color="#1F2937" />
+            <Text style={enhancedStyles.actionButtonSecondaryText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
 
@@ -298,7 +291,7 @@ export default function ProfileScreen() {
             <View style={enhancedStyles.bioSection}>
               <View style={enhancedStyles.bioEmptyState}>
                 <View style={enhancedStyles.bioEmptyIcon}>
-                  <Ionicons name="document-text-outline" size={24} color="#8e78fb" />
+                  <Ionicons name="document-text-outline" size={24} color="#8B5CF6" />
                 </View>
                 <Text style={enhancedStyles.bioEmptyText}>No bio added yet</Text>
                 <Text style={enhancedStyles.bioEmptySubtext}>Add a bio to tell others about yourself</Text>
@@ -394,8 +387,8 @@ export default function ProfileScreen() {
               <Text style={enhancedStyles.sectionTitle}>About Me</Text>
               <View style={enhancedStyles.infoCard}>
                 <View style={enhancedStyles.infoRow}>
-                  <View style={[enhancedStyles.infoIcon, { backgroundColor: 'rgba(142, 120, 251, 0.15)' }]}>
-                    <Ionicons name="mail-outline" size={20} color="#8e78fb" />
+                  <View style={[enhancedStyles.infoIcon, { backgroundColor: 'rgba(139, 92, 246, 0.15)' }]}>
+                    <Ionicons name="mail-outline" size={20} color="#8B5CF6" />
                   </View>
                   <View style={enhancedStyles.infoContent}>
                     <Text style={enhancedStyles.infoLabel}>Email</Text>
@@ -473,7 +466,7 @@ export default function ProfileScreen() {
               ) : (
                 <View style={enhancedStyles.emptyStateCard}>
                   <View style={enhancedStyles.emptyStateIcon}>
-                    <Ionicons name="time-outline" size={48} color="#8e78fb" />
+                    <Ionicons name="time-outline" size={48} color="#8B5CF6" />
                   </View>
                   <Text style={enhancedStyles.emptyStateText}>No recent activity</Text>
                   <Text style={enhancedStyles.emptyStateSubtext}>Your activities will appear here</Text>

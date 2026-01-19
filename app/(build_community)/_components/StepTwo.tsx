@@ -191,7 +191,7 @@ const StepTwo = ({
                 activeOpacity={0.7}
               >
                 <Text style={styles.currencyText}>{selectedCurrency}</Text>
-                <ChevronDown size={16} color="#9ca3af" />
+                <ChevronDown size={16} color="#6B7280" />
               </TouchableOpacity>
               <TextInput 
                 style={styles.feeInput} 
@@ -201,7 +201,7 @@ const StepTwo = ({
                   updatePricing({ price: numValue });
                 }} 
                 placeholder="0" 
-                placeholderTextColor="#6b7280" 
+                placeholderTextColor="#9CA3AF" 
                 keyboardType="numeric" 
               />
             </View>
@@ -229,10 +229,10 @@ const StepTwo = ({
                     updatePricing({ freeTrialDays: numValue });
                   }} 
                   placeholder="0" 
-                  placeholderTextColor="#6b7280" 
+                  placeholderTextColor="#9CA3AF" 
                   keyboardType="numeric" 
                 />
-                <Text style={{ color: '#9ca3af', fontSize: 14 }}>days (max 30)</Text>
+                <Text style={{ color: '#6B7280', fontSize: 14 }}>days (max 30)</Text>
               </View>
             </View>
 
@@ -247,13 +247,13 @@ const StepTwo = ({
               }}
               onPress={() => setShowAdvancedOptions(!showAdvancedOptions)}
             >
-              <Percent size={16} color="#8e78fb" />
-              <Text style={{ color: '#8e78fb', marginLeft: 8, fontWeight: '600' }}>
+              <Percent size={16} color="#111827" />
+              <Text style={{ color: '#111827', marginLeft: 8, fontWeight: '600' }}>
                 {showAdvancedOptions ? 'Hide' : 'Show'} Advanced Payment Options
               </Text>
               <ChevronDown 
                 size={16} 
-                color="#8e78fb" 
+                color="#111827" 
                 style={{ 
                   marginLeft: 4,
                   transform: [{ rotate: showAdvancedOptions ? '180deg' : '0deg' }]
@@ -280,17 +280,17 @@ const StepTwo = ({
                               updatePaymentOptions({ installmentCount: numValue });
                             }} 
                             placeholder="3" 
-                            placeholderTextColor="#6b7280" 
+                            placeholderTextColor="#9CA3AF" 
                             keyboardType="numeric" 
                           />
-                          <Text style={{ color: '#9ca3af', fontSize: 14 }}>payments (2-12)</Text>
+                          <Text style={{ color: '#6B7280', fontSize: 14 }}>payments (2-12)</Text>
                         </View>
                       )}
                     </View>
                     <Switch
                       value={pricing.paymentOptions.allowInstallments}
                       onValueChange={(value) => updatePaymentOptions({ allowInstallments: value })}
-                      trackColor={{ false: '#374151', true: '#8e78fb' }}
+                      trackColor={{ false: '#E5E7EB', true: '#111827' }}
                       thumbColor="#ffffff"
                     />
                   </View>
@@ -313,10 +313,10 @@ const StepTwo = ({
                         updatePaymentOptions({ earlyBirdDiscount: numValue });
                       }} 
                       placeholder="0" 
-                      placeholderTextColor="#6b7280" 
+                      placeholderTextColor="#9CA3AF" 
                       keyboardType="numeric" 
                     />
-                    <Text style={{ color: '#9ca3af', fontSize: 14 }}>% off</Text>
+                    <Text style={{ color: '#6B7280', fontSize: 14 }}>% off</Text>
                   </View>
                 </View>
 
@@ -337,10 +337,10 @@ const StepTwo = ({
                         updatePaymentOptions({ groupDiscount: numValue });
                       }} 
                       placeholder="0" 
-                      placeholderTextColor="#6b7280" 
+                      placeholderTextColor="#9CA3AF" 
                       keyboardType="numeric" 
                     />
-                    <Text style={{ color: '#9ca3af', fontSize: 14 }}>% off</Text>
+                    <Text style={{ color: '#6B7280', fontSize: 14 }}>% off</Text>
                   </View>
                 </View>
 
@@ -361,10 +361,10 @@ const StepTwo = ({
                         updatePaymentOptions({ memberDiscount: numValue });
                       }} 
                       placeholder="0" 
-                      placeholderTextColor="#6b7280" 
+                      placeholderTextColor="#9CA3AF" 
                       keyboardType="numeric" 
                     />
-                    <Text style={{ color: '#9ca3af', fontSize: 14 }}>% off</Text>
+                    <Text style={{ color: '#6B7280', fontSize: 14 }}>% off</Text>
                   </View>
                 </View>
               </View>
@@ -405,7 +405,7 @@ const StepTwo = ({
                     <Text style={styles.currencyName}>{item.name}</Text>
                   </View>
                   {selectedCurrency === item.code && (
-                    <Check size={18} color="#22d3ee" />
+                    <Check size={18} color="#10B981" />
                   )}
                 </TouchableOpacity>
               )}

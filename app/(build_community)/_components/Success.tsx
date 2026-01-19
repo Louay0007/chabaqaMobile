@@ -138,7 +138,7 @@ const Success = ({
         activeOpacity={0.8}
       >
         <Text style={styles.continueButtonText}>Go to My Communities</Text>
-        <ArrowRight size={20} color="#111827" />
+        <ArrowRight size={20} color="#FFFFFF" />
       </TouchableOpacity>
     </Animated.View>
   );
@@ -167,10 +167,10 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#22c55e',
+    backgroundColor: '#8B5CF6',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000000',
+    shadowColor: '#8B5CF6',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
@@ -182,9 +182,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: -50,
-    backgroundColor: '#374151',
+    backgroundColor: '#F3F4F6',
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#E5E7EB',
   },
   coverPreview: {
     width: '100%',
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   },
   coverOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgba(0,0,0,0.2)',
   },
   communityLogoWrapper: {
     position: 'relative',
@@ -202,10 +202,10 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#374151',
+    backgroundColor: '#F3F4F6',
     overflow: 'hidden',
     borderWidth: 4,
-    borderColor: '#1f2937',
+    borderColor: '#FFFFFF',
   },
   communityLogo: {
     width: '100%',
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#374151',
+    backgroundColor: '#8B5CF6',
   },
   placeholderText: {
     fontSize: 32,
@@ -230,9 +230,9 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#22c55e',
+    backgroundColor: '#8B5CF6',
     borderWidth: 4,
-    borderColor: '#1f2937',
+    borderColor: '#FFFFFF',
   },
   textContainer: {
     alignItems: 'center',
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   congratsText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#22c55e',
+    color: '#8B5CF6',
     textTransform: 'uppercase',
     letterSpacing: 2,
     marginBottom: 12,
@@ -249,13 +249,13 @@ const styles = StyleSheet.create({
   communityNameText: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#ffffff',
+    color: '#000000',
     textAlign: 'center',
     marginBottom: 8,
   },
   liveText: {
     fontSize: 18,
-    color: '#9ca3af',
+    color: '#6B7280',
     fontWeight: '500',
   },
   infoCardsContainer: {
@@ -269,25 +269,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1f2937',
+    backgroundColor: '#8B5CF6',
     paddingVertical: 16,
     paddingHorizontal: 12,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#7C3AED',
     gap: 10,
   },
   infoCardText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#d1d5db',
+    color: '#FFFFFF',
   },
   continueButton: {
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#8B5CF6',
     paddingVertical: 18,
     paddingHorizontal: 24,
     borderRadius: 30,
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
+    color: '#FFFFFF',
   },
 });
 

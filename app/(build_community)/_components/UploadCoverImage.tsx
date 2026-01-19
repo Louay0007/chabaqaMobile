@@ -61,7 +61,7 @@ const UploadCoverImage: React.FC<UploadCoverImageProps> = ({
     <>
       <View style={coverStyles.coverUploadContainer}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <ImageIcon size={16} color="#9ca3af" />
+          <ImageIcon size={16} color="#6B7280" />
           <Text style={coverStyles.coverUploadLabel}>{title}</Text>
         </View>
         <TouchableOpacity 
@@ -85,7 +85,7 @@ const UploadCoverImage: React.FC<UploadCoverImageProps> = ({
             </View>
           ) : (
             <LinearGradient 
-              colors={['#8e78fb', '#47c7ea']} 
+              colors={['#8B5CF6', '#7C3AED']} 
               start={{ x: 0, y: 0 }} 
               end={{ x: 1, y: 0 }} 
               style={coverStyles.coverUploadGradient}
@@ -145,7 +145,7 @@ const coverStyles = StyleSheet.create({
   coverUploadLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#9ca3af',
+    color: '#6B7280',
   },
   coverUploadButton: {
     width: '100%',
@@ -153,12 +153,12 @@ const coverStyles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: '#374151',
+    borderColor: '#E5E7EB',
     borderStyle: 'dashed',
-    backgroundColor: '#1f2937',
+    backgroundColor: '#F9FAFB',
   },
   coverUploadButtonSelected: {
-    borderColor: '#8e78fb',
+    borderColor: '#8B5CF6',
     borderStyle: 'solid',
   },
   coverUploadGradient: {
@@ -195,11 +195,11 @@ const coverStyles = StyleSheet.create({
 const modalStyles = StyleSheet.create({
   bottomModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   bottomModalContent: {
-    backgroundColor: '#1f2937',
+    backgroundColor: '#1F2937',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingBottom: 40,
@@ -211,7 +211,7 @@ const modalStyles = StyleSheet.create({
   modalHandle: {
     width: 40,
     height: 4,
-    backgroundColor: '#4b5563',
+    backgroundColor: '#4B5563',
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 20,
@@ -233,7 +233,7 @@ const modalStyles = StyleSheet.create({
   },
   bottomOptionText: {
     fontSize: 16,
-    color: '#ffffff',
+    color: '#FFFFFF',
     fontWeight: '500',
   },
 });

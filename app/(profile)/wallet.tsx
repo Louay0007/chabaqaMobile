@@ -73,8 +73,8 @@ export default function WalletPage() {
           <View style={styles.transactionIconBox}>
             <Ionicons
               name={isCredit ? 'arrow-down' : 'arrow-up'}
-              size={16}
-              color="#fff"
+              size={20}
+              color={isCredit ? '#10B981' : '#EF4444'}
             />
           </View>
           <View style={styles.transactionInfo}>
@@ -89,7 +89,7 @@ export default function WalletPage() {
             </Text>
           </View>
         </View>
-        <Text style={[styles.transactionAmount, { opacity: isCredit ? 1 : 0.6 }]}>
+        <Text style={[styles.transactionAmount, { color: isCredit ? '#10B981' : '#EF4444' }]}>
           {isCredit ? '+' : ''}{item.amount.toFixed(2)}
         </Text>
       </View>
@@ -100,7 +100,7 @@ export default function WalletPage() {
     <View style={styles.transactionItem}>
       <View style={styles.transactionLeft}>
         <View style={styles.transactionIconBox}>
-          <Ionicons name="time-outline" size={16} color="#fff" />
+          <Ionicons name="time-outline" size={20} color="#F59E0B" />
         </View>
         <View style={styles.transactionInfo}>
           <Text style={styles.transactionTitle}>
@@ -125,7 +125,7 @@ export default function WalletPage() {
             source={require('@/assets/images/brandmark_chabaqa.png')}
             style={styles.loadingLogo}
           />
-          <ActivityIndicator size="small" color="#fff" style={{ marginTop: 24 }} />
+          <ActivityIndicator size="small" color="#000000" style={{ marginTop: 24 }} />
         </View>
       </SafeAreaView>
     );
@@ -136,11 +136,11 @@ export default function WalletPage() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
-          <Ionicons name="chevron-back" size={24} color="#fff" />
+          <Ionicons name="chevron-back" size={24} color="#000000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Wallet</Text>
         <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="ellipsis-horizontal" size={24} color="#fff" />
+          <Ionicons name="ellipsis-horizontal" size={24} color="#000000" />
         </TouchableOpacity>
       </View>
 
@@ -151,7 +151,7 @@ export default function WalletPage() {
           activeTab === 'transactions' ? renderTransaction({ item }) : renderPendingTopUp({ item })
         }
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#000000" />
         }
         ListHeaderComponent={
           <>
@@ -267,8 +267,8 @@ export default function WalletPage() {
           <View style={styles.emptyContainer}>
             <Ionicons
               name={activeTab === 'transactions' ? 'receipt-outline' : 'time-outline'}
-              size={40}
-              color="#444"
+              size={48}
+              color="#9CA3AF"
             />
             <Text style={styles.emptyTitle}>
               {activeTab === 'transactions' ? 'No transactions yet' : 'No pending requests'}
@@ -290,7 +290,7 @@ export default function WalletPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
+    backgroundColor: '#FFFFFF',
   },
   loadingContainer: {
     flex: 1,
@@ -301,7 +301,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     resizeMode: 'contain',
-    tintColor: '#fff',
   },
   header: {
     flexDirection: 'row',
@@ -309,6 +308,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
   },
   headerButton: {
     width: 44,
@@ -317,9 +319,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000000',
     letterSpacing: -0.3,
   },
   listContent: {
@@ -328,13 +330,24 @@ const styles = StyleSheet.create({
   balanceSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-    marginBottom: 8,
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 20,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
   },
   cardWrapper: {
     width: CARD_SIZE,
     height: CARD_SIZE * 0.7,
+    marginRight: 20,
   },
   cardImage: {
     width: '100%',
@@ -343,125 +356,135 @@ const styles = StyleSheet.create({
   },
   balanceInfo: {
     flex: 1,
-    marginLeft: 20,
+    justifyContent: 'center',
   },
   balanceLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
-    color: '#666',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    color: '#6B7280',
     marginBottom: 8,
   },
   balanceAmount: {
-    fontSize: 36,
+    fontSize: 40,
     fontWeight: '700',
-    color: '#fff',
+    color: '#000000',
     letterSpacing: -1,
   },
   balanceUnit: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
-    color: '#666',
-    letterSpacing: 2,
+    color: '#6B7280',
     marginTop: 4,
-    marginBottom: 12,
   },
   userName: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#888',
+    color: '#9CA3AF',
+    marginTop: 12,
   },
   actionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    marginBottom: 28,
+    paddingHorizontal: 16,
+    marginBottom: 24,
   },
   actionButton: {
     alignItems: 'center',
     flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginHorizontal: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   actionIconBox: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#fff',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
   },
   actionLabel: {
     fontSize: 12,
-    fontWeight: '500',
-    color: '#fff',
+    fontWeight: '600',
+    color: '#374151',
   },
   statsRow: {
     flexDirection: 'row',
-    marginHorizontal: 20,
+    marginHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     paddingVertical: 20,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
     marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   statItem: {
     flex: 1,
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
-    color: '#fff',
+    color: '#000000',
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 11,
-    fontWeight: '500',
-    color: '#666',
+    fontWeight: '600',
+    color: '#6B7280',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   statDivider: {
     width: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#E5E7EB',
   },
   tabsContainer: {
     flexDirection: 'row',
-    marginHorizontal: 20,
+    marginHorizontal: 16,
     marginBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 4,
   },
   tab: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    marginRight: 24,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 8,
   },
   tabActive: {
-    borderBottomColor: '#fff',
+    backgroundColor: '#1A1A1A',
   },
   tabText: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#666',
+    fontWeight: '600',
+    color: '#6B7280',
   },
   tabTextActive: {
-    color: '#fff',
-    fontWeight: '600',
+    color: '#FFFFFF',
   },
   tabBadge: {
-    backgroundColor: '#fff',
+    backgroundColor: '#EF4444',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 10,
-    marginLeft: 8,
+    marginLeft: 6,
   },
   tabBadgeText: {
-    color: '#000',
+    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '700',
   },
@@ -470,9 +493,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 16,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
   transactionLeft: {
     flexDirection: 'row',
@@ -480,10 +510,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   transactionIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -492,30 +522,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   transactionTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#fff',
-    marginBottom: 2,
+    color: '#000000',
+    marginBottom: 4,
   },
   transactionDate: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 13,
+    color: '#6B7280',
   },
   transactionAmount: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
-    color: '#fff',
+    color: '#000000',
   },
   statusBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#FEF3C7',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
   },
   statusText: {
     fontSize: 11,
-    fontWeight: '600',
-    color: '#888',
+    fontWeight: '700',
+    color: '#92400E',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -523,17 +553,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 60,
     paddingHorizontal: 40,
+    marginHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
   },
   emptyTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
-    color: '#fff',
+    color: '#000000',
     marginTop: 16,
     marginBottom: 8,
   },
   emptyText: {
-    fontSize: 13,
-    color: '#666',
+    fontSize: 14,
+    color: '#6B7280',
     textAlign: 'center',
+    lineHeight: 20,
   },
 });

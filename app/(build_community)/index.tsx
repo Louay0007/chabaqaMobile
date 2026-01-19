@@ -270,7 +270,7 @@ export default function BuildCommunityScreen() {
         <View style={styles.safeAreaTop} />
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.headerContainer}>
-            <BackButton onPress={() => router.back()} color="#ffffff" size={28} />
+            <BackButton onPress={() => router.back()} color="#000000" size={28} />
             {/* Chabaqa Logo - Top Right */}
             <Image
               source={require('@/assets/images/logo_chabaqa.png')}
@@ -337,7 +337,7 @@ export default function BuildCommunityScreen() {
                     style={{ flex: currentStep === 1 ? 1 : undefined }}
                   >
                     <LinearGradient 
-                      colors={['#8e78fb', '#47c7ea']} 
+                      colors={['#8B5CF6', '#7C3AED']} 
                       start={{ x: 0, y: 0 }} 
                       end={{ x: 1, y: 0 }} 
                       style={[styles.primaryButton, (!canContinue() || isSubmitting) && styles.disabledButton]}

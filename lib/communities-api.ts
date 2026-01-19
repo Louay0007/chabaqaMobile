@@ -152,7 +152,7 @@ export interface Pagination {
 export interface CommunitiesResponse {
   success: boolean;
   message: string;
-  data: Community[]; // Backend returns array directly
+  data: Community[] | { communities: Community[]; pagination?: Pagination }; // Supports both shapes
   pagination?: Pagination; // Optional for now
 }
 
@@ -276,7 +276,7 @@ export const getCommunities = async (
     }
 
     const resp = await tryEndpoints<CommunitiesResponse>(
-      `/api/community-aff-crea-join/all-communities${queryString ? `?${queryString}` : ''}`,
+      `/api/communities${queryString ? `?${queryString}` : ''}`,
       {
         method: 'GET',
         headers,
@@ -284,15 +284,22 @@ export const getCommunities = async (
       }
     );
 
+    const dataPayload = resp.data.data as any;
+    const communities = Array.isArray(dataPayload)
+      ? dataPayload
+      : dataPayload?.communities || [];
+    const pagination = dataPayload?.pagination || resp.data.pagination;
+
     console.log('✅ [COMMUNITIES-API] Communities fetched successfully:', {
-      count: resp.data.data?.length || 0,
-      total: resp.data.pagination?.total || resp.data.data?.length || 0,
+      count: communities.length,
+      total: pagination?.total || communities.length,
     });
 
     // Transform image URLs in the response
     return {
       ...resp.data,
-      data: resp.data.data?.map(transformCommunityImages) || [],
+      data: communities.map(transformCommunityImages),
+      pagination,
     };
   } catch (error: any) {
     console.error('💥 [COMMUNITIES-API] Error fetching communities:', error);
@@ -309,8 +316,24 @@ export const getCommunityBySlug = async (slug: string): Promise<CommunityRespons
   try {
     console.log('🔍 [COMMUNITIES-API] Fetching community by slug/id:', slug);
 
-    // Backend uses ID not slug, but we'll try with the slug parameter (which might be an ID)
-    const resp = await tryEndpoints<CommunityResponse>(
+    // Prefer discovery endpoint (slug-based), fallback to community-aff-crea-join (id/slug)
+    const primaryResp = await tryEndpoints<CommunityResponse>(
+      `/api/communities/${slug}`,
+      {
+        method: 'GET',
+        timeout: 30000,
+      }
+    );
+
+    if (primaryResp.status !== 404 && primaryResp.data?.data) {
+      console.log('✅ [COMMUNITIES-API] Community fetched successfully:', primaryResp.data.data?.name || 'Community');
+      return {
+        ...primaryResp.data,
+        data: transformCommunityImages(primaryResp.data.data),
+      };
+    }
+
+    const fallbackResp = await tryEndpoints<CommunityResponse>(
       `/api/community-aff-crea-join/${slug}`,
       {
         method: 'GET',
@@ -318,12 +341,10 @@ export const getCommunityBySlug = async (slug: string): Promise<CommunityRespons
       }
     );
 
-    console.log('✅ [COMMUNITIES-API] Community fetched successfully:', resp.data.data?.name || 'Community');
-
-    // Transform image URLs in the response
+    console.log('✅ [COMMUNITIES-API] Community fetched successfully (fallback):', fallbackResp.data.data?.name || 'Community');
     return {
-      ...resp.data,
-      data: transformCommunityImages(resp.data.data),
+      ...fallbackResp.data,
+      data: transformCommunityImages(fallbackResp.data.data),
     };
   } catch (error: any) {
     console.error('💥 [COMMUNITIES-API] Error fetching community:', error);
@@ -404,7 +425,7 @@ export const getGlobalStats = async (): Promise<StatsResponse> => {
   try {
     console.log('🔍 [COMMUNITIES-API] Fetching global stats');
 
-    const resp = await tryEndpoints<StatsResponse>(
+    const resp = await tryEndpoints<any>(
       '/api/communities/stats/global',
       {
         method: 'GET',
@@ -414,7 +435,15 @@ export const getGlobalStats = async (): Promise<StatsResponse> => {
 
     console.log('✅ [COMMUNITIES-API] Global stats fetched successfully');
 
-    return resp.data;
+    if (resp.data?.data) {
+      return resp.data as StatsResponse;
+    }
+
+    return {
+      success: true,
+      message: 'Global stats retrieved successfully',
+      data: resp.data as GlobalStats,
+    };
   } catch (error: any) {
     console.error('💥 [COMMUNITIES-API] Error fetching stats:', error);
     throw new Error(error.message || 'Failed to fetch global stats');
@@ -438,7 +467,7 @@ export const getSearchSuggestions = async (
     params.append('q', query);
     params.append('limit', String(limit));
 
-    const resp = await tryEndpoints<SuggestionsResponse>(
+    const resp = await tryEndpoints<any>(
       `/api/communities/search/suggestions?${params.toString()}`,
       {
         method: 'GET',
@@ -446,9 +475,14 @@ export const getSearchSuggestions = async (
       }
     );
 
-    console.log('✅ [COMMUNITIES-API] Suggestions fetched:', resp.data.data.suggestions.length);
+    const suggestions = resp.data?.data?.suggestions || resp.data?.suggestions || [];
+    console.log('✅ [COMMUNITIES-API] Suggestions fetched:', suggestions.length);
 
-    return resp.data;
+    return {
+      success: true,
+      message: resp.data?.message || 'Suggestions retrieved successfully',
+      data: { suggestions },
+    };
   } catch (error: any) {
     console.error('💥 [COMMUNITIES-API] Error fetching suggestions:', error);
     // Don't throw for suggestions, just return empty

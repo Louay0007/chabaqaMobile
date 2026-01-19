@@ -93,7 +93,7 @@ const StepThree = ({ formData, updateFormData, socialLinkErrors }: StepThreeProp
           value={formData.socialLinks.instagram} 
           onChangeText={text => updateFormData('socialLinks.instagram', text)} 
           placeholder="Instagram username or URL" 
-          placeholderTextColor="#6b7280" 
+          placeholderTextColor="#9CA3AF" 
         />
       </View>
       {socialLinkErrors.instagram && <Text style={styles.errorText}>{socialLinkErrors.instagram}</Text>}
@@ -110,7 +110,7 @@ const StepThree = ({ formData, updateFormData, socialLinkErrors }: StepThreeProp
           value={formData.socialLinks.tiktok} 
           onChangeText={text => updateFormData('socialLinks.tiktok', text)} 
           placeholder="TikTok username or URL" 
-          placeholderTextColor="#6b7280" 
+          placeholderTextColor="#9CA3AF" 
         />
       </View>
       {socialLinkErrors.tiktok && <Text style={styles.errorText}>{socialLinkErrors.tiktok}</Text>}
@@ -127,7 +127,7 @@ const StepThree = ({ formData, updateFormData, socialLinkErrors }: StepThreeProp
           value={formData.socialLinks.facebook} 
           onChangeText={text => updateFormData('socialLinks.facebook', text)} 
           placeholder="Facebook page URL" 
-          placeholderTextColor="#6b7280" 
+          placeholderTextColor="#9CA3AF" 
         />
       </View>
       {socialLinkErrors.facebook && <Text style={styles.errorText}>{socialLinkErrors.facebook}</Text>}
@@ -144,7 +144,7 @@ const StepThree = ({ formData, updateFormData, socialLinkErrors }: StepThreeProp
           value={formData.socialLinks.youtube} 
           onChangeText={text => updateFormData('socialLinks.youtube', text)} 
           placeholder="YouTube channel URL" 
-          placeholderTextColor="#6b7280" 
+          placeholderTextColor="#9CA3AF" 
         />
       </View>
       {socialLinkErrors.youtube && <Text style={styles.errorText}>{socialLinkErrors.youtube}</Text>}
@@ -161,7 +161,7 @@ const StepThree = ({ formData, updateFormData, socialLinkErrors }: StepThreeProp
           value={formData.socialLinks.linkedin} 
           onChangeText={text => updateFormData('socialLinks.linkedin', text)} 
           placeholder="LinkedIn page URL" 
-          placeholderTextColor="#6b7280" 
+          placeholderTextColor="#9CA3AF" 
         />
       </View>
       {socialLinkErrors.linkedin && <Text style={styles.errorText}>{socialLinkErrors.linkedin}</Text>}
@@ -178,7 +178,7 @@ const StepThree = ({ formData, updateFormData, socialLinkErrors }: StepThreeProp
           value={formData.socialLinks.website} 
           onChangeText={text => updateFormData('socialLinks.website', text)} 
           placeholder="Your website URL" 
-          placeholderTextColor="#6b7280" 
+          placeholderTextColor="#9CA3AF" 
         />
       </View>
       {socialLinkErrors.website && <Text style={styles.errorText}>{socialLinkErrors.website}</Text>}
@@ -195,7 +195,7 @@ const StepThree = ({ formData, updateFormData, socialLinkErrors }: StepThreeProp
           value={formData.socialLinks.twitter || ''} 
           onChangeText={text => updateFormData('socialLinks.twitter', text)} 
           placeholder="X (Twitter) username or URL" 
-          placeholderTextColor="#6b7280" 
+          placeholderTextColor="#9CA3AF" 
         />
       </View>
       {socialLinkErrors.twitter && <Text style={styles.errorText}>{socialLinkErrors.twitter}</Text>}
@@ -212,7 +212,7 @@ const StepThree = ({ formData, updateFormData, socialLinkErrors }: StepThreeProp
           value={formData.socialLinks.discord || ''} 
           onChangeText={text => updateFormData('socialLinks.discord', text)} 
           placeholder="Discord invite link" 
-          placeholderTextColor="#6b7280" 
+          placeholderTextColor="#9CA3AF" 
         />
       </View>
       {socialLinkErrors.discord && <Text style={styles.errorText}>{socialLinkErrors.discord}</Text>}
@@ -229,7 +229,7 @@ const StepThree = ({ formData, updateFormData, socialLinkErrors }: StepThreeProp
           value={formData.socialLinks.behance || ''} 
           onChangeText={text => updateFormData('socialLinks.behance', text)} 
           placeholder="Behance profile URL" 
-          placeholderTextColor="#6b7280" 
+          placeholderTextColor="#9CA3AF" 
         />
       </View>
       {socialLinkErrors.behance && <Text style={styles.errorText}>{socialLinkErrors.behance}</Text>}
@@ -246,7 +246,7 @@ const StepThree = ({ formData, updateFormData, socialLinkErrors }: StepThreeProp
           value={formData.socialLinks.github || ''} 
           onChangeText={text => updateFormData('socialLinks.github', text)} 
           placeholder="GitHub profile URL" 
-          placeholderTextColor="#6b7280" 
+          placeholderTextColor="#9CA3AF" 
         />
       </View>
       {socialLinkErrors.github && <Text style={styles.errorText}>{socialLinkErrors.github}</Text>}

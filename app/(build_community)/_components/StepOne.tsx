@@ -36,7 +36,7 @@ const StepOne = ({ formData, updateFormData, selectedImage, handleImagePicker, s
     {/* Form Fields */}
     <View style={styles.inputContainer}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <Users size={16} color="#9ca3af" />
+        <Users size={16} color="#6B7280" />
         <Text style={styles.label}>Community Name *</Text>
       </View>
       <TextInput 
@@ -44,13 +44,13 @@ const StepOne = ({ formData, updateFormData, selectedImage, handleImagePicker, s
         value={formData.name} 
         onChangeText={text => updateFormData('name', text)} 
         placeholder="e.g Creators Club" 
-        placeholderTextColor="#6b7280" 
+        placeholderTextColor="#9CA3AF" 
       />
     </View>
     
     <View style={styles.inputContainer}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <MapPin size={16} color="#9ca3af" />
+        <MapPin size={16} color="#6B7280" />
         <Text style={styles.label}>Country *</Text>
       </View>
       <TextInput 
@@ -58,13 +58,13 @@ const StepOne = ({ formData, updateFormData, selectedImage, handleImagePicker, s
         value={formData.country} 
         onChangeText={text => updateFormData('country', text)} 
         placeholder="e.g Tunisia, France, Morocco..." 
-        placeholderTextColor="#6b7280" 
+        placeholderTextColor="#9CA3AF" 
       />
     </View>
     
     <View style={styles.inputContainer}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <FileText size={16} color="#9ca3af" />
+        <FileText size={16} color="#6B7280" />
         <Text style={styles.label}>Bio (optional)</Text>
       </View>
       <TextInput 
@@ -72,7 +72,7 @@ const StepOne = ({ formData, updateFormData, selectedImage, handleImagePicker, s
         value={formData.bio} 
         onChangeText={text => updateFormData('bio', text)} 
         placeholder="Tell people what your community is about..." 
-        placeholderTextColor="#6b7280" 
+        placeholderTextColor="#9CA3AF" 
         multiline 
         numberOfLines={4} 
       />
@@ -80,7 +80,7 @@ const StepOne = ({ formData, updateFormData, selectedImage, handleImagePicker, s
     
     <View style={styles.inputContainer}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <FolderOpen size={16} color="#9ca3af" />
+        <FolderOpen size={16} color="#6B7280" />
         <Text style={styles.label}>Category (optional)</Text>
       </View>
       <TextInput 
@@ -88,13 +88,13 @@ const StepOne = ({ formData, updateFormData, selectedImage, handleImagePicker, s
         value={formData.category || ''} 
         onChangeText={text => updateFormData('category', text)} 
         placeholder="e.g Technology, Marketing..." 
-        placeholderTextColor="#6b7280" 
+        placeholderTextColor="#9CA3AF" 
       />
     </View>
     
     <View style={styles.inputContainer}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <Tag size={16} color="#9ca3af" />
+        <Tag size={16} color="#6B7280" />
         <Text style={styles.label}>Tags (optional)</Text>
       </View>
       <TextInput
@@ -102,13 +102,13 @@ const StepOne = ({ formData, updateFormData, selectedImage, handleImagePicker, s
         value={(formData.tags || []).join(', ')}
         onChangeText={text => updateFormData('tags', text)}
         placeholder="e.g React, JavaScript, AI"
-        placeholderTextColor="#6b7280"
+        placeholderTextColor="#9CA3AF"
       />
     </View>
     
     <View style={styles.inputContainer}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <AlignLeft size={16} color="#9ca3af" />
+        <AlignLeft size={16} color="#6B7280" />
         <Text style={styles.label}>Long description (optional)</Text>
       </View>
       <TextInput
@@ -116,7 +116,7 @@ const StepOne = ({ formData, updateFormData, selectedImage, handleImagePicker, s
         value={formData.longDescription || ''}
         onChangeText={text => updateFormData('longDescription', text)}
         placeholder="Write a detailed description of your community..."
-        placeholderTextColor="#6b7280"
+        placeholderTextColor="#9CA3AF"
         multiline
         numberOfLines={5}
       />

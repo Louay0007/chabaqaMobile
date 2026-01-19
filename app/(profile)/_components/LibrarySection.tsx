@@ -105,9 +105,22 @@ export default function LibrarySection() {
         headers: { Authorization: `Bearer ${token}` },
         timeout: 10000,
       });
-      const transactions = resp.data?.data || resp.data?.transactions || [];
-      return transactions.filter((tx: any) => tx.type === 'purchase' && tx.contentType === 'PRODUCT');
-    } catch {
+      const transactions = resp.data?.data || resp.data?.transactions || resp.data || [];
+      console.log('📦 [LIBRARY] All transactions:', transactions.length);
+      
+      // Filter for all purchases (any content type)
+      const purchases = transactions.filter((tx: any) => tx.type === 'purchase');
+      console.log('📦 [LIBRARY] Purchases found:', purchases.length);
+      console.log('📦 [LIBRARY] Purchase details:', purchases.map((p: any) => ({ 
+        type: p.type, 
+        contentType: p.contentType, 
+        description: p.description,
+        amount: p.amount 
+      })));
+      
+      return purchases;
+    } catch (error) {
+      console.log('Error fetching purchased products:', error);
       return [];
     }
   };
@@ -115,7 +128,7 @@ export default function LibrarySection() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#8e78fb" />
+        <ActivityIndicator size="large" color="#8B5CF6" />
         <Text style={styles.loadingText}>Loading your library...</Text>
       </View>
     );
@@ -148,7 +161,7 @@ export default function LibrarySection() {
           <Ionicons 
             name={expandedSections[sectionKey] ? 'chevron-up' : 'chevron-down'} 
             size={20} 
-            color="#9ca3af" 
+            color="#6B7280" 
           />
         )}
       </View>
@@ -202,7 +215,7 @@ export default function LibrarySection() {
     <View style={styles.container}>
       {/* Communities Section - Cards */}
       <View style={styles.section}>
-        {renderSectionHeader('people-outline', 'Joined Communities', communities.length, '#8e78fb', 'communities', communities.length > 2)}
+        {renderSectionHeader('people-outline', 'Joined Communities', communities.length, '#8B5CF6', 'communities', communities.length > 2)}
         
         {communities.length === 0 ? (
           <View style={styles.emptyCard}>
@@ -271,25 +284,33 @@ export default function LibrarySection() {
         )}
       </View>
 
-      {/* Products Section - List */}
+      {/* Purchases Section - List */}
       <View style={styles.section}>
-        {renderSectionHeader('cart-outline', 'Purchased Products', products.length, '#ec4899', 'products', products.length > 2)}
+        {renderSectionHeader('cart-outline', 'Purchases', products.length, '#ec4899', 'products', products.length > 2)}
 
         {products.length === 0 ? (
           <View style={styles.emptyCard}>
             <Ionicons name="cart-outline" size={40} color="#6b7280" />
-            <Text style={styles.emptyText}>No products purchased</Text>
+            <Text style={styles.emptyText}>No purchases yet</Text>
           </View>
         ) : (
           <View style={styles.listContainer}>
-            {productsToShow.map((product, index) => 
+            {productsToShow.map((purchase, index) => 
               renderListItem(
-                product, 
+                purchase, 
                 index, 
-                'cart-outline', 
-                '#ec4899',
-                product.description || 'Product',
-                `${Math.abs(product.amount)} points`
+                purchase.contentType === 'product' ? 'cart-outline' : 
+                purchase.contentType === 'course' ? 'book-outline' :
+                purchase.contentType === 'challenge' ? 'flag-outline' :
+                purchase.contentType === 'community' ? 'people-outline' :
+                purchase.contentType === 'session' ? 'calendar-outline' : 'cart-outline', 
+                purchase.contentType === 'product' ? '#ec4899' : 
+                purchase.contentType === 'course' ? '#47c7ea' :
+                purchase.contentType === 'challenge' ? '#ff9b28' :
+                purchase.contentType === 'community' ? '#8B5CF6' :
+                purchase.contentType === 'session' ? '#10b981' : '#ec4899',
+                purchase.description || `${purchase.contentType || 'Purchase'}`,
+                `${Math.abs(purchase.amount)} points`
               )
             )}
           </View>
@@ -314,7 +335,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: fontSize.base,
     marginTop: spacing.lg,
-    color: '#9ca3af',
+    color: '#6B7280',
   },
 
   section: {
@@ -354,7 +375,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSize.base,
     fontWeight: fontWeight.semibold,
-    color: '#ffffff',
+    color: '#000000',
   },
 
   countBadge: {
@@ -380,17 +401,22 @@ const styles = StyleSheet.create({
 
   communityCard: {
     width: '48%',
-    backgroundColor: '#1f2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
 
   communityImage: {
     width: '100%',
     height: 80,
-    backgroundColor: '#374151',
+    backgroundColor: '#F3F4F6',
   },
 
   communityImagePlaceholder: {
@@ -400,18 +426,19 @@ const styles = StyleSheet.create({
 
   communityContent: {
     padding: spacing.sm,
+    backgroundColor: '#FFFFFF',
   },
 
   communityName: {
     fontSize: fontSize.sm,
     fontWeight: fontWeight.semibold,
-    color: '#ffffff',
+    color: '#000000',
     marginBottom: 2,
   },
 
   communityMeta: {
     fontSize: fontSize.xs,
-    color: '#9ca3af',
+    color: '#6B7280',
   },
 
   // List styles
@@ -422,11 +449,16 @@ const styles = StyleSheet.create({
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1f2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
 
   itemIcon: {
@@ -445,41 +477,41 @@ const styles = StyleSheet.create({
   listItemTitle: {
     fontSize: fontSize.sm,
     fontWeight: fontWeight.medium,
-    color: '#ffffff',
+    color: '#000000',
     marginBottom: 2,
   },
 
   listItemMeta: {
     fontSize: fontSize.xs,
-    color: '#9ca3af',
+    color: '#6B7280',
   },
 
   // Empty State
   emptyCard: {
-    backgroundColor: '#1f2937',
+    backgroundColor: '#F9FAFB',
     borderRadius: borderRadius.lg,
     padding: spacing.xl,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#E5E7EB',
   },
 
   emptyText: {
     fontSize: fontSize.sm,
     marginTop: spacing.md,
     textAlign: 'center',
-    color: '#9ca3af',
+    color: '#6B7280',
   },
 
   emptySubtext: {
     fontSize: fontSize.xs,
     marginTop: spacing.xs,
     textAlign: 'center',
-    color: '#6b7280',
+    color: '#9CA3AF',
   },
 
   exploreButton: {
-    backgroundColor: '#8e78fb',
+    backgroundColor: '#8B5CF6',
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
     borderRadius: borderRadius.full,

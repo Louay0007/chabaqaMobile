@@ -42,6 +42,7 @@ import TimelineTab from './_components/TimelineTab';
 // Local task type matching UI requirements
 interface TaskType {
   id: string;
+  backendId?: string;
   day: number;
   title: string;
   description: string;
@@ -196,22 +197,44 @@ export default function ChallengeDetailScreen() {
           );
           setIsParticipant(userIsParticipant);
         }
-        // Transform tasks
-        const tasks = (challengeData.tasks || []).map((task: any) => ({
-          id: task.id || task._id,
-          day: task.day,
-          title: task.title || '',
-          description: task.description || '',
-          deliverable: task.deliverable,
-          isCompleted: task.isCompleted || false,
-          isActive: task.isActive !== undefined ? task.isActive : true,
-          points: task.points || 0,
-          instructions: task.instructions || '',
-          notes: task.notes,
-          resources: task.resources || [],
-          createdAt: task.createdAt,
+        const participantCompletedTasks: string[] = currentUserId && challengeData.participants
+          ? challengeData.participants
+              .find((p: any) =>
+                p.userId === currentUserId ||
+                p.userId?.toString() === currentUserId ||
+                p.userId === currentUserId?.toString()
+              )?.completedTasks || []
+          : [];
+
+        const tasks = (challengeData.tasks || [])
+          .map((task: any, index: number) => {
+            const backendId = task.id || task._id?.toString?.() || task._id;
+            return {
+              id: backendId || `task-${index}`,
+              backendId,
+              day: task.day ?? index + 1,
+              title: task.title || '',
+              description: task.description || '',
+              deliverable: task.deliverable,
+              isCompleted: backendId ? participantCompletedTasks.includes(backendId) : false,
+              isActive: true,
+              points: task.points || 0,
+              instructions: task.instructions || '',
+              notes: task.notes,
+              resources: task.resources || [],
+              createdAt: task.createdAt,
+            };
+          })
+          .sort((a, b) => a.day - b.day);
+
+        const firstIncomplete = tasks.find((task) => !task.isCompleted);
+        const activeTaskId = firstIncomplete?.id || tasks[0]?.id;
+        const normalizedTasks = tasks.map((task) => ({
+          ...task,
+          isActive: task.id === activeTaskId,
         }));
-        setChallengeTasks(tasks);
+
+        setChallengeTasks(normalizedTasks);
 
         // Fetch leaderboard data
         await fetchLeaderboard();

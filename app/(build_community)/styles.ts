@@ -7,20 +7,20 @@ export const unstable_settings = {
 import { StyleSheet, Platform } from 'react-native';
 import { borderRadius, fontSize, fontWeight, spacing } from '../../lib/design-tokens';
 
-// Dark theme colors matching PaymentScreen
+// Light theme colors with purple accents
 const darkColors = {
-  background: '#111827',
-  card: '#1f2937',
-  cardBorder: '#374151',
-  inputBg: '#374151',
-  text: '#ffffff',
-  textSecondary: '#9ca3af',
-  textMuted: '#6b7280',
-  primary: '#8e78fb',
-  primaryLight: 'rgba(142, 120, 251, 0.15)',
-  success: '#22d3ee',
-  error: '#ef4444',
-  errorBg: 'rgba(239, 68, 68, 0.1)',
+  background: '#FFFFFF',
+  card: '#FFFFFF',
+  cardBorder: '#E5E7EB',
+  inputBg: '#F9FAFB',
+  text: '#000000',
+  textSecondary: '#6B7280',
+  textMuted: '#9CA3AF',
+  primary: '#8B5CF6',
+  primaryLight: 'rgba(139, 92, 246, 0.1)',
+  success: '#10B981',
+  error: '#EF4444',
+  errorBg: 'rgba(239, 68, 68, 0.08)',
 };
 
 const styles = StyleSheet.create({
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     color: darkColors.textMuted,
   },
   stepDotTextActive: {
-    color: darkColors.text,
+    color: '#FFFFFF',
   },
   stepLine: {
     width: 40,
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontSize: 22,
     fontWeight: fontWeight.bold,
-    color: darkColors.text,
+    color: '#8B5CF6',
     textAlign: 'center',
     marginBottom: spacing.xs,
   },
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     minWidth: 150,
   },
   primaryButtonText: {
-    color: darkColors.text,
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -522,11 +522,11 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#22d3ee',
+    backgroundColor: '#10B981',
   },
   successCheckIcon: {
     fontSize: 32,
-    color: darkColors.background,
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
   successPartyIcon: {
@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
   },
   modernCheckIcon: {
     fontSize: 40,
-    color: darkColors.background,
+    color: '#FFFFFF',
     fontWeight: '900',
   },
   modernIconGlow: {
@@ -687,7 +687,7 @@ const styles = StyleSheet.create({
     right: -10,
     bottom: -10,
     borderRadius: 60,
-    backgroundColor: 'rgba(34, 211, 238, 0.2)',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
     opacity: 0.8,
   },
   modernContent: {
@@ -845,7 +845,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   minimalistIcon: {
-    backgroundColor: '#22d3ee',
+    backgroundColor: '#10B981',
     borderRadius: 24,
     padding: spacing.lg,
   },
@@ -913,7 +913,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   minimalistPrimaryButton: {
-    backgroundColor: darkColors.text,
+    backgroundColor: '#111827',
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 30,
@@ -921,7 +921,7 @@ const styles = StyleSheet.create({
   minimalistPrimaryButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: darkColors.background,
+    color: '#FFFFFF',
     textAlign: 'center',
   },
   minimalistSecondaryButton: {

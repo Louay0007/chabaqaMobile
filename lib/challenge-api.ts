@@ -270,7 +270,6 @@ export async function getChallenges(filters: ChallengeFilters = {}): Promise<Cha
     if (filters.category) params.append('category', filters.category);
     if (filters.difficulty) params.append('difficulty', filters.difficulty);
     if (filters.isActive !== undefined) params.append('isActive', filters.isActive.toString());
-    if (filters.search) params.append('search', filters.search);
 
     const resp = await tryEndpoints<any>(
       `/api/challenges?${params.toString()}`,
@@ -471,9 +470,8 @@ export async function getMyChallengeParticipation(challengeId: string): Promise<
     }
 
     console.log('📊 [CHALLENGE-API] Fetching participation for challenge:', challengeId);
-
     const resp = await tryEndpoints<any>(
-      `/api/challenges/${challengeId}`,
+      '/api/challenges/user/my-participations',
       {
         method: 'GET',
         headers: {
@@ -483,12 +481,12 @@ export async function getMyChallengeParticipation(challengeId: string): Promise<
       }
     );
 
-    if (resp.status >= 200 && resp.status < 300) {
-      console.log('✅ [CHALLENGE-API] Challenge fetched - participation check requires user ID lookup');
-      return null;
-    }
+    const participations: ChallengeParticipation[] = resp.data?.data?.participations || [];
+    const participation = participations.find(
+      (entry) => entry.challenge?.id === challengeId || entry.challengeId === challengeId
+    );
 
-    return null;
+    return participation || null;
   } catch (error: any) {
     console.error('💥 [CHALLENGE-API] Error fetching participation:', error);
     return null;

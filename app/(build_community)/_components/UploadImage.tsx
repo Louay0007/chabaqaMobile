@@ -62,7 +62,7 @@ const UploadImage: React.FC<UploadImageProps> = ({ selectedImage, handleImagePic
           onPress={() => setShowImagePicker(true)}
           activeOpacity={0.8}
         >
-          <LinearGradient colors={['#8e78fb', '#47c7ea']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.photoUploadGradient}>
+          <LinearGradient colors={['#8B5CF6', '#7C3AED']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.photoUploadGradient}>
             {selectedImage ? (
               <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
             ) : (
@@ -117,11 +117,11 @@ const UploadImage: React.FC<UploadImageProps> = ({ selectedImage, handleImagePic
 const modalStyles = StyleSheet.create({
   bottomModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   bottomModalContent: {
-    backgroundColor: '#1f2937',
+    backgroundColor: '#1F2937',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingBottom: 40,
@@ -133,7 +133,7 @@ const modalStyles = StyleSheet.create({
   modalHandle: {
     width: 40,
     height: 4,
-    backgroundColor: '#4b5563',
+    backgroundColor: '#4B5563',
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 20,
@@ -155,7 +155,7 @@ const modalStyles = StyleSheet.create({
   },
   bottomOptionText: {
     fontSize: 16,
-    color: '#ffffff',
+    color: '#FFFFFF',
     fontWeight: '500',
   },
 });

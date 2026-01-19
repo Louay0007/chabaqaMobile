@@ -64,33 +64,27 @@ export const loginAction = async (data: {
     const result = resp.data;
     console.log('📨 [AUTH-API] Réponse du serveur:', result);
 
-    if (resp.status >= 200 && resp.status < 300 && result.requires2FA) {
-      console.log('📱 [AUTH-API] 2FA requis');
-      return {
-        success: true,
-        requires2FA: true,
-        userId: result.userId,
-        message: result.message
-      };
-    } else if (resp.status >= 200 && resp.status < 300 && !result.requires2FA && result.accessToken) {
-      // Connexion directe sans 2FA (cas Google OAuth ou utilisateur sans 2FA)
-      console.log('✅ [AUTH-API] Connexion directe réussie (pas de 2FA)');
-      await storeTokens(result.accessToken, result.refreshToken);
+    const accessToken = result.accessToken || result.access_token;
+    const refreshToken = result.refreshToken || result.refresh_token;
+
+    if (resp.status >= 200 && resp.status < 300 && accessToken) {
+      console.log('✅ [AUTH-API] Connexion réussie');
+      await storeTokens(accessToken, refreshToken);
       if (result.user) {
         await storeUser(result.user);
       }
 
       return {
         success: true,
-        requires2FA: false
-      };
-    } else {
-      console.log('❌ [AUTH-API] Échec de connexion:', result.message);
-      return {
-        success: false,
-        error: result.message || "Email ou mot de passe incorrect"
+        requires2FA: false,
       };
     }
+
+    console.log('❌ [AUTH-API] Échec de connexion:', result.message);
+    return {
+      success: false,
+      error: result.message || "Email ou mot de passe incorrect",
+    };
   } catch (error) {
     console.error('💥 [AUTH-API] Exception lors de la connexion:', error);
     return {
@@ -106,56 +100,12 @@ export const loginAction = async (data: {
  * @param data - Email et code de vérification à 6 chiffres
  * @returns VerifyTwoFactorResult avec success, user ou error
  */
-export const verifyTwoFactorAction = async (data: {
-  userId: string;
-  code: string;
-  rememberMe?: boolean;
-}): Promise<VerifyTwoFactorResult> => {
-  try {
-    console.log('🔐 [AUTH-API] Vérification du code 2FA pour userId:', data.userId);
-
-    const resp = await tryEndpoints<any>(
-      '/api/auth/verify-2fa',
-      {
-        method: 'POST',
-        data: {
-          userId: data.userId,
-          code: data.code,
-          rememberMe: data.rememberMe || false
-        },
-        timeout: 30000,
-      }
-    );
-
-    const result = resp.data;
-    console.log('📨 [AUTH-API] Réponse du serveur:', result);
-
-    if (resp.status >= 200 && resp.status < 300 && result.access_token) {
-      console.log('✅ [AUTH-API] 2FA vérifié avec succès');
-      // Stocker les tokens
-      await storeTokens(result.access_token, result.refresh_token);
-      if (result.user) {
-        await storeUser(result.user);
-      }
-
-      return {
-        success: true,
-        user: result.user,
-      };
-    } else {
-      console.log('❌ [AUTH-API] Code invalide ou expiré');
-      return {
-        success: false,
-        error: result.message || "Code de vérification invalide ou expiré"
-      };
-    }
-  } catch (error) {
-    console.error('💥 [AUTH-API] Exception lors de la vérification 2FA:', error);
-    return {
-      success: false,
-      error: 'Erreur de connexion. Veuillez réessayer.'
-    };
-  }
+export const verifyTwoFactorAction = async (): Promise<VerifyTwoFactorResult> => {
+  console.log('⚠️ [AUTH-API] 2FA user flow not supported by backend');
+  return {
+    success: false,
+    error: 'La vérification 2FA utilisateur n\'est pas prise en charge sur le backend.',
+  };
 };
 
 /**
