@@ -9,6 +9,7 @@
 
 import { tryEndpoints } from './http';
 import { getAccessToken } from './auth';
+import { getImageUrl } from './image-utils';
 
 // ============================================================================
 // TypeScript Interfaces
@@ -97,6 +98,33 @@ export interface ProductPurchase {
   download_count?: number;
 }
 
+export interface ProductReviewUser {
+  id: string;
+  name: string;
+  avatar?: string;
+}
+
+export interface ProductReview {
+  id: string;
+  user: ProductReviewUser;
+  rating: number;
+  message: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ProductReviewsResponse {
+  reviews: ProductReview[];
+  averageRating: number;
+  ratingCount: number;
+}
+
+export interface MyProductReview {
+  rating: number;
+  message: string;
+  updatedAt?: string;
+}
+
 /**
  * API response for product list
  */
@@ -170,6 +198,113 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
     console.error('💥 [PRODUCT-API] Error fetching products:', error);
     throw new Error(error.message || 'Failed to fetch products');
   }
+}
+
+export async function getProductReviews(productId: string): Promise<ProductReviewsResponse> {
+  const resp = await tryEndpoints<any>(
+    `/api/products/${productId}/reviews`,
+    {
+      method: 'GET',
+      timeout: 30000,
+    }
+  );
+
+  if (resp.status >= 200 && resp.status < 300) {
+    return {
+      reviews: resp.data?.reviews || [],
+      averageRating: Number(resp.data?.averageRating || 0),
+      ratingCount: Number(resp.data?.ratingCount || 0),
+    };
+  }
+
+  throw new Error(resp.data?.message || 'Failed to fetch reviews');
+}
+
+export async function getMyProductReview(productId: string): Promise<MyProductReview | null> {
+  const token = await getAccessToken();
+  if (!token) return null;
+
+  const resp = await tryEndpoints<any>(
+    `/api/products/${productId}/reviews/me`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      timeout: 30000,
+    }
+  );
+
+  if (resp.status >= 200 && resp.status < 300) {
+    return resp.data?.review || null;
+  }
+
+  return null;
+}
+
+export async function upsertProductReview(
+  productId: string,
+  rating: number,
+  message: string
+): Promise<{ averageRating: number; ratingCount: number; myReview: MyProductReview | null }> {
+  const token = await getAccessToken();
+  if (!token) {
+    throw new Error('Authentication required');
+  }
+
+  const resp = await tryEndpoints<any>(
+    `/api/products/${productId}/reviews`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      data: { rating, message },
+      timeout: 30000,
+    }
+  );
+
+  if (resp.status >= 200 && resp.status < 300) {
+    return {
+      averageRating: Number(resp.data?.averageRating || 0),
+      ratingCount: Number(resp.data?.ratingCount || 0),
+      myReview: resp.data?.myReview || null,
+    };
+  }
+
+  throw new Error(resp.data?.message || 'Failed to submit review');
+}
+
+/**
+ * Check if the logged-in user has access to a product (paid order exists).
+ * Backend source of truth: GET /api/products/:id/check-purchase
+ */
+export async function checkProductAccess(productId: string): Promise<{ purchased: boolean; purchase?: any }> {
+  const token = await getAccessToken();
+  if (!token) {
+    return { purchased: false };
+  }
+
+  const resp = await tryEndpoints<any>(
+    `/api/products/${productId}/check-purchase`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      timeout: 30000,
+    }
+  );
+
+  if (resp.status >= 200 && resp.status < 300) {
+    return {
+      purchased: !!resp.data?.purchased,
+      purchase: resp.data?.purchase,
+    };
+  }
+
+  return { purchased: false };
 }
 
 /**
@@ -268,9 +403,9 @@ export async function downloadProductFile(
     const resp = await tryEndpoints<any>(
       `/api/products/${productId}/files/${fileId}/download`,
       {
-        method: 'GET',
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         timeout: 30000,
       }
@@ -278,7 +413,8 @@ export async function downloadProductFile(
 
     if (resp.status >= 200 && resp.status < 300) {
       console.log('✅ [PRODUCT-API] Download URL retrieved');
-      return { download_url: resp.data.download_url || resp.data.url };
+      const rawUrl = resp.data?.downloadUrl || resp.data?.download_url || resp.data?.url;
+      return { download_url: getImageUrl(rawUrl) };
     }
 
     throw new Error(resp.data.message || 'Failed to get download URL');
@@ -495,4 +631,60 @@ export function formatFileSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   
   return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+}
+
+/**
+ * Purchase product with wallet balance
+ * 
+ * @param productId - Product ID to purchase
+ * @param amount - Amount in DT
+ * @param creatorId - Creator ID
+ * @returns Promise with purchase result
+ */
+export async function purchaseProductWithWallet(
+  productId: string,
+  amount: number,
+  creatorId: string
+): Promise<{ success: boolean; newBalance: number; message?: string }> {
+  try {
+    const token = await getAccessToken();
+    if (!token) {
+      throw new Error('Authentication required. Please login to purchase.');
+    }
+
+    console.log('💳 [PRODUCT-API] Purchasing product with wallet:', { productId, amount, creatorId });
+
+    const resp = await tryEndpoints<any>(
+      `/api/wallet/purchase`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        data: {
+          contentType: 'product',
+          contentId: productId,
+          amount,
+          creatorId,
+          description: `Product purchase`,
+        },
+        timeout: 30000,
+      }
+    );
+
+    if (resp.status >= 200 && resp.status < 300) {
+      console.log('✅ [PRODUCT-API] Product purchased successfully');
+      return {
+        success: true,
+        newBalance: resp.data.data?.newBalance || 0,
+        message: resp.data.message || 'Purchase successful',
+      };
+    }
+
+    throw new Error(resp.data?.message || 'Failed to purchase product');
+  } catch (error: any) {
+    console.error('💥 [PRODUCT-API] Error purchasing product:', error);
+    throw new Error(error.message || 'Failed to purchase product');
+  }
 }

@@ -2,16 +2,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { Image, Text, TouchableOpacity, View, Modal, StyleSheet, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera, ImagePlus, X } from 'lucide-react-native';
+import { Camera, ImagePlus, Upload } from 'lucide-react-native';
 import styles from '../styles';
-import CameraIcon from './icons/CameraIcon';
 
 interface UploadImageProps {
   selectedImage: string | null;
   handleImagePicker: (imageUri: string) => void;
+  title?: string;
 }
 
-const UploadImage: React.FC<UploadImageProps> = ({ selectedImage, handleImagePicker }) => {
+const UploadImage: React.FC<UploadImageProps> = ({ selectedImage, handleImagePicker, title = "Add community photo" }) => {
   const [showImagePicker, setShowImagePicker] = useState(false);
 
   const handleTakePhoto = async () => {
@@ -62,14 +62,18 @@ const UploadImage: React.FC<UploadImageProps> = ({ selectedImage, handleImagePic
           onPress={() => setShowImagePicker(true)}
           activeOpacity={0.8}
         >
-          <LinearGradient colors={['#8e78fb', '#47c7ea']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.photoUploadGradient}>
-            {selectedImage ? <Image source={{ uri: selectedImage }} style={styles.selectedImage} /> : <CameraIcon />}
+          <LinearGradient colors={['#8B5CF6', '#7C3AED']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.photoUploadGradient}>
+            {selectedImage ? (
+              <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
+            ) : (
+              <Upload size={28} color="#ffffff" />
+            )}
           </LinearGradient>
         </TouchableOpacity>
-        <Text style={styles.photoUploadText}>Add community photo</Text>
+        <Text style={styles.photoUploadText}>{title}</Text>
       </View>
 
-      {/* Image Picker Modal */}
+      {/* Image Picker Modal - Dark Theme */}
       <Modal
         visible={showImagePicker}
         transparent={true}
@@ -88,7 +92,9 @@ const UploadImage: React.FC<UploadImageProps> = ({ selectedImage, handleImagePic
               style={modalStyles.bottomOptionButton}
               onPress={handleTakePhoto}
             >
-              <Camera size={24} color="#374151" />
+              <View style={modalStyles.iconContainer}>
+                <Camera size={22} color="#ffffff" />
+              </View>
               <Text style={modalStyles.bottomOptionText}>Take a photo</Text>
             </TouchableOpacity>
             
@@ -96,7 +102,9 @@ const UploadImage: React.FC<UploadImageProps> = ({ selectedImage, handleImagePic
               style={modalStyles.bottomOptionButton}
               onPress={handleChooseFromLibrary}
             >
-              <ImagePlus size={24} color="#374151" />
+              <View style={modalStyles.iconContainer}>
+                <ImagePlus size={22} color="#ffffff" />
+              </View>
               <Text style={modalStyles.bottomOptionText}>Choose from library</Text>
             </TouchableOpacity>
           </View>
@@ -113,16 +121,19 @@ const modalStyles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   bottomModalContent: {
-    backgroundColor: 'white',
+    backgroundColor: '#1F2937',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingBottom: 40,
     paddingTop: 8,
+    borderWidth: 1,
+    borderColor: '#374151',
+    borderBottomWidth: 0,
   },
   modalHandle: {
     width: 40,
     height: 4,
-    backgroundColor: '#d1d5db',
+    backgroundColor: '#4B5563',
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 20,
@@ -130,14 +141,22 @@ const modalStyles = StyleSheet.create({
   bottomOptionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 18,
+    paddingVertical: 16,
     paddingHorizontal: 24,
     gap: 16,
   },
+  iconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#374151',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   bottomOptionText: {
-    fontSize: 17,
-    color: '#111827',
-    fontWeight: '400',
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '500',
   },
 });
 

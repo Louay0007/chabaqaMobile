@@ -1,34 +1,26 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import * as ImagePicker from 'expo-image-picker';
 import {
   ActivityIndicator,
   Image,
-  ImageBackground,
-  Platform,
   RefreshControl,
   ScrollView,
-  StatusBar,
   Text,
   TouchableOpacity,
   View,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ThemedText } from '@/_components/ThemedText';
-import { ThemedView } from '@/_components/ThemedView';
-import GlobalBottomNavigation from '../_components/GlobalBottomNavigation';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useAuth } from '@/hooks/use-auth';
 import { useAdaptiveColors } from '@/hooks/useAdaptiveColors';
 import { enhancedStyles } from './_enhanced-styles';
 import LibrarySection from './_components/LibrarySection';
-import { colors } from '@/lib/design-tokens';
 import Sidebar from '../_components/Sidebar';
 import { communityStyles } from '../(communities)/_styles';
-import { getProfileData, ProfileData, UserActivity, formatActivityTime, getActivityIcon, getActivityColor } from '@/lib/profile-api';
+import { getProfileData, ProfileData, formatActivityTime, getActivityIcon, getActivityColor } from '@/lib/profile-api';
+import { getImageUrl } from '@/lib/image-utils';
 
 export default function ProfileScreen() {
   const { user, isAuthenticated } = useAuth();
@@ -40,7 +32,6 @@ export default function ProfileScreen() {
 
   // Real API data state
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadProfileData();
@@ -52,7 +43,6 @@ export default function ProfileScreen() {
       console.log('🔄 [PROFILE] Screen focused, forcing fresh profile data load');
       // Force a fresh load by clearing current data first
       setProfileData(null);
-      setError(null);
       loadProfileData();
     }, [])
   );
@@ -60,7 +50,6 @@ export default function ProfileScreen() {
   const loadProfileData = async () => {
     try {
       setLoading(true);
-      setError(null);
       
       console.log('🔄 [PROFILE] Loading profile data...');
       const data = await getProfileData();
@@ -74,18 +63,8 @@ export default function ProfileScreen() {
         userCountry: data.user?.pays || 'No country',
         userCity: data.user?.ville || 'No city'
       });
-      
-      console.log('📍 [PROFILE] Location data:', {
-        phone: data.user?.numtel,
-        country: data.user?.pays,
-        city: data.user?.ville,
-        willDisplayPhone: !!(data.user?.numtel),
-        willDisplayCountry: !!(data.user?.pays),
-        willDisplayCity: !!(data.user?.ville)
-      });
     } catch (error: any) {
       console.error('💥 [PROFILE] Error loading profile data:', error);
-      setError(error.message || 'Failed to load profile data');
     } finally {
       setLoading(false);
     }
@@ -97,47 +76,17 @@ export default function ProfileScreen() {
     setRefreshing(false);
   };
 
-  const handlePickImage = async () => {
-    try {
-      // Request permission
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (permissionResult.granted === false) {
-        Alert.alert('Permission Required', 'Permission to access camera roll is required!');
-        return;
-      }
-
-      // Launch image picker
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        // TODO: Upload the image to your backend
-        // For now, just show success message
-        Alert.alert('Success', 'Photo selected! Upload functionality to be implemented.');
-        console.log('Selected image:', result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image');
-    }
-  };
-
   // Function to get tab colors based on tab type
   const getTabColors = (tab: string): [string, string] => {
     switch (tab) {
       case 'about':
-        return ['#8e78fb', '#7a68f5']; // Purple like communities
+        return ['#8B5CF6', '#7C3AED']; // Purple like communities
       case 'library':
         return ['#47c7ea', '#3bb5d6']; // Cyan like courses
       case 'activity':
         return ['#ff9b28', '#ff8c1a']; // Orange like challenges
       default:
-        return ['#8e78fb', '#7a68f5'];
+        return ['#8B5CF6', '#7C3AED'];
     }
   };
 
@@ -174,7 +123,7 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={enhancedStyles.container}>
         <View style={enhancedStyles.centerContainer}>
-          <Ionicons name="person-circle-outline" size={80} color="#8e78fb" />
+          <Ionicons name="person-circle-outline" size={80} color="#8B5CF6" />
           <Text style={enhancedStyles.emptyText}>
             Please login to view your profile
           </Text>
@@ -193,7 +142,7 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={enhancedStyles.container}>
         <View style={enhancedStyles.centerContainer}>
-          <ActivityIndicator size="large" color="#8e78fb" />
+          <ActivityIndicator size="large" color="#8B5CF6" />
         </View>
       </SafeAreaView>
     );
@@ -211,29 +160,25 @@ export default function ProfileScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Enhanced Profile Header with Gradient and Decorative Elements */}
+        {/* Profile Header with Dark Background */}
         <View style={enhancedStyles.headerWrapper}>
-          <ImageBackground
-            source={require('@/assets/images/background.png')}
-            style={enhancedStyles.headerGradient}
-            imageStyle={enhancedStyles.headerBackgroundImage}
-          >
-            {/* Gradient effects removed */}
-            
-            {/* Decorative Circles - keep for additional visual effect */}
-            <View style={enhancedStyles.decorativeCircle1} />
-            <View style={enhancedStyles.decorativeCircle2} />
-            <View style={enhancedStyles.decorativeCircle3} />
-
+          <View style={enhancedStyles.headerGradient}>
             {/* Avatar with Glow Effect */}
             <View style={enhancedStyles.avatarContainer}>
               <View style={enhancedStyles.avatarGlow}>
-                {(profileData?.user?.avatar || user?.avatar) ? (
-                  <Image source={{ uri: profileData?.user?.avatar || user?.avatar }} style={enhancedStyles.avatar} />
+                {(profileData?.user?.avatar || profileData?.user?.photo_profil || user?.avatar) ? (
+                  <Image 
+                    source={{ uri: getImageUrl(profileData?.user?.avatar || profileData?.user?.photo_profil || user?.avatar, true) }} 
+                    style={enhancedStyles.avatar}
+                    onError={() => {
+                      console.log('❌ [PROFILE] Avatar image failed to load:', getImageUrl(profileData?.user?.avatar || profileData?.user?.photo_profil || user?.avatar));
+                    }}
+                    defaultSource={require('@/assets/images/logo_chabaqa.png')}
+                  />
                 ) : (
                   <View style={[enhancedStyles.avatar, enhancedStyles.avatarPlaceholder]}>
                     <LinearGradient
-                      colors={['#8e78fb', '#667eea']}
+                      colors={['#8B5CF6', '#7C3AED']}
                       style={enhancedStyles.avatarGradient}
                     >
                       <Ionicons name="person" size={42} color="#fff" />
@@ -241,13 +186,6 @@ export default function ProfileScreen() {
                   </View>
                 )}
               </View>
-              {/* Edit Avatar Badge */}
-              <TouchableOpacity 
-                style={enhancedStyles.editAvatarBadge}
-                onPress={handlePickImage}
-              >
-                <Ionicons name="camera" size={14} color="#fff" />
-              </TouchableOpacity>
             </View>
 
             {/* User Info */}
@@ -258,15 +196,15 @@ export default function ProfileScreen() {
               </View>
             )}
             <Text style={enhancedStyles.userEmail}>{profileData?.user?.email || user?.email}</Text>
-          </ImageBackground>
+          </View>
 
-          {/* Glass-morphism Stats Cards */}
+          {/* Stats Cards - Normal Flow */}
           <View style={enhancedStyles.statsContainer}>
             <View style={enhancedStyles.statsRow}>
               <View style={enhancedStyles.statCardWrapper}>
                 <View style={enhancedStyles.statCard}>
-                  <View style={[enhancedStyles.statIcon, { backgroundColor: '#8e78fb' }]}>
-                    <Ionicons name="people" size={18} color="#fff" />
+                  <View style={[enhancedStyles.statIcon, { backgroundColor: '#8B5CF6' }]}>
+                    <Ionicons name="people-outline" size={18} color="#fff" />
                   </View>
                   <Text style={enhancedStyles.statValue}>{profileData?.stats?.communitiesJoined || 0}</Text>
                   <Text style={enhancedStyles.statLabel}>Communities</Text>
@@ -276,49 +214,60 @@ export default function ProfileScreen() {
               <View style={enhancedStyles.statCardWrapper}>
                 <View style={enhancedStyles.statCard}>
                   <View style={[enhancedStyles.statIcon, { backgroundColor: '#47c7ea' }]}>
-                    <Ionicons name="school" size={18} color="#fff" />
+                    <Ionicons name="book-outline" size={18} color="#fff" />
                   </View>
-                  <Text style={enhancedStyles.statValue}>{profileData?.stats?.coursesCompleted || 0}</Text>
+                  <Text style={enhancedStyles.statValue}>{profileData?.stats?.coursesEnrolled || 0}</Text>
                   <Text style={enhancedStyles.statLabel}>Courses</Text>
+                </View>
+              </View>
+            </View>
+            
+            <View style={enhancedStyles.statsRow}>
+              <View style={enhancedStyles.statCardWrapper}>
+                <View style={enhancedStyles.statCard}>
+                  <View style={[enhancedStyles.statIcon, { backgroundColor: '#ff9b28' }]}>
+                    <Ionicons name="flag-outline" size={18} color="#fff" />
+                  </View>
+                  <Text style={enhancedStyles.statValue}>{profileData?.stats?.challengesParticipating || 0}</Text>
+                  <Text style={enhancedStyles.statLabel}>Challenges</Text>
                 </View>
               </View>
 
               <View style={enhancedStyles.statCardWrapper}>
                 <View style={enhancedStyles.statCard}>
-                  <View style={[enhancedStyles.statIcon, { backgroundColor: '#ff9b28' }]}>
-                    <Ionicons name="trophy" size={18} color="#fff" />
+                  <View style={[enhancedStyles.statIcon, { backgroundColor: '#ec4899' }]}>
+                    <Ionicons name="cart-outline" size={18} color="#fff" />
                   </View>
-                  <Text style={enhancedStyles.statValue}>{profileData?.stats?.challengesCompleted || 0}</Text>
-                  <Text style={enhancedStyles.statLabel}>Challenges</Text>
+                  <Text style={enhancedStyles.statValue}>{profileData?.stats?.productsPurchased || 0}</Text>
+                  <Text style={enhancedStyles.statLabel}>Purchases</Text>
                 </View>
               </View>
             </View>
           </View>
         </View>
 
-        {/* Modern Action Buttons */}
+        {/* Action Buttons */}
         <View style={enhancedStyles.actionsContainer}>
           <TouchableOpacity
-            style={enhancedStyles.actionButtonPrimary}
-            onPress={() => router.push('/(profile)/edit')}
+            style={[enhancedStyles.actionButtonPrimary, { flex: 1, marginRight: 8 }]}
+            onPress={() => router.push('/(profile)/wallet')}
           >
             <LinearGradient
-              colors={['#8e78fb', '#7a68f5']}
+              colors={['#8B5CF6', '#7C3AED']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={enhancedStyles.actionButtonGradient}
             >
-              <Ionicons name="pencil" size={18} color="#fff" />
-              <Text style={enhancedStyles.actionButtonPrimaryText}>Edit Profile</Text>
+              <Ionicons name="wallet-outline" size={18} color="#fff" />
+              <Text style={enhancedStyles.actionButtonPrimaryText}>Wallet</Text>
             </LinearGradient>
           </TouchableOpacity>
-
           <TouchableOpacity
-            style={enhancedStyles.actionButtonSecondary}
-            onPress={() => {}}
+            style={[enhancedStyles.actionButtonSecondary, { flex: 1 }]}
+            onPress={() => router.push('/(profile)/edit')}
           >
-            <Ionicons name="share-social" size={16} color="#8e78fb" />
-            <Text style={enhancedStyles.actionButtonSecondaryText}>Share</Text>
+            <Ionicons name="create-outline" size={18} color="#1F2937" />
+            <Text style={enhancedStyles.actionButtonSecondaryText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
 
@@ -342,7 +291,7 @@ export default function ProfileScreen() {
             <View style={enhancedStyles.bioSection}>
               <View style={enhancedStyles.bioEmptyState}>
                 <View style={enhancedStyles.bioEmptyIcon}>
-                  <Ionicons name="person-outline" size={24} color="#8e78fb" />
+                  <Ionicons name="document-text-outline" size={24} color="#8B5CF6" />
                 </View>
                 <Text style={enhancedStyles.bioEmptyText}>No bio added yet</Text>
                 <Text style={enhancedStyles.bioEmptySubtext}>Add a bio to tell others about yourself</Text>
@@ -438,8 +387,8 @@ export default function ProfileScreen() {
               <Text style={enhancedStyles.sectionTitle}>About Me</Text>
               <View style={enhancedStyles.infoCard}>
                 <View style={enhancedStyles.infoRow}>
-                  <View style={[enhancedStyles.infoIcon, { backgroundColor: '#f0edff' }]}>
-                    <Ionicons name="mail" size={20} color="#8e78fb" />
+                  <View style={[enhancedStyles.infoIcon, { backgroundColor: 'rgba(139, 92, 246, 0.15)' }]}>
+                    <Ionicons name="mail-outline" size={20} color="#8B5CF6" />
                   </View>
                   <View style={enhancedStyles.infoContent}>
                     <Text style={enhancedStyles.infoLabel}>Email</Text>
@@ -448,8 +397,8 @@ export default function ProfileScreen() {
                 </View>
                 {(profileData?.user?.numtel || user?.numtel) && (
                   <View style={enhancedStyles.infoRow}>
-                    <View style={[enhancedStyles.infoIcon, { backgroundColor: '#e5f8ff' }]}>
-                      <Ionicons name="call" size={20} color="#47c7ea" />
+                    <View style={[enhancedStyles.infoIcon, { backgroundColor: 'rgba(71, 199, 234, 0.15)' }]}>
+                      <Ionicons name="call-outline" size={20} color="#47c7ea" />
                     </View>
                     <View style={enhancedStyles.infoContent}>
                       <Text style={enhancedStyles.infoLabel}>Phone</Text>
@@ -459,8 +408,8 @@ export default function ProfileScreen() {
                 )}
                 {(profileData?.user?.pays || user?.pays) && (
                   <View style={enhancedStyles.infoRow}>
-                    <View style={[enhancedStyles.infoIcon, { backgroundColor: '#fff0e5' }]}>
-                      <Ionicons name="globe-outline" size={20} color="#ff9b28" />
+                    <View style={[enhancedStyles.infoIcon, { backgroundColor: 'rgba(255, 155, 40, 0.15)' }]}>
+                      <Ionicons name="earth-outline" size={20} color="#ff9b28" />
                     </View>
                     <View style={enhancedStyles.infoContent}>
                       <Text style={enhancedStyles.infoLabel}>Country</Text>
@@ -470,8 +419,8 @@ export default function ProfileScreen() {
                 )}
                 {(profileData?.user?.ville || user?.ville) && (
                   <View style={enhancedStyles.infoRow}>
-                    <View style={[enhancedStyles.infoIcon, { backgroundColor: '#f0f9ff' }]}>
-                      <Ionicons name="location" size={20} color="#3b82f6" />
+                    <View style={[enhancedStyles.infoIcon, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
+                      <Ionicons name="location-outline" size={20} color="#3b82f6" />
                     </View>
                     <View style={enhancedStyles.infoContent}>
                       <Text style={enhancedStyles.infoLabel}>City</Text>
@@ -480,8 +429,8 @@ export default function ProfileScreen() {
                   </View>
                 )}
                 <View style={enhancedStyles.infoRow}>
-                  <View style={[enhancedStyles.infoIcon, { backgroundColor: '#ffe5f0' }]}>
-                    <Ionicons name="calendar" size={20} color="#f65887" />
+                  <View style={[enhancedStyles.infoIcon, { backgroundColor: 'rgba(246, 88, 135, 0.15)' }]}>
+                    <Ionicons name="calendar-outline" size={20} color="#f65887" />
                   </View>
                   <View style={enhancedStyles.infoContent}>
                     <Text style={enhancedStyles.infoLabel}>Member Since</Text>
@@ -517,7 +466,7 @@ export default function ProfileScreen() {
               ) : (
                 <View style={enhancedStyles.emptyStateCard}>
                   <View style={enhancedStyles.emptyStateIcon}>
-                    <Ionicons name="pulse-outline" size={48} color="#8e78fb" />
+                    <Ionicons name="time-outline" size={48} color="#8B5CF6" />
                   </View>
                   <Text style={enhancedStyles.emptyStateText}>No recent activity</Text>
                   <Text style={enhancedStyles.emptyStateSubtext}>Your activities will appear here</Text>
@@ -533,9 +482,6 @@ export default function ProfileScreen() {
         isVisible={sidebarVisible}
         onClose={() => setSidebarVisible(false)}
       />
-
-      {/* Global Bottom Navigation */}
-      <GlobalBottomNavigation />
     </SafeAreaView>
   );
 }

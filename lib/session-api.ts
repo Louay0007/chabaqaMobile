@@ -9,6 +9,7 @@
 
 import { tryEndpoints } from './http';
 import { getAccessToken } from './auth';
+import { getImageUrl } from './image-utils';
 
 // ============================================================================
 // TypeScript Interfaces
@@ -785,7 +786,7 @@ export function convertSessionForUI(apiSession: Session): any {
     mentor: {
       id: apiSession.creator._id,
       name: apiSession.creator.name,
-      avatar: apiSession.creator.avatar,
+      avatar: getImageUrl(apiSession.creator.avatar),
       title: apiSession.creator.title || 'Mentor',
       role: apiSession.creator.role || 'Mentor',
       rating: apiSession.creator.rating || apiSession.average_rating || 0,

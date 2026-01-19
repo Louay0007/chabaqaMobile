@@ -40,10 +40,10 @@ export const PlatformUtils = {
     } else if (Platform.OS === 'android') {
       // Android emulator uses 10.0.2.2 to access host machine
       return 'http://10.0.2.2:3000';
-    } else {
-      // iOS simulator can use localhost
-      return 'http://localhost:3000';
     }
+
+    // iOS simulator can use localhost; physical devices should set EXPO_PUBLIC_API_URL
+    return 'http://localhost:3000';
   },
 
   // Check if secure storage is available
