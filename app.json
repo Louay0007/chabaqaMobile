@@ -28,7 +28,11 @@
       "edgeToEdgeEnabled": true,
       "package": "com.mariembenali.chabaqa",
       "allowBackup": false,
-      "permissions": []
+      "permissions": [],
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
+      "minSdkVersion": 23,
+      "buildToolsVersion": "34.0.0"
     },
     "plugins": [
       "expo-router",

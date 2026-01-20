@@ -383,3 +383,41 @@ export default {
   validatePhone,
   validateName,
 };
+
+/**
+ * Delete user account and all associated data
+ * This action is permanent and cannot be undone
+ * 
+ * @returns Promise with success response
+ * @throws Error if deletion fails
+ */
+export const deleteAccount = async (): Promise<SuccessResponse> => {
+  try {
+    console.log('🗑️ [USER-API] Deleting account...');
+
+    const accessToken = await getAccessToken();
+
+    if (!accessToken) {
+      throw new Error('Authentication required');
+    }
+
+    const resp = await tryEndpoints<SuccessResponse>(
+      '/api/user/delete-account',
+      {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000,
+      }
+    );
+
+    console.log('✅ [USER-API] Account deleted successfully');
+
+    return resp.data;
+  } catch (error: any) {
+    console.error('💥 [USER-API] Error deleting account:', error);
+    throw new Error(error.message || 'Failed to delete account');
+  }
+};

@@ -23,6 +23,8 @@ import Sidebar from '../_components/Sidebar';
 import { communityStyles } from '../(communities)/_styles';
 import { getProfileData, ProfileData, formatActivityTime, getActivityIcon, getActivityColor } from '@/lib/profile-api';
 import { getImageUrl } from '@/lib/image-utils';
+import { deleteAccount } from '@/lib/user-api';
+import { logout } from '@/lib/auth';
 
 export default function ProfileScreen() {
   const { user, isAuthenticated } = useAuth();
@@ -76,6 +78,76 @@ export default function ProfileScreen() {
     setRefreshing(true);
     await loadProfileData();
     setRefreshing(false);
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      '⚠️ Delete Account',
+      'Are you absolutely sure you want to delete your account?\n\nThis will permanently delete:\n• Your profile and all personal data\n• All your posts and comments\n• Your communities and memberships\n• Your events and registrations\n• Your wallet and transactions\n• All your messages\n\nThis action cannot be undone!',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            // Second confirmation
+            Alert.alert(
+              '🚨 Final Confirmation',
+              'This is your last chance. Are you 100% sure you want to permanently delete your account?',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                },
+                {
+                  text: 'Yes, Delete Forever',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      console.log('🗑️ [PROFILE] User confirmed account deletion');
+                      setLoading(true);
+                      
+                      await deleteAccount();
+                      
+                      console.log('✅ [PROFILE] Account deleted successfully');
+                      
+                      // Logout and clear all data
+                      await logout();
+                      
+                      // Show success message
+                      Alert.alert(
+                        '✅ Account Deleted',
+                        'Your account and all associated data have been permanently deleted.',
+                        [
+                          {
+                            text: 'OK',
+                            onPress: () => {
+                              // Navigate to landing page
+                              router.replace('/(landing)');
+                            },
+                          },
+                        ]
+                      );
+                    } catch (error: any) {
+                      console.error('❌ [PROFILE] Error deleting account:', error);
+                      setLoading(false);
+                      Alert.alert(
+                        'Error',
+                        error.message || 'Failed to delete account. Please try again.',
+                        [{ text: 'OK' }]
+                      );
+                    }
+                  },
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
   };
 
   // Function to get tab colors based on tab type
@@ -441,6 +513,21 @@ export default function ProfileScreen() {
                     </Text>
                   </View>
                 </View>
+              </View>
+
+              {/* Delete Account Section */}
+              <View style={enhancedStyles.dangerZone}>
+                <Text style={enhancedStyles.dangerZoneTitle}>Danger Zone</Text>
+                <Text style={enhancedStyles.dangerZoneDescription}>
+                  Once you delete your account, there is no going back. All your data will be permanently removed.
+                </Text>
+                <TouchableOpacity
+                  style={enhancedStyles.deleteAccountButton}
+                  onPress={handleDeleteAccount}
+                >
+                  <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                  <Text style={enhancedStyles.deleteAccountButtonText}>Delete Account</Text>
+                </TouchableOpacity>
               </View>
             </View>
           )}

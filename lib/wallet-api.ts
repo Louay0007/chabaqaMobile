@@ -109,6 +109,27 @@ export async function getExchangeRates(): Promise<ExchangeRates> {
 }
 
 /**
+ * Check if FREE_MODE is enabled on the backend
+ * Used by the mobile app to adapt UI (e.g. hide payments, show "Join for free")
+ */
+export async function isFreeModeEnabled(): Promise<boolean> {
+  try {
+    const API_BASE_URL = PlatformUtils.getApiUrl();
+    const freeModeCheckUrl = `${API_BASE_URL}/api/wallet/free-mode-check`;
+
+    const response = await fetch(freeModeCheckUrl);
+    if (!response.ok) {
+      return false;
+    }
+    const data = await response.json();
+    return !!data?.freeMode;
+  } catch (error) {
+    console.log('⚠️ [WALLET] Failed to check FREE_MODE, assuming disabled:', error);
+    return false;
+  }
+}
+
+/**
  * Get user's wallet balance
  */
 export async function getWalletBalance(): Promise<WalletBalance> {
@@ -353,6 +374,41 @@ export async function purchaseWithWallet(
   description?: string,
   currency?: string,
 ): Promise<{ success: boolean; transaction: WalletTransaction; newBalance: number }> {
+  // Check if FREE_MODE is enabled - if so, simulate successful purchase without actual payment
+  const API_BASE_URL = PlatformUtils.getApiUrl();
+  const freeModeCheckUrl = `${API_BASE_URL}/api/wallet/free-mode-check`;
+  
+  try {
+    const freeModeResponse = await fetch(freeModeCheckUrl);
+    const freeModeData = await freeModeResponse.json();
+    
+    if (freeModeData.freeMode === true) {
+      console.log('💚 [WALLET] FREE MODE enabled - granting free access');
+      
+      // Return a mock successful transaction
+      return {
+        success: true,
+        transaction: {
+          _id: 'free-mode-transaction',
+          userId: 'current-user',
+          type: 'purchase',
+          amount: 0,
+          balanceBefore: 0,
+          balanceAfter: 0,
+          description: `Free access to ${contentType}`,
+          contentType,
+          contentId,
+          reference: `FREE-${Date.now()}`,
+          createdAt: new Date().toISOString(),
+        } as any,
+        newBalance: 0,
+      };
+    }
+  } catch (error) {
+    console.log('⚠️ [WALLET] Could not check FREE_MODE, proceeding with normal payment');
+  }
+
+  // Normal payment flow (when FREE_MODE is disabled)
   const token = await getAccessToken();
   if (!token) {
     throw new Error('Authentication required');
@@ -484,6 +540,7 @@ export function getTransactionColor(type: WalletTransactionType): string {
 
 export default {
   getExchangeRates,
+  isFreeModeEnabled,
   getWalletBalance,
   getWalletSummary,
   getTransactionHistory,

@@ -81,9 +81,32 @@ export default function EventDetailPage() {
       return;
     }
 
+    // Find the selected ticket
+    const selectedTicket = event?.tickets.find(t => t.type === selectedTicketType);
+    if (!selectedTicket) {
+      Alert.alert('Error', 'Selected ticket not found');
+      return;
+    }
+
+    // Check if ticket has a price
+    if (selectedTicket.price > 0) {
+      // Redirect to payment screen
+      console.log('💰 [EVENT-DETAIL] Ticket requires payment, redirecting to payment screen');
+      router.push({
+        pathname: '/(communities)/payment',
+        params: {
+          eventId: eventId,
+          ticketType: selectedTicketType,
+          contentType: 'event',
+        }
+      });
+      return;
+    }
+
+    // Free ticket - register directly
     try {
       setRegistering(true);
-      console.log('📝 [EVENT-DETAIL] Registering for event:', { eventId, ticketType: selectedTicketType });
+      console.log('📝 [EVENT-DETAIL] Registering for free event:', { eventId, ticketType: selectedTicketType });
 
       await registerForEvent(eventId || '', selectedTicketType);
       

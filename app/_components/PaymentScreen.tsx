@@ -25,7 +25,7 @@ import { getExchangeRates, ExchangeRates } from '@/lib/wallet-api';
 
 export interface PaymentScreenProps {
   // Content info
-  contentType: 'challenge' | 'product' | 'community' | 'course' | 'session';
+  contentType: 'challenge' | 'product' | 'community' | 'course' | 'session' | 'event';
   title: string;
   description?: string;
   thumbnail?: string;
@@ -38,6 +38,7 @@ export interface PaymentScreenProps {
   
   // Wallet
   walletBalance: number;
+  freeMode?: boolean;
   
   // Actions
   onBack: () => void;
@@ -88,6 +89,7 @@ export default function PaymentScreen({
   price,
   currency = 'TND',
   walletBalance,
+  freeMode = false,
   onBack,
   onPay,
   onTopUp,
@@ -144,7 +146,7 @@ export default function PaymentScreen({
           <TouchableOpacity onPress={onBack} style={styles.backButton}>
             <ChevronLeft size={24} color="#000000" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Payment</Text>
+          <Text style={styles.headerTitle}>{freeMode ? 'Free Access' : 'Payment'}</Text>
           <View style={styles.headerSpacer} />
         </View>
       </SafeAreaView>
@@ -184,72 +186,77 @@ export default function PaymentScreen({
           </View>
         </View>
 
-        {/* Wallet Section */}
-        <View style={styles.card}>
-          <View style={styles.walletHeader}>
-            <View style={styles.walletIconBox}>
-              <Wallet size={20} color="#111827" />
+        {/* Wallet & payment details - hidden in FREE MODE to avoid showing any payment UI */}
+        {!freeMode && (
+          <>
+            {/* Wallet Section */}
+            <View style={styles.card}>
+              <View style={styles.walletHeader}>
+                <View style={styles.walletIconBox}>
+                  <Wallet size={20} color="#111827" />
+                </View>
+                <Text style={styles.walletLabel}>YOUR WALLET</Text>
+              </View>
+              
+              <Text style={styles.walletBalance}>{walletBalance.toFixed(2)}</Text>
+              <Text style={styles.walletUnit}>POINTS</Text>
+              
+              <View style={styles.divider} />
+              
+              <TouchableOpacity onPress={onTopUp} style={styles.topUpLink}>
+                <PlusCircle size={16} color="#6B7280" />
+                <Text style={styles.topUpText}>Top Up Wallet</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.walletLabel}>YOUR WALLET</Text>
-          </View>
-          
-          <Text style={styles.walletBalance}>{walletBalance.toFixed(2)}</Text>
-          <Text style={styles.walletUnit}>POINTS</Text>
-          
-          <View style={styles.divider} />
-          
-          <TouchableOpacity onPress={onTopUp} style={styles.topUpLink}>
-            <PlusCircle size={16} color="#6B7280" />
-            <Text style={styles.topUpText}>Top Up Wallet</Text>
-          </TouchableOpacity>
-        </View>
 
-        {/* Payment Summary */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>PAYMENT SUMMARY</Text>
-          
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Original Price</Text>
-            <Text style={styles.summaryValue}>{price} {normalizedCurrency}</Text>
-          </View>
-          
-          {needsConversion && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Converted to TND</Text>
-              <Text style={styles.summaryValueCyan}>
-                {loadingRates ? '...' : `${priceInTND.toFixed(2)} DT`}
-              </Text>
+            {/* Payment Summary */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>PAYMENT SUMMARY</Text>
+              
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Original Price</Text>
+                <Text style={styles.summaryValue}>{price} {normalizedCurrency}</Text>
+              </View>
+              
+              {needsConversion && (
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Converted to TND</Text>
+                  <Text style={styles.summaryValueCyan}>
+                    {loadingRates ? '...' : `${priceInTND.toFixed(2)} DT`}
+                  </Text>
+                </View>
+              )}
+              
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Your Balance</Text>
+                <Text style={styles.summaryValueCyan}>{walletBalance.toFixed(2)} DT</Text>
+              </View>
+              
+              <View style={styles.dividerLight} />
+              
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabelBold}>Balance After</Text>
+                <Text style={[
+                  styles.summaryValueBold,
+                  { color: hasEnoughBalance ? '#8B5CF6' : '#ef4444' }
+                ]}>
+                  {hasEnoughBalance ? balanceAfter.toFixed(2) : '0.00'} DT
+                </Text>
+              </View>
+              
+              {needsConversion && (
+                <Text style={styles.conversionNote}>
+                  💱 Exchange rate: 1 {normalizedCurrency} = {exchangeRate.toFixed(2)} TND
+                </Text>
+              )}
             </View>
-          )}
-          
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Your Balance</Text>
-            <Text style={styles.summaryValueCyan}>{walletBalance.toFixed(2)} DT</Text>
-          </View>
-          
-          <View style={styles.dividerLight} />
-          
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabelBold}>Balance After</Text>
-            <Text style={[
-              styles.summaryValueBold,
-              { color: hasEnoughBalance ? '#8B5CF6' : '#ef4444' }
-            ]}>
-              {hasEnoughBalance ? balanceAfter.toFixed(2) : '0.00'} DT
-            </Text>
-          </View>
-          
-          {needsConversion && (
-            <Text style={styles.conversionNote}>
-              💱 Exchange rate: 1 {normalizedCurrency} = {exchangeRate.toFixed(2)} TND
-            </Text>
-          )}
-        </View>
+          </>
+        )}
       </ScrollView>
 
       {/* Bottom Section */}
       <View style={styles.bottomSection}>
-        {hasEnoughBalance ? (
+        {freeMode ? (
           <TouchableOpacity
             onPress={onPay}
             disabled={processing}
@@ -260,22 +267,43 @@ export default function PaymentScreen({
             ) : (
               <>
                 <CheckCircle2 size={20} color="#FFFFFF" />
-                <Text style={styles.payButtonText}>Pay with Wallet</Text>
+                <Text style={styles.payButtonText}>Access for Free</Text>
               </>
             )}
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity onPress={onTopUp} style={styles.topUpButton}>
-            <PlusCircle size={20} color="#FFFFFF" />
-            <Text style={styles.topUpButtonText}>Top Up Wallet</Text>
-          </TouchableOpacity>
+          <>
+            {hasEnoughBalance ? (
+              <TouchableOpacity
+                onPress={onPay}
+                disabled={processing}
+                style={[styles.payButton, processing && styles.payButtonDisabled]}
+              >
+                {processing ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <>
+                    <CheckCircle2 size={20} color="#FFFFFF" />
+                    <Text style={styles.payButtonText}>Pay with Wallet</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity onPress={onTopUp} style={styles.topUpButton}>
+                <PlusCircle size={20} color="#FFFFFF" />
+                <Text style={styles.topUpButtonText}>Top Up Wallet</Text>
+              </TouchableOpacity>
+            )}
+          </>
         )}
         
         {/* Security Notice */}
         <View style={styles.securityNotice}>
           <Shield size={14} color="#9CA3AF" />
           <Text style={styles.securityText}>
-            Your payment is secure. Points will be deducted instantly and access granted immediately.
+            {freeMode
+              ? 'FREE MODE is enabled. You will get instant free access without any payment.'
+              : 'Your payment is secure. Points will be deducted instantly and access granted immediately.'}
           </Text>
         </View>
       </View>

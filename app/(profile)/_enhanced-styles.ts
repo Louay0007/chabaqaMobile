@@ -516,4 +516,43 @@ export const enhancedStyles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
   },
+
+  // Danger Zone Styles
+  dangerZone: {
+    marginTop: 32,
+    padding: 20,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+  },
+  dangerZoneTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#DC2626',
+    marginBottom: 8,
+  },
+  dangerZoneDescription: {
+    fontSize: 14,
+    color: '#991B1B',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  deleteAccountButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: '#EF4444',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  deleteAccountButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#EF4444',
+  },
 });

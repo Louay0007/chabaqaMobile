@@ -109,9 +109,12 @@ export default function TopUpPage() {
       await submitTopUpRequest(parseFloat(amount), currency, proofFile, notes);
       
       Alert.alert(
-        'Submitted',
-        'Your request has been submitted. Points will be added after approval.',
-        [{ text: 'Done', onPress: () => router.back() }]
+        '✅ Request Submitted Successfully',
+        `Your top-up request for ${amount} ${selectedCurrency?.symbol} has been submitted.\n\n⏳ Your payment is now under review by our admin team. You will receive ${points.toFixed(2)} points once your payment is verified and approved.\n\nThis usually takes 24-48 hours.`,
+        [{ 
+          text: 'Got it', 
+          onPress: () => router.back() 
+        }]
       );
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to submit request');
